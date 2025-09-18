@@ -192,13 +192,15 @@ class InGameUpgradePanel(
         }
 
         val upgradeButton = TextButton(buttonText, upgradeButtonStyle).apply {
-            if (canUpgrade) {
-                addListener(object : ChangeListener() {
-                    override fun changed(event: ChangeEvent?, actor: Actor?) {
+            // 모든 버튼에 리스너 추가 (업그레이드 가능 여부는 purchaseUpgrade에서 체크)
+            addListener(object : ChangeListener() {
+                override fun changed(event: ChangeEvent?, actor: Actor?) {
+                    println("업그레이드 버튼 클릭: ${upgradeType.name}, 업그레이드 가능: $canUpgrade")
+                    if (canUpgrade) {
                         purchaseUpgrade(upgradeType)
                     }
-                })
-            }
+                }
+            })
         }
 
         // 레이아웃 (가로 배치)
@@ -214,8 +216,10 @@ class InGameUpgradePanel(
     private fun purchaseUpgrade(upgradeType: InGameUpgrades.UpgradeType) {
         val currentLevel = saveData.inGameUpgrades[upgradeType.name] ?: 0
         val cost = InGameUpgrades.getUpgradeCost(upgradeType, currentLevel)
+        val info = InGameUpgrades.UPGRADE_DATA[upgradeType] ?: return
 
-        if (saveData.silver >= cost) {
+        // 최대 레벨 체크와 실버 체크
+        if (currentLevel < info.maxLevel && saveData.silver >= cost) {
             saveData.silver -= cost
             saveData.inGameUpgrades[upgradeType.name] = currentLevel + 1
 

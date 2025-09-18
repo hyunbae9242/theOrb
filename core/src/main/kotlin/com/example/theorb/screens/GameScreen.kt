@@ -36,8 +36,8 @@ class GameScreen : BaseScreen() {
 
     // 레이아웃 비율 (퍼센트 기반) - 더 많은 여유공간
     private val topUIHeightRatio = 0.15f // 15% - 상단 UI
-    private val gameAreaHeightRatio = 0.60f // 60% - 게임 영역
-    private val upgradeUIHeightRatio = 0.25f // 25% - 하단 업그레이드 UI
+    private val gameAreaHeightRatio = 0.50f // 50% - 게임 영역
+    private val upgradeUIHeightRatio = 0.35f // 35% - 하단 업그레이드 UI
 
     private lateinit var player: Player
     private val enemies = mutableListOf<Enemy>()
@@ -142,15 +142,15 @@ class GameScreen : BaseScreen() {
             add(speedButton).size(56f, 56f).top() // 정사각형 배경 이미지 크기 56x56
         }
 
-        topUIContainer.add(topLeft).left().top().padLeft(8f)
+        topUIContainer.add(topLeft).left().top().padLeft(12f)
         topUIContainer.add(Table()).expandX() // 중간 공간 채우기
-        topUIContainer.add(topRight).right().top().padRight(8f)
+        topUIContainer.add(topRight).right().top().padRight(12f)
 
         // 메인 레이아웃 구성 (퍼센트 기반)
         val screenHeight = viewport.worldHeight
-        mainLayout.add(topUIContainer).fillX().height(screenHeight * topUIHeightRatio).row()
-        mainLayout.add(gameArea).fillX().height(screenHeight * gameAreaHeightRatio).row()
-        mainLayout.add(upgradeContainer).fillX().height(screenHeight * upgradeUIHeightRatio)
+        mainLayout.add(topUIContainer).expandX().fillX().padTop(20f).height(screenHeight * topUIHeightRatio).row()
+        mainLayout.add(gameArea).expandX().fillX().height(screenHeight * gameAreaHeightRatio).row()
+        mainLayout.add(upgradeContainer).expandX().fillX().height(screenHeight * upgradeUIHeightRatio)
 
         // 중앙 상단에 타이머 추가
         timerLabel = Label("10:00", skin.get("label-default", Label.LabelStyle::class.java)).apply {

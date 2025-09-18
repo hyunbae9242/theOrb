@@ -1,17 +1,20 @@
 {
-gold: 1991429
-gems: 90
+gold: 1993900
+gems: 105
 equippedSkills: [
 	LightningStrike
 	Fireball
 ]
 currentSpeedMultiplier: 2
-silver: 5521
+silver: 934
 inGameUpgrades: {
 	class: java.util.LinkedHashMap
-	CRITICAL_CHANCE: 6
+	CRITICAL_CHANCE: 19
 	CRITICAL_DAMAGE: 35
+	GEM_INCREASE: 3
+	ENEMY_SPAWN_SPEED: 8
+	ENEMY_SPAWN_COUNT: 2
 }
-criticalChance: 35
+criticalChance: 100
 criticalDamage: 500
 }
