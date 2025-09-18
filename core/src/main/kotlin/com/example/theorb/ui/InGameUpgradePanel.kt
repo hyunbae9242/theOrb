@@ -132,8 +132,8 @@ class InGameUpgradePanel(
         }
 
         // 해당 탭의 업그레이드들을 세로로 배치
-        val upgrades = InGameUpgrades.UPGRADE_DATA.filter { it.value.tab == tab }
-        println("탭 ${tab} 업그레이드 목록: ${upgrades.keys.map { it.name }}")
+        val upgrades = InGameUpgrades.UPGRADE_DATA.filter { it.value.tab == tab }.toList()
+        println("탭 ${tab} 업그레이드 목록: ${upgrades.map { it.first.name }}")
 
         upgrades.forEachIndexed { index, (upgradeType, info) ->
             val currentLevel = saveData.inGameUpgrades[upgradeType.name] ?: 0
