@@ -18,6 +18,11 @@ class InGameUpgradePanel(
     private lateinit var contentTable: Table
     private var currentTab = InGameUpgrades.UpgradeTab.ATTACK
 
+    // 탭 버튼들 참조
+    private lateinit var attackTabBtn: TextButton
+    private lateinit var defenseTabBtn: TextButton
+    private lateinit var utilityTabBtn: TextButton
+
     fun createUI(): Table {
         // 메인 컨테이너
         mainContainer = Table().apply {
@@ -26,72 +31,43 @@ class InGameUpgradePanel(
             pad(8f)
         }
 
-        // 상단: 탭 버튼들만 (실버는 GameScreen으로 이동)
+        // 상단: 탭 버튼들 (직사각형 배경 적용)
         val topRow = Table().apply {
-            // 탭 버튼들을 중앙 정렬
             val tabContainer = Table()
 
-            // 공격 탭 (기본 선택)
-            val attackTabBtn = TextButton("공격", BaseScreen.skin.get("btn-small-bold", TextButton.TextButtonStyle::class.java)
-                ?: BaseScreen.skin.get("btn", TextButton.TextButtonStyle::class.java))
-            val attackTabContainer = Table().apply {
-                background = BaseScreen.skin.getDrawable("white")
-                color = BaseScreen.ACCENT
-                pad(2f)
-                add(Table().apply {
-                    background = BaseScreen.skin.getDrawable("white")
-                    color = BaseScreen.PANEL_BG
-                    add(attackTabBtn).pad(8f, 12f, 8f, 12f)
-                })
-            }
+            // 공격 탭 버튼
+            attackTabBtn = createTabButton("공격")
             attackTabBtn.addListener(object : ChangeListener() {
                 override fun changed(event: ChangeEvent?, actor: Actor?) {
                     currentTab = InGameUpgrades.UpgradeTab.ATTACK
+                    updateTabStates()
                     showTab(InGameUpgrades.UpgradeTab.ATTACK)
                 }
             })
 
-            // 방어 탭
-            val defenseTabBtn = TextButton("방어", BaseScreen.skin.get("btn", TextButton.TextButtonStyle::class.java))
-            val defenseTabContainer = Table().apply {
-                background = BaseScreen.skin.getDrawable("white")
-                color = BaseScreen.BORDER
-                pad(2f)
-                add(Table().apply {
-                    background = BaseScreen.skin.getDrawable("white")
-                    color = Color(0.1f, 0.1f, 0.1f, 1f)
-                    add(defenseTabBtn).pad(8f, 12f, 8f, 12f)
-                })
-            }
+            // 방어 탭 버튼
+            defenseTabBtn = createTabButton("방어")
             defenseTabBtn.addListener(object : ChangeListener() {
                 override fun changed(event: ChangeEvent?, actor: Actor?) {
                     currentTab = InGameUpgrades.UpgradeTab.DEFENSE
+                    updateTabStates()
                     showTab(InGameUpgrades.UpgradeTab.DEFENSE)
                 }
             })
 
-            // 유틸 탭
-            val utilityTabBtn = TextButton("유틸", BaseScreen.skin.get("btn", TextButton.TextButtonStyle::class.java))
-            val utilityTabContainer = Table().apply {
-                background = BaseScreen.skin.getDrawable("white")
-                color = BaseScreen.BORDER
-                pad(2f)
-                add(Table().apply {
-                    background = BaseScreen.skin.getDrawable("white")
-                    color = Color(0.1f, 0.1f, 0.1f, 1f)
-                    add(utilityTabBtn).pad(8f, 12f, 8f, 12f)
-                })
-            }
+            // 유틸 탭 버튼
+            utilityTabBtn = createTabButton("유틸")
             utilityTabBtn.addListener(object : ChangeListener() {
                 override fun changed(event: ChangeEvent?, actor: Actor?) {
                     currentTab = InGameUpgrades.UpgradeTab.UTILITY
+                    updateTabStates()
                     showTab(InGameUpgrades.UpgradeTab.UTILITY)
                 }
             })
 
-            tabContainer.add(attackTabContainer).pad(2f)
-            tabContainer.add(defenseTabContainer).pad(2f)
-            tabContainer.add(utilityTabContainer).pad(2f)
+            tabContainer.add(attackTabBtn).size(112f, 56f).pad(2f)
+            tabContainer.add(defenseTabBtn).size(112f, 56f).pad(2f)
+            tabContainer.add(utilityTabBtn).size(112f, 56f).pad(2f)
 
             add(tabContainer).center().expandX()
         }
@@ -107,10 +83,39 @@ class InGameUpgradePanel(
         mainContainer.add(topRow).fillX().pad(4f).row()
         mainContainer.add(contentScrollPane).expand().fill().pad(4f)
 
-        // 기본 탭 표시
+        // 기본 탭 표시 및 상태 설정
+        updateTabStates()
         showTab(InGameUpgrades.UpgradeTab.ATTACK)
 
         return mainContainer
+    }
+
+    // 탭 버튼 생성 함수
+    private fun createTabButton(text: String): TextButton {
+        val buttonStyle = TextButton.TextButtonStyle().apply {
+            font = BaseScreen.skin.get("btn-small-bold", TextButton.TextButtonStyle::class.java)?.font
+                ?: BaseScreen.skin.get("btn", TextButton.TextButtonStyle::class.java).font
+            fontColor = Color.WHITE
+            up = ResourceManager.getButtonCancelBg() // 기본 상태
+            down = ResourceManager.getButtonHighlightBg()
+            over = ResourceManager.getButtonHighlightBg()
+        }
+        return TextButton(text, buttonStyle)
+    }
+
+    // 탭 상태 업데이트 함수
+    private fun updateTabStates() {
+        // 모든 탭을 기본 상태로 설정
+        attackTabBtn.style.up = ResourceManager.getButtonCancelBg()
+        defenseTabBtn.style.up = ResourceManager.getButtonCancelBg()
+        utilityTabBtn.style.up = ResourceManager.getButtonCancelBg()
+
+        // 현재 활성 탭을 하이라이트로 설정
+        when (currentTab) {
+            InGameUpgrades.UpgradeTab.ATTACK -> attackTabBtn.style.up = ResourceManager.getButtonHighlightBg()
+            InGameUpgrades.UpgradeTab.DEFENSE -> defenseTabBtn.style.up = ResourceManager.getButtonHighlightBg()
+            InGameUpgrades.UpgradeTab.UTILITY -> utilityTabBtn.style.up = ResourceManager.getButtonHighlightBg()
+        }
     }
 
     private fun showTab(tab: InGameUpgrades.UpgradeTab) {
