@@ -24,11 +24,12 @@ class InGameUpgradePanel(
     private lateinit var utilityTabBtn: TextButton
 
     fun createUI(): Table {
-        // 메인 컨테이너
+        // 메인 컨테이너 (화면 전체 폭 사용)
         mainContainer = Table().apply {
             background = BaseScreen.skin.getDrawable("white")
             color = BaseScreen.PANEL_BG
             pad(8f)
+            setFillParent(true) // 부모 컨테이너 전체 크기 사용
         }
 
         // 상단: 탭 버튼들 (직사각형 배경 적용)
@@ -69,7 +70,7 @@ class InGameUpgradePanel(
             tabContainer.add(defenseTabBtn).size(112f, 56f).pad(2f)
             tabContainer.add(utilityTabBtn).size(112f, 56f).pad(2f)
 
-            add(tabContainer).center().expandX()
+            add(tabContainer).center().expandX().fillX()
         }
 
         // 콘텐츠 영역
@@ -79,8 +80,8 @@ class InGameUpgradePanel(
             setScrollingDisabled(true, false)
         }
 
-        // 레이아웃 구성
-        mainContainer.add(topRow).fillX().pad(4f).row()
+        // 레이아웃 구성 (전체 폭 사용)
+        mainContainer.add(topRow).fillX().expandX().pad(4f).row()
         mainContainer.add(contentScrollPane).expand().fill().pad(4f)
 
         // 기본 탭 표시 및 상태 설정
