@@ -71,6 +71,10 @@ class GameScreen : BaseScreen() {
 
     override fun show() {
         initSharedResources()
+
+        // 게임 시작 시 인게임 진행도 초기화
+        resetInGameProgress()
+
         Gdx.input.inputProcessor = uiStage
         settingsModal = SettingsModal(uiStage, skin)
         modalDialog = ModalDialog(uiStage, skin)
@@ -458,6 +462,9 @@ class GameScreen : BaseScreen() {
         isGameOver = false
         hideBossHealthBar()
 
+        // 재시작 시 인게임 진행도 초기화
+        resetInGameProgress()
+
         // 플레이어 재생성
         loadSaveData()
 
@@ -544,13 +551,18 @@ class GameScreen : BaseScreen() {
         SaveManager.save(gameObject.saveData)
     }
 
-    // 스테이지 종료 시 인게임 화폐 및 업그레이드 초기화
+    // 게임 시작/재시작 시 인게임 화폐 및 업그레이드 초기화
     fun resetInGameProgress() {
+        println("인게임 진행도 초기화 시작")
+        println("  초기화 전 - 실버: ${gameObject.saveData.silver}, 업그레이드 개수: ${gameObject.saveData.inGameUpgrades.size}")
+
         gameObject.saveData.silver = 0
         gameObject.saveData.inGameUpgrades.clear()
         gameObject.saveData.criticalChance = 5f
         gameObject.saveData.criticalDamage = 150f
         SaveManager.save(gameObject.saveData)
+
+        println("  초기화 완료 - 실버: ${gameObject.saveData.silver}, 업그레이드 개수: ${gameObject.saveData.inGameUpgrades.size}")
     }
 
     override fun dispose() {

@@ -182,8 +182,6 @@ class InGameUpgradePanel(
         val canUpgrade = currentLevel < info.maxLevel && saveData.silver >= cost
         val buttonText = if (currentLevel >= info.maxLevel) "MAX" else "Level Up\n($cost silver)"
 
-        println("업그레이드 생성: ${upgradeType.name}, 레벨: $currentLevel/${info.maxLevel}, 비용: $cost, 실버: ${saveData.silver}, 업그레이드 가능: $canUpgrade")
-
         val upgradeButtonStyle = TextButton.TextButtonStyle().apply {
             font = BaseScreen.skin.get("btn-small-bold", TextButton.TextButtonStyle::class.java)?.font
                 ?: BaseScreen.skin.get("btn", TextButton.TextButtonStyle::class.java).font
