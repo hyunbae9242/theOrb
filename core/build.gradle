@@ -1,0 +1,27 @@
+plugins {
+  id "org.jetbrains.kotlin.jvm"
+}
+
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+eclipse.project.name = appName + '-core'
+
+dependencies {
+  api "com.badlogicgames.gdx:gdx:$gdxVersion"
+  implementation "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
+
+  if (enableGraalNative == 'true') {
+    implementation "io.github.berstanio:gdx-svmhelper-annotations:$graalHelperVersion"
+  }
+}
+
+// ✅ Kotlin & Java 모두 JDK 17로 빌드
+java {
+  toolchain {
+    languageVersion.set(JavaLanguageVersion.of(17))
+  }
+}
+
+// ✅ Kotlin 바이트코드는 1.8로 유지
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+  kotlinOptions.jvmTarget = "1.8"
+}
