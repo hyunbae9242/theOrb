@@ -2,8 +2,10 @@ package com.example.theorb.ui
 
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.scenes.scene2d.Actor
+import com.badlogic.gdx.scenes.scene2d.Touchable
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.example.theorb.balance.InGameUpgrades
 import com.example.theorb.data.SaveData
 import com.example.theorb.data.SaveManager
@@ -72,23 +74,26 @@ class InGameUpgradePanel(
             add(tabContainer).center().expandX().fillX()
         }
 
-        // 콘텐츠 영역
-        contentTable = Table().apply {
-            // 콘텐츠 테이블에 여백 추가하여 상단 요소와의 겹침 방지
-            padTop(16f)
-        }
-        contentScrollPane = ScrollPane(contentTable, BaseScreen.skin.get("default", ScrollPane.ScrollPaneStyle::class.java)).apply {
+        // 기본적인 ScrollPane으로 다시 시작
+        contentTable = Table()
+
+        contentScrollPane = ScrollPane(contentTable, BaseScreen.skin).apply {
             setFadeScrollBars(false)
-            setScrollingDisabled(true, false)
-            // ScrollPane 터치 영역 최적화
-            setClamp(true)
-            setOverscroll(false, false)
-            println("ScrollPane touchable 상태: $touchable")
+            setScrollingDisabled(true, false) // 세로 스크롤만 허용
+
+            // 스크롤 방해 최소화 설정
+            setCancelTouchFocus(false)
+            setFlickScroll(false)
+            setSmoothScrolling(false)
+
+            // 중요: 스크롤 감도를 위해 velocity threshold 조정
+            setVelocityX(0f)
+            setVelocityY(0f)
         }
 
         // 레이아웃 구성 (전체 폭 사용)
         mainContainer.add(topRow).fillX().expandX().pad(4f).row()
-        mainContainer.add(contentScrollPane).expand().fill().pad(12f, 4f, 4f, 4f) // 상단 패딩 더 늘려서 탭과 겹침 방지
+        mainContainer.add(contentScrollPane).expand().fill().pad(8f, 4f, 4f, 4f)
 
         // 기본 탭 표시 및 상태 설정
         updateTabStates()
@@ -138,18 +143,13 @@ class InGameUpgradePanel(
 
         // 해당 탭의 업그레이드들을 세로로 배치
         val upgrades = InGameUpgrades.UPGRADE_DATA.filter { it.value.tab == tab }.toList()
-        println("탭 ${tab} 업그레이드 목록: ${upgrades.map { it.first.name }}")
 
         upgrades.forEachIndexed { index, (upgradeType, info) ->
             val currentLevel = saveData.inGameUpgrades[upgradeType.name] ?: 0
             val cost = InGameUpgrades.getUpgradeCost(upgradeType, currentLevel)
             val currentBonus = InGameUpgrades.getCurrentBonus(upgradeType, currentLevel)
-
-            println("업그레이드 ${index + 1}번째: ${upgradeType.name}")
             val upgradeRow = createUpgradeRow(upgradeType, info, currentLevel, cost, currentBonus)
-            // 첫 번째 업그레이드는 추가 상단 여백으로 탭과의 겹침 완전히 방지
-            val topPadding = if (index == 0) 8f else 2f
-            contentTable.add(upgradeRow).fillX().pad(2f).padTop(topPadding).padBottom(6f).row()
+            contentTable.add(upgradeRow).fillX().pad(2f).padBottom(4f).row()
         }
     }
 
@@ -160,13 +160,7 @@ class InGameUpgradePanel(
         cost: Int,
         currentBonus: Float
     ): Table {
-        val row = Table().apply {
-            background = BaseScreen.skin.getDrawable("white")
-            color = BaseScreen.BORDER
-            pad(1f)
-        }
-
-        val innerRow = Table().apply {
+        val upgradeRow = Table().apply {
             background = BaseScreen.skin.getDrawable("white")
             color = Color(0.15f, 0.15f, 0.15f, 1f)
             pad(8f)
@@ -205,39 +199,60 @@ class InGameUpgradePanel(
         }
 
         val upgradeButton = TextButton(buttonText, upgradeButtonStyle).apply {
-            // 업그레이드 불가능한 경우 비활성화
-            if (!canUpgrade) {
-                color = Color(0.5f, 0.5f, 0.5f, 1f) // 회색 처리
-                println("버튼 비활성화: ${upgradeType.name} (실버 부족 또는 최대 레벨)")
-            }
+            // 버튼 내부 Label의 touchable을 disabled로 설정하여 터치 이벤트가 버튼으로 전달되도록 함
+            label.touchable = Touchable.disabled
 
-            // 모든 버튼에 클릭 리스너 추가 (디버깅을 위해)
-            addListener(object : ChangeListener() {
-                override fun changed(event: ChangeEvent?, actor: Actor?) {
-                    println("★ 클릭 이벤트 발생! ${upgradeType.name}, canUpgrade=$canUpgrade")
-                    println("  버튼 위치: x=${x}, y=${y}, width=${width}, height=${height}")
-                    if (canUpgrade) {
-                        println("  업그레이드 함수 호출")
+            // ScrollPane 환경에서 안정적인 클릭 처리
+            addListener(object : com.badlogic.gdx.scenes.scene2d.InputListener() {
+                private var isTouchDown = false
+                private var touchDownButton = -1
+                private var touchDownX = 0f
+                private var touchDownY = 0f
+
+                override fun touchDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, button: Int): Boolean {
+                    isTouchDown = true
+                    touchDownButton = button
+                    touchDownX = x
+                    touchDownY = y
+                    return true
+                }
+
+                override fun touchUp(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, button: Int) {
+                    val eventTarget = event?.target
+                    val isTargetThisButton = eventTarget == this@apply || eventTarget == this@apply.label
+                    val isValidClick = isTouchDown && button == touchDownButton && button == 0 && isTargetThisButton
+
+                    if (isValidClick && canUpgrade) {
                         purchaseUpgrade(upgradeType)
-                    } else {
-                        println("  업그레이드 불가능 - 실버=${saveData.silver}, 비용=$cost")
+                    }
+
+                    isTouchDown = false
+                    touchDownButton = -1
+                }
+
+                override fun touchDragged(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int) {
+                    val dragDistance = kotlin.math.sqrt((x - touchDownX) * (x - touchDownX) + (y - touchDownY) * (y - touchDownY))
+                    if (dragDistance > 10f) {
+                        isTouchDown = false
                     }
                 }
             })
 
-            println("버튼 생성 완료: ${upgradeType.name}, touchable=$touchable")
+            // 업그레이드 불가능한 경우 비활성화
+            if (!canUpgrade) {
+                color = Color(0.5f, 0.5f, 0.5f, 1f) // 회색 처리
+                // 중요: 비활성화된 버튼도 클릭 가능하도록 touchable을 enabled로 유지
+            }
+
+//            println("${upgradeType.name} 버튼 생성 완료, touchable=${touchable}")
         }
 
-        // 레이아웃 (가로 배치)
-        innerRow.add(nameLabel).left().padRight(8f)
-        innerRow.add(levelLabel).left().padRight(8f)
-        innerRow.add(bonusLabel).left().padRight(8f)
-
-        // 모든 버튼 동일한 크기로 설정하고 우측 여백 추가
-        innerRow.add(upgradeButton).size(112f, 56f).right().expandX().padRight(4f)
-
-        row.add(innerRow).expand().fill()
-        return row
+        // 레이아웃 (가로 배치) - 업그레이드 버튼을 오른쪽으로 배치
+        upgradeRow.add(nameLabel).left().padRight(8f)
+        upgradeRow.add(levelLabel).left().padRight(8f)
+        upgradeRow.add(bonusLabel).left().padRight(8f)
+        upgradeRow.add(upgradeButton).size(112f, 56f).right().expandX()
+        return upgradeRow
     }
 
     private fun purchaseUpgrade(upgradeType: InGameUpgrades.UpgradeType) {
@@ -245,14 +260,8 @@ class InGameUpgradePanel(
         val cost = InGameUpgrades.getUpgradeCost(upgradeType, currentLevel)
         val info = InGameUpgrades.UPGRADE_DATA[upgradeType] ?: return
 
-        println("purchaseUpgrade 호출: ${upgradeType.name}")
-        println("  현재 레벨: $currentLevel, 최대 레벨: ${info.maxLevel}")
-        println("  필요 비용: $cost, 보유 실버: ${saveData.silver}")
-        println("  레벨 체크: ${currentLevel < info.maxLevel}, 실버 체크: ${saveData.silver >= cost}")
-
         // 최대 레벨 체크와 실버 체크
         if (currentLevel < info.maxLevel && saveData.silver >= cost) {
-            println("  업그레이드 실행!")
             saveData.silver -= cost
             saveData.inGameUpgrades[upgradeType.name] = currentLevel + 1
 
@@ -261,8 +270,6 @@ class InGameUpgradePanel(
 
             SaveManager.save(saveData)
             refreshUI()
-        } else {
-            println("  업그레이드 실패 - 조건 불만족")
         }
     }
 
