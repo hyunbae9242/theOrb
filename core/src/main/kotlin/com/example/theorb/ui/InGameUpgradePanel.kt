@@ -182,6 +182,8 @@ class InGameUpgradePanel(
         val canUpgrade = currentLevel < info.maxLevel && saveData.silver >= cost
         val buttonText = if (currentLevel >= info.maxLevel) "MAX" else "Level Up\n($cost silver)"
 
+        println("업그레이드 생성: ${upgradeType.name}, 레벨: $currentLevel/${info.maxLevel}, 비용: $cost, 실버: ${saveData.silver}, 업그레이드 가능: $canUpgrade")
+
         val upgradeButtonStyle = TextButton.TextButtonStyle().apply {
             font = BaseScreen.skin.get("btn-small-bold", TextButton.TextButtonStyle::class.java)?.font
                 ?: BaseScreen.skin.get("btn", TextButton.TextButtonStyle::class.java).font
@@ -192,15 +194,20 @@ class InGameUpgradePanel(
         }
 
         val upgradeButton = TextButton(buttonText, upgradeButtonStyle).apply {
-            // 모든 버튼에 리스너 추가 (업그레이드 가능 여부는 purchaseUpgrade에서 체크)
-            addListener(object : ChangeListener() {
-                override fun changed(event: ChangeEvent?, actor: Actor?) {
-                    println("업그레이드 버튼 클릭: ${upgradeType.name}, 업그레이드 가능: $canUpgrade")
-                    if (canUpgrade) {
+            // 업그레이드 불가능한 경우 비활성화
+            if (!canUpgrade) {
+                color = Color(0.5f, 0.5f, 0.5f, 1f) // 회색 처리
+            }
+
+            // 업그레이드 가능한 경우만 클릭 리스너 추가
+            if (canUpgrade) {
+                addListener(object : ChangeListener() {
+                    override fun changed(event: ChangeEvent?, actor: Actor?) {
+                        println("클릭 시점 - ${upgradeType.name}: 현재 실버=${saveData.silver}, 필요 비용=$cost")
                         purchaseUpgrade(upgradeType)
                     }
-                }
-            })
+                })
+            }
         }
 
         // 레이아웃 (가로 배치)
@@ -218,8 +225,14 @@ class InGameUpgradePanel(
         val cost = InGameUpgrades.getUpgradeCost(upgradeType, currentLevel)
         val info = InGameUpgrades.UPGRADE_DATA[upgradeType] ?: return
 
+        println("purchaseUpgrade 호출: ${upgradeType.name}")
+        println("  현재 레벨: $currentLevel, 최대 레벨: ${info.maxLevel}")
+        println("  필요 비용: $cost, 보유 실버: ${saveData.silver}")
+        println("  레벨 체크: ${currentLevel < info.maxLevel}, 실버 체크: ${saveData.silver >= cost}")
+
         // 최대 레벨 체크와 실버 체크
         if (currentLevel < info.maxLevel && saveData.silver >= cost) {
+            println("  업그레이드 실행!")
             saveData.silver -= cost
             saveData.inGameUpgrades[upgradeType.name] = currentLevel + 1
 
@@ -228,6 +241,8 @@ class InGameUpgradePanel(
 
             SaveManager.save(saveData)
             refreshUI()
+        } else {
+            println("  업그레이드 실패 - 조건 불만족")
         }
     }
 
