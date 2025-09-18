@@ -73,17 +73,22 @@ class InGameUpgradePanel(
         }
 
         // 콘텐츠 영역
-        contentTable = Table()
+        contentTable = Table().apply {
+            // 콘텐츠 테이블에 여백 추가하여 상단 요소와의 겹침 방지
+            padTop(16f)
+        }
         contentScrollPane = ScrollPane(contentTable, BaseScreen.skin.get("default", ScrollPane.ScrollPaneStyle::class.java)).apply {
             setFadeScrollBars(false)
             setScrollingDisabled(true, false)
-            // 디버깅: ScrollPane이 클릭을 방해하지 않도록 설정
+            // ScrollPane 터치 영역 최적화
+            setClamp(true)
+            setOverscroll(false, false)
             println("ScrollPane touchable 상태: $touchable")
         }
 
         // 레이아웃 구성 (전체 폭 사용)
         mainContainer.add(topRow).fillX().expandX().pad(4f).row()
-        mainContainer.add(contentScrollPane).expand().fill().pad(4f)
+        mainContainer.add(contentScrollPane).expand().fill().pad(12f, 4f, 4f, 4f) // 상단 패딩 더 늘려서 탭과 겹침 방지
 
         // 기본 탭 표시 및 상태 설정
         updateTabStates()
@@ -142,7 +147,9 @@ class InGameUpgradePanel(
 
             println("업그레이드 ${index + 1}번째: ${upgradeType.name}")
             val upgradeRow = createUpgradeRow(upgradeType, info, currentLevel, cost, currentBonus)
-            contentTable.add(upgradeRow).fillX().pad(1f).row()
+            // 첫 번째 업그레이드는 추가 상단 여백으로 탭과의 겹침 완전히 방지
+            val topPadding = if (index == 0) 8f else 2f
+            contentTable.add(upgradeRow).fillX().pad(2f).padTop(topPadding).padBottom(6f).row()
         }
     }
 
@@ -208,6 +215,7 @@ class InGameUpgradePanel(
             addListener(object : ChangeListener() {
                 override fun changed(event: ChangeEvent?, actor: Actor?) {
                     println("★ 클릭 이벤트 발생! ${upgradeType.name}, canUpgrade=$canUpgrade")
+                    println("  버튼 위치: x=${x}, y=${y}, width=${width}, height=${height}")
                     if (canUpgrade) {
                         println("  업그레이드 함수 호출")
                         purchaseUpgrade(upgradeType)
@@ -216,13 +224,17 @@ class InGameUpgradePanel(
                     }
                 }
             })
+
+            println("버튼 생성 완료: ${upgradeType.name}, touchable=$touchable")
         }
 
         // 레이아웃 (가로 배치)
         innerRow.add(nameLabel).left().padRight(8f)
         innerRow.add(levelLabel).left().padRight(8f)
         innerRow.add(bonusLabel).left().padRight(8f)
-        innerRow.add(upgradeButton).size(112f, 56f).right().expandX() // 새로운 배경 이미지 크기
+
+        // 모든 버튼 동일한 크기로 설정하고 우측 여백 추가
+        innerRow.add(upgradeButton).size(112f, 56f).right().expandX().padRight(4f)
 
         row.add(innerRow).expand().fill()
         return row
