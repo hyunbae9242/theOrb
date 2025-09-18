@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.utils.Align
 import com.example.theorb.balance.Element
+import com.example.theorb.util.formatNumber
 
 class DamageText(
     private val damage: Int,
@@ -42,7 +43,7 @@ class DamageText(
         elementColor.a = alpha
 
         font.color = elementColor
-        font.draw(batch, damage.toString(), x, y, 0f, Align.center, false)
+        font.draw(batch, formatNumber(damage), x, y, 0f, Align.center, false)
 
         // 폰트 색상 복원
         font.color = originalColor

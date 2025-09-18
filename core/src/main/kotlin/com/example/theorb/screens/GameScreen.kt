@@ -29,6 +29,7 @@ import com.example.theorb.ui.InGameUpgradePanel
 import com.example.theorb.ui.ModalDialog
 import com.example.theorb.ui.SettingsModal
 import com.example.theorb.util.ResourceManager
+import com.example.theorb.util.formatNumber
 
 class GameScreen : BaseScreen() {
     private val shape = ShapeRenderer()
@@ -99,14 +100,14 @@ class GameScreen : BaseScreen() {
         val upgradeContainer = upgradePanel.createUI()
 
         // 좌측: 골드, 젬, 실버 정보
-        goldLabel = Label("골드: ${gameObject.saveData.gold}", skin.get("label-small", Label.LabelStyle::class.java)).apply {
+        goldLabel = Label("골드: ${formatNumber(gameObject.saveData.gold)}", skin.get("label-small", Label.LabelStyle::class.java)).apply {
             color = Color(1f, 0.84f, 0f, 1f) // 골드 색상
         }
         gemLabel = Label("젬: ${gameObject.saveData.gems}", skin.get("label-small", Label.LabelStyle::class.java)).apply {
             color = Color(0.5f, 1f, 1f, 1f) // 시안 색상 (젬)
         }
         // 실버 표시 추가
-        silverLabel = Label("실버: ${gameObject.saveData.silver}", skin.get("label-small", Label.LabelStyle::class.java)).apply {
+        silverLabel = Label("실버: ${formatNumber(gameObject.saveData.silver)}", skin.get("label-small", Label.LabelStyle::class.java)).apply {
             color = Color(0.8f, 0.8f, 0.9f, 1f) // 은색 계열
         }
 
@@ -199,8 +200,10 @@ class GameScreen : BaseScreen() {
         }
 
         // 체력바 컨테이너 - 배경만 표시하고, 채우기는 별도로 관리
+        // 뷰포트 넓이의 60%를 체력바 너비로 사용
+        val healthBarWidth = viewport.worldWidth * 0.6f
         val healthBarContainer = Table().apply {
-            add(bossHealthBarBackground).size(300f, 20f)
+            add(bossHealthBarBackground).size(healthBarWidth, 20f)
             isVisible = false
         }
 
@@ -268,7 +271,7 @@ class GameScreen : BaseScreen() {
                 repeat(totalSpawnCount) {
                     val gameAreaStartY = viewport.worldHeight * upgradeUIHeightRatio
                     val gameAreaHeight = viewport.worldHeight * gameAreaHeightRatio
-                    enemies.add(EnemyFactory.spawnRandom(viewport.worldWidth, gameAreaHeight, gameAreaStartY))
+                    enemies.add(EnemyFactory.spawnRandom(viewport.worldWidth, gameAreaHeight, gameAreaStartY, gameTimer))
                 }
 
                 spawnTimer = 1f // 1초마다 적 추가
@@ -279,7 +282,7 @@ class GameScreen : BaseScreen() {
             if (bossSpawnTimer <= 0f) {
                 val gameAreaStartY = viewport.worldHeight * upgradeUIHeightRatio
                 val gameAreaHeight = viewport.worldHeight * gameAreaHeightRatio
-                val boss = EnemyFactory.spawnBoss(viewport.worldWidth, gameAreaHeight, gameAreaStartY)
+                val boss = EnemyFactory.spawnBoss(viewport.worldWidth, gameAreaHeight, gameAreaStartY, gameTimer)
                 enemies.add(boss)
                 currentBoss = boss
                 bossSpawnTimer = 60f // 1분 후 다시 스폰
@@ -391,10 +394,13 @@ class GameScreen : BaseScreen() {
         batch.end()
 
         // --- UI ---
-        goldLabel.setText("골드: ${gameObject.saveData.gold}")
+        goldLabel.setText("골드: ${formatNumber(gameObject.saveData.gold)}")
         gemLabel.setText("젬: ${gameObject.saveData.gems}")
-        silverLabel.setText("실버: ${gameObject.saveData.silver}")
+        silverLabel.setText("실버: ${formatNumber(gameObject.saveData.silver)}")
         upgradePanel.refreshUI()
+
+        // 보스 체력바 실시간 업데이트
+        updateBossHealthBar()
 
         // 타이머 업데이트 (남은 시간으로 표시)
         val remainingTime = maxGameTime - gameTimer
@@ -498,7 +504,8 @@ class GameScreen : BaseScreen() {
     private fun updateBossHealthBarPosition() {
         // 체력바 채우기의 위치를 배경과 맞추기
         bossHealthBar.pack()
-        val backgroundX = bossHealthBar.x + (bossHealthBar.width - 300f) / 2f
+        val healthBarWidth = viewport.worldWidth * 0.6f
+        val backgroundX = bossHealthBar.x + (bossHealthBar.width - healthBarWidth) / 2f
         val backgroundY = bossHealthBar.y - 25f // 라벨 아래에 위치
         bossHealthBarFill.setPosition(backgroundX, backgroundY)
     }
@@ -508,12 +515,14 @@ class GameScreen : BaseScreen() {
             if (boss.isDead()) {
                 hideBossHealthBar()
             } else {
-                // 체력바 비율 계산 (최대 체력 기준)
-                val maxHp = (Balance.BASE_HP * Balance.TYPE_MULTIPLIERS[EnemyType.BOSS]!!.hpMul).toInt()
-                val healthPercentage = boss.hp.toFloat() / maxHp.toFloat()
+                // 체력바 비율 계산 (현재 체력/최대 체력 기준으로 정확한 비율 계산)
+                // HP가 음수일 수 있으므로 0 이상으로 클램프
+                val currentHp = maxOf(0, boss.hp)
+                val healthPercentage = currentHp.toFloat() / boss.maxHp.toFloat()
 
-                // 체력바 너비 업데이트 (300f가 최대 너비)
-                val fillWidth = 300f * healthPercentage
+                // 체력바 너비 업데이트 (뷰포트 넓이의 60%가 최대 너비, 0~1 범위로 클램프)
+                val maxHealthBarWidth = viewport.worldWidth * 0.6f
+                val fillWidth = maxHealthBarWidth * healthPercentage.coerceIn(0f, 1f)
                 bossHealthBarFill.setSize(fillWidth, 20f)
 
                 // 위치도 다시 업데이트

@@ -16,6 +16,7 @@ class Enemy(
     val rewardGold: Int = 1,
     private val resist: Map<Element, Float> // 0.0 ~ 0.75
 ) {
+    val maxHp: Int = hp // 최대 체력 저장
     var vhp: Int = hp // 가상 hp (투사체 발사 시점에 즉시 감소)
     var animationTime: Float = 0f
 
@@ -34,15 +35,6 @@ class Enemy(
     fun resistAgainst(element: Element): Float = resist[element] ?: 0f
 
     fun isDead() = hp <= 0
-
-    fun willDieFromVirtualDamage(): Boolean {
-        // 가상 hp가 0 이하면 이미 죽을 예정
-        // 안전장치: vhp가 실제 hp보다 낮으면 동기화
-        if (vhp < hp) {
-            vhp = hp
-        }
-        return vhp <= 0
-    }
 
     fun getDeathEffectType(): EffectType {
         val availableDeathEffects = when (element) {

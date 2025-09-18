@@ -20,7 +20,7 @@ fun calcDamage(enemy: Enemy, player: Player, skill: Skill): Int {
     val baseDamage = player.baseDamage * skill.damageMul
 
     // 영구 업그레이드 데미지 보너스 적용
-    val permanentDamageMultiplier = UpgradeManager.getEffectiveDamage(saveData, 1) // 1을 곱해서 배수만 가져옴
+    val permanentDamageMultiplier = UpgradeManager.getDamageMultiplier(saveData)
 
     // 인게임 업그레이드 데미지 보너스 적용
     val inGameDamageMultiplier = InGameUpgradeManager.getDamageMultiplier(saveData)
@@ -46,4 +46,23 @@ fun calcDamage(enemy: Enemy, player: Player, skill: Skill): Int {
 fun isCriticalHit(player: Player): Boolean {
     val critChance = InGameUpgradeManager.getCriticalChance(player.saveData)
     return Random.nextFloat() * 100f < critChance
+}
+
+/**
+ * 큰 숫자를 압축 표기로 변환 (1000 -> 1K, 1000000 -> 1M 등)
+ */
+fun formatNumber(number: Int): String {
+    return when {
+        number >= 1_000_000_000 -> "${(number / 1_000_000_000f).let { if (it >= 10) it.toInt().toString() else "%.1f".format(it) }}B"
+        number >= 1_000_000 -> "${(number / 1_000_000f).let { if (it >= 10) it.toInt().toString() else "%.1f".format(it) }}M"
+        number >= 1_000 -> "${(number / 1_000f).let { if (it >= 10) it.toInt().toString() else "%.1f".format(it) }}K"
+        else -> number.toString()
+    }
+}
+
+/**
+ * 큰 숫자를 압축 표기로 변환 (Float 버전)
+ */
+fun formatNumber(number: Float): String {
+    return formatNumber(number.toInt())
 }

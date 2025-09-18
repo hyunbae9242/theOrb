@@ -11,6 +11,7 @@ import com.example.theorb.data.SaveData
 import com.example.theorb.data.SaveManager
 import com.example.theorb.screens.BaseScreen
 import com.example.theorb.util.ResourceManager
+import com.example.theorb.util.formatNumber
 
 class InGameUpgradePanel(
     private val saveData: SaveData
@@ -187,7 +188,7 @@ class InGameUpgradePanel(
 
         // 업그레이드 버튼 - 새로운 배경 이미지 사용
         val canUpgrade = currentLevel < info.maxLevel && saveData.silver >= cost
-        val buttonText = if (currentLevel >= info.maxLevel) "MAX" else "Level Up\n($cost silver)"
+        val buttonText = if (currentLevel >= info.maxLevel) "MAX" else "Level Up\n(${formatNumber(cost)} silver)"
 
         val upgradeButtonStyle = TextButton.TextButtonStyle().apply {
             font = BaseScreen.skin.get("btn-small-bold", TextButton.TextButtonStyle::class.java)?.font

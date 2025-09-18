@@ -37,6 +37,13 @@ object UpgradeManager {
         return (baseDamage + damageBonus).toInt()
     }
 
+    // 데미지 계산용 - 배수 형태로 반환
+    fun getDamageMultiplier(saveData: SaveData): Float {
+        val damageBonus = getUpgradeValue(saveData, UpgradeType.DAMAGE)
+        // 기본 데미지 10 기준으로 배수 계산 (10 + bonus) / 10
+        return (10f + damageBonus) / 10f
+    }
+
     fun getEffectiveRange(saveData: SaveData, baseRange: Float): Float {
         val rangeMultiplier = getUpgradeValue(saveData, UpgradeType.RANGE)
         return baseRange * (1f + rangeMultiplier) // 기본 사정거리 * (1 + 업그레이드 비율)

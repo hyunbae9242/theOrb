@@ -18,6 +18,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.Align
 import com.example.theorb.TheOrb
 import com.example.theorb.util.ResourceManager
+import com.example.theorb.util.formatNumber
 
 class HomeScreen(private val game: Game) : BaseScreen() {
     private val stage = Stage(viewport)
@@ -36,7 +37,7 @@ class HomeScreen(private val game: Game) : BaseScreen() {
         // ===== 상단 바 =====
         val top = Table().apply { pad(12f) }
 
-        val gold = Label("골드: ${gameObject.saveData.gold}", skin.get("label-small", Label.LabelStyle::class.java)).apply {
+        val gold = Label("골드: ${formatNumber(gameObject.saveData.gold)}", skin.get("label-small", Label.LabelStyle::class.java)).apply {
             color = TEXT_PRIMARY
         }
         val gem  = Label("젬: 5",    skin.get("label-small", Label.LabelStyle::class.java)).apply {

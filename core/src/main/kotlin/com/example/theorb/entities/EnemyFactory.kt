@@ -3,13 +3,14 @@ package com.example.theorb.entities
 import com.example.theorb.balance.Balance
 import com.example.theorb.balance.Element
 import com.example.theorb.balance.EnemyType
+import com.example.theorb.balance.ProgressionBalance
 import com.example.theorb.util.weightedRandom
 import kotlin.math.min
 import kotlin.random.Random
 
 object EnemyFactory {
 
-    fun spawnRandom(width: Float = 480f, gameAreaHeight: Float = 550f, gameAreaStartY: Float = 150f, rnd: Random = Random): Enemy {
+    fun spawnRandom(width: Float = 480f, gameAreaHeight: Float = 550f, gameAreaStartY: Float = 150f, gameTimeSeconds: Float = 0f, rnd: Random = Random): Enemy {
         val type = weightedRandom(Balance.TYPE_WEIGHTS_NO_BOSS, rnd)
         val element = weightedRandom(Balance.ELEMENT_WEIGHTS, rnd)
 
@@ -22,9 +23,10 @@ object EnemyFactory {
             else -> rnd.nextFloat() * width to (gameAreaHeight + gameAreaStartY)    // top
         }
 
-        // 타입별 배수 적용
+        // 타입별 배수 적용 및 시간 기반 스케일링 적용
         val mul = Balance.TYPE_MULTIPLIERS[type]!!
-        val hp = (Balance.BASE_HP * mul.hpMul).toInt()
+        val scalingMultiplier = ProgressionBalance.getHealthScalingMultiplier(gameTimeSeconds)
+        val hp = (Balance.BASE_HP * mul.hpMul * scalingMultiplier).toInt()
         val speed = Balance.BASE_SPEED * mul.speedMul
         val contactDmg = (Balance.BASE_CONTACT_DAMAGE * mul.dmgMul).toInt()
         val rewardGold = (Balance.BASE_REWARD_GOLD * mul.goldMul).toInt()
@@ -50,7 +52,7 @@ object EnemyFactory {
         }
     }
 
-    fun spawnBoss(width: Float = 480f, gameAreaHeight: Float = 550f, gameAreaStartY: Float = 150f, rnd: Random = Random): Enemy {
+    fun spawnBoss(width: Float = 480f, gameAreaHeight: Float = 550f, gameAreaStartY: Float = 150f, gameTimeSeconds: Float = 0f, rnd: Random = Random): Enemy {
         val element = weightedRandom(Balance.ELEMENT_WEIGHTS, rnd)
 
         // 스폰 위치(게임 영역의 4변 랜덤)
@@ -62,9 +64,10 @@ object EnemyFactory {
             else -> rnd.nextFloat() * width to (gameAreaHeight + gameAreaStartY)    // top
         }
 
-        // 보스 타입별 배수 적용
+        // 보스 타입별 배수 적용 및 시간 기반 스케일링 적용
         val mul = Balance.TYPE_MULTIPLIERS[EnemyType.BOSS]!!
-        val hp = (Balance.BASE_HP * mul.hpMul).toInt()
+        val scalingMultiplier = ProgressionBalance.getHealthScalingMultiplier(gameTimeSeconds)
+        val hp = (Balance.BASE_HP * mul.hpMul * scalingMultiplier).toInt()
         val speed = Balance.BASE_SPEED * mul.speedMul
         val contactDmg = (Balance.BASE_CONTACT_DAMAGE * mul.dmgMul).toInt()
         val rewardGold = (Balance.BASE_REWARD_GOLD * mul.goldMul).toInt()

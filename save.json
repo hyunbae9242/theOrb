@@ -1,14 +1,19 @@
 {
-gold: 2010133
-gems: 277
+gold: 2012174
+gems: 300
+permanentUpgrades: {
+	class: java.util.LinkedHashMap
+	COOLDOWN_REDUCTION: 4
+}
 equippedSkills: [
 	LightningStrike
 	Fireball
 ]
 currentSpeedMultiplier: 2
-silver: 337
+silver: 29
 inGameUpgrades: {
 	class: java.util.LinkedHashMap
-	DAMAGE_INCREASE: 7
+	DAMAGE_INCREASE: 4
+	COOLDOWN_REDUCTION: 2
 }
 }
