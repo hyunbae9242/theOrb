@@ -24,12 +24,11 @@ class InGameUpgradePanel(
     private lateinit var utilityTabBtn: TextButton
 
     fun createUI(): Table {
-        // 메인 컨테이너 (화면 전체 폭 사용)
+        // 메인 컨테이너 (할당된 영역 내에서 전체 폭 사용)
         mainContainer = Table().apply {
             background = BaseScreen.skin.getDrawable("white")
             color = BaseScreen.PANEL_BG
             pad(8f)
-            setFillParent(true) // 부모 컨테이너 전체 크기 사용
         }
 
         // 상단: 탭 버튼들 (직사각형 배경 적용)
