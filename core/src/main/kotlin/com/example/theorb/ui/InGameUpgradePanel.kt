@@ -77,6 +77,8 @@ class InGameUpgradePanel(
         contentScrollPane = ScrollPane(contentTable, BaseScreen.skin.get("default", ScrollPane.ScrollPaneStyle::class.java)).apply {
             setFadeScrollBars(false)
             setScrollingDisabled(true, false)
+            // 디버깅: ScrollPane이 클릭을 방해하지 않도록 설정
+            println("ScrollPane touchable 상태: $touchable")
         }
 
         // 레이아웃 구성 (전체 폭 사용)
@@ -130,11 +132,15 @@ class InGameUpgradePanel(
         }
 
         // 해당 탭의 업그레이드들을 세로로 배치
-        InGameUpgrades.UPGRADE_DATA.filter { it.value.tab == tab }.forEach { (upgradeType, info) ->
+        val upgrades = InGameUpgrades.UPGRADE_DATA.filter { it.value.tab == tab }
+        println("탭 ${tab} 업그레이드 목록: ${upgrades.keys.map { it.name }}")
+
+        upgrades.forEachIndexed { index, (upgradeType, info) ->
             val currentLevel = saveData.inGameUpgrades[upgradeType.name] ?: 0
             val cost = InGameUpgrades.getUpgradeCost(upgradeType, currentLevel)
             val currentBonus = InGameUpgrades.getCurrentBonus(upgradeType, currentLevel)
 
+            println("업그레이드 ${index + 1}번째: ${upgradeType.name}")
             val upgradeRow = createUpgradeRow(upgradeType, info, currentLevel, cost, currentBonus)
             contentTable.add(upgradeRow).fillX().pad(1f).row()
         }
@@ -195,17 +201,21 @@ class InGameUpgradePanel(
             // 업그레이드 불가능한 경우 비활성화
             if (!canUpgrade) {
                 color = Color(0.5f, 0.5f, 0.5f, 1f) // 회색 처리
+                println("버튼 비활성화: ${upgradeType.name} (실버 부족 또는 최대 레벨)")
             }
 
-            // 업그레이드 가능한 경우만 클릭 리스너 추가
-            if (canUpgrade) {
-                addListener(object : ChangeListener() {
-                    override fun changed(event: ChangeEvent?, actor: Actor?) {
-                        println("클릭 시점 - ${upgradeType.name}: 현재 실버=${saveData.silver}, 필요 비용=$cost")
+            // 모든 버튼에 클릭 리스너 추가 (디버깅을 위해)
+            addListener(object : ChangeListener() {
+                override fun changed(event: ChangeEvent?, actor: Actor?) {
+                    println("★ 클릭 이벤트 발생! ${upgradeType.name}, canUpgrade=$canUpgrade")
+                    if (canUpgrade) {
+                        println("  업그레이드 함수 호출")
                         purchaseUpgrade(upgradeType)
+                    } else {
+                        println("  업그레이드 불가능 - 실버=${saveData.silver}, 비용=$cost")
                     }
-                })
-            }
+                }
+            })
         }
 
         // 레이아웃 (가로 배치)
