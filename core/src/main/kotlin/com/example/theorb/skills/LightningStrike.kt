@@ -17,7 +17,7 @@ class LightningStrike : Skill(
     hitEffectType = EffectType.LIGHTNING_STRIKE,
     isInstant = true // 즉발 스킬
 ) {
-    override fun createProjectile(x: Float, y: Float, target: Enemy, caster: Player, preCalculatedDamage: Int, effects: MutableList<Effect>, onDamage: ((Int, Float, Float, com.example.theorb.balance.Element) -> Unit)?): Projectile {
+    override fun createProjectile(x: Float, y: Float, target: Enemy, caster: Player, preCalculatedDamage: Int, effects: MutableList<Effect>, onDamage: ((Int, Float, Float, com.example.theorb.balance.Element, String) -> Unit)?): Projectile {
         return Projectile(target.x, target.y, target, caster, this, preCalculatedDamage, onHit = {enemy ->
             effects.add(
                 Effect(

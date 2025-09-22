@@ -18,7 +18,7 @@ class Projectile(
     val preCalculatedDamage: Int, // 미리 계산된 데미지
     val speed: Float = 500f,
     val onHit: ((Enemy) -> Unit)? = null,
-    val onDamage: ((Int, Float, Float, com.example.theorb.balance.Element) -> Unit)? = null
+    val onDamage: ((Int, Float, Float, com.example.theorb.balance.Element, String) -> Unit)? = null
 ) {
     var alive = true
     private var effect: Effect? = null
@@ -44,7 +44,7 @@ class Projectile(
 
         if (dist < target.type.radius) {
             target.hp -= preCalculatedDamage // 미리 계산된 데미지 적용
-            onDamage?.invoke(preCalculatedDamage, target.x, target.y, skill.baseElement) // 데미지 텍스트 생성
+            onDamage?.invoke(preCalculatedDamage, target.x, target.y, skill.baseElement, skill.name) // 데미지 텍스트 생성
             onHit?.invoke(target) // 히트 이펙트 실행
             alive = false
         } else {

@@ -10,8 +10,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.example.theorb.util.ResourceManager
-import kotlin.math.max
-import kotlin.math.min
 
 class ModalDialog(private val stage: Stage, private val skin: Skin) {
 
@@ -94,11 +92,7 @@ class ModalDialog(private val stage: Stage, private val skin: Skin) {
         onCancel: (() -> Unit)?
     ) {
         dialogContainer = Table().apply {
-            background = createRoundedRectWithBorder(
-                400, 300, 15,
-                com.example.theorb.screens.BaseScreen.PANEL_BG,
-                com.example.theorb.screens.BaseScreen.BORDER, 3
-            )
+            background = ResourceManager.getSquarePanel320()
             pad(30f)
         }
 

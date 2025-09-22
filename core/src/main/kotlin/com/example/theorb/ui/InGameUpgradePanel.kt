@@ -5,7 +5,6 @@ import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Touchable
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.example.theorb.balance.InGameUpgrades
 import com.example.theorb.data.SaveData
 import com.example.theorb.data.SaveManager
@@ -29,8 +28,7 @@ class InGameUpgradePanel(
     fun createUI(): Table {
         // 메인 컨테이너 (할당된 영역 내에서 전체 폭 사용)
         mainContainer = Table().apply {
-            background = BaseScreen.skin.getDrawable("white")
-            color = BaseScreen.PANEL_BG
+            background = ResourceManager.getRectanglePanel430278()
             pad(8f)
         }
 
@@ -68,9 +66,9 @@ class InGameUpgradePanel(
                 }
             })
 
-            tabContainer.add(attackTabBtn).size(112f, 56f).pad(2f)
-            tabContainer.add(defenseTabBtn).size(112f, 56f).pad(2f)
-            tabContainer.add(utilityTabBtn).size(112f, 56f).pad(2f)
+            tabContainer.add(attackTabBtn).size(110f, 42f).pad(2f).padRight(10f)
+            tabContainer.add(defenseTabBtn).size(110f, 42f).pad(2f).padRight(10f)
+            tabContainer.add(utilityTabBtn).size(110f, 42f).pad(2f)
 
             add(tabContainer).center().expandX().fillX()
         }
@@ -81,12 +79,10 @@ class InGameUpgradePanel(
         contentScrollPane = ScrollPane(contentTable, BaseScreen.skin).apply {
             setFadeScrollBars(false)
             setScrollingDisabled(true, false) // 세로 스크롤만 허용
-
             // 스크롤 방해 최소화 설정
             setCancelTouchFocus(false)
             setFlickScroll(false)
             setSmoothScrolling(false)
-
             // 중요: 스크롤 감도를 위해 velocity threshold 조정
             setVelocityX(0f)
             setVelocityY(0f)
@@ -252,7 +248,7 @@ class InGameUpgradePanel(
         upgradeRow.add(nameLabel).left().padRight(8f)
         upgradeRow.add(levelLabel).left().padRight(8f)
         upgradeRow.add(bonusLabel).left().padRight(8f)
-        upgradeRow.add(upgradeButton).size(112f, 56f).right().expandX()
+        upgradeRow.add(upgradeButton).size(84f, 42f).right().expandX()
         return upgradeRow
     }
 

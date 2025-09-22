@@ -24,7 +24,7 @@ abstract class Skill(
     fun resetCooldown() { cooldownTimer = baseCooldown }
     fun updateCooldown(delta: Float) { cooldownTimer -= delta }
 
-    abstract fun createProjectile(x: Float, y: Float, target: Enemy, caster: Player, preCalculatedDamage: Int, effects: MutableList<Effect>, onDamage: ((Int, Float, Float, com.example.theorb.balance.Element) -> Unit)? = null): Projectile
+    abstract fun createProjectile(x: Float, y: Float, target: Enemy, caster: Player, preCalculatedDamage: Int, effects: MutableList<Effect>, onDamage: ((Int, Float, Float, com.example.theorb.balance.Element, String) -> Unit)? = null): Projectile
 }
 
 object SkillRegistry {

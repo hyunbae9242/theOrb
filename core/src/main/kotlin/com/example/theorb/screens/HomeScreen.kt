@@ -58,36 +58,14 @@ class HomeScreen(private val game: Game) : BaseScreen() {
         val center = Table()
 
         val orb = Image(ResourceManager.getBaseOrbDrawable()).apply {
-            setSize(80f, 80f)
+            setSize(60f, 60f)
         }
         val stageLabel = Label("스테이지 $stageIndex", skin.get("label-large", Label.LabelStyle::class.java)).apply {
             color = TEXT_PRIMARY
         }
 
-        val prevBtn = ImageButton(ResourceManager.getArrowLeftDrawable())
-        val nextBtn = ImageButton(ResourceManager.getArrowRightDrawable())
-
-
-        prevBtn.addListener(object : com.badlogic.gdx.scenes.scene2d.utils.ChangeListener() {
-            override fun changed(event: ChangeEvent?, actor: Actor?) {
-                if (stageIndex > 1) {
-                    stageIndex--
-                    stageLabel.setText("스테이지 $stageIndex")
-                }
-            }
-        })
-        nextBtn.addListener(object : com.badlogic.gdx.scenes.scene2d.utils.ChangeListener() {
-            override fun changed(event: ChangeEvent?, actor: Actor?) {
-                stageIndex++
-                stageLabel.setText("스테이지 $stageIndex")
-            }
-        })
-
-
         val stageRow = Table().apply {
-            add(prevBtn).size(56f, 56f).padRight(16f) // 14px * 4 = 56px (4배 스케일링)
             add(stageLabel).padRight(16f)
-            add(nextBtn).size(56f, 56f) // 14px * 4 = 56px (4배 스케일링)
         }
 
         center.add(orb).padTop(24f).padBottom(24f).row()

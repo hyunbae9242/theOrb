@@ -17,7 +17,7 @@ class Fireball : Skill(
     hitEffectType = EffectType.FIREBALL_HIT,
     flyEffectType = EffectType.FIREBALL_FLY
 ) {
-    override fun createProjectile(x: Float, y: Float, target: Enemy, caster: Player, preCalculatedDamage: Int, effects: MutableList<Effect>, onDamage: ((Int, Float, Float, com.example.theorb.balance.Element) -> Unit)?): Projectile {
+    override fun createProjectile(x: Float, y: Float, target: Enemy, caster: Player, preCalculatedDamage: Int, effects: MutableList<Effect>, onDamage: ((Int, Float, Float, com.example.theorb.balance.Element, String) -> Unit)?): Projectile {
         return Projectile(x, y, target, caster, this, preCalculatedDamage, onHit = {enemy ->
             effects.add(
                 Effect(

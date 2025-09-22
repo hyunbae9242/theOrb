@@ -9,26 +9,29 @@ object ResourceManager {
     // 이미지 경로 상수들
     object Images {
         // UI 버튼들
-        const val PAUSE_BUTTON = "images/buttons/Pause.png"
-        const val HOME_BUTTON = "images/buttons/Home.png"
-        const val PLAY_BUTTON = "images/buttons/Play.png"
-        const val RESTART_BUTTON = "images/buttons/Repeat-Right.png"
-        const val ARROW_LEFT = "images/buttons/SolidArrow-Left.png"
-        const val ARROW_RIGHT = "images/buttons/SolidArrow-Right.png"
+        const val PAUSE_BUTTON = "images/buttons/blue/Pause.png"
+        const val HOME_BUTTON = "images/buttons/blue/Home.png"
+        const val PLAY_BUTTON = "images/buttons/blue/Play.png"
+        const val RESTART_BUTTON = "images/buttons/blue/Repeat-Right.png"
 
-        // 버튼 배경들 - 직사각형 (112x56)
-        const val BUTTON_BG_CANCEL = "images/buttons/Rectangle_Button_1.png"
-        const val BUTTON_BG_CONFIRM = "images/buttons/Rectangle_Button_2.png"
-        const val BUTTON_BG_HIGHLIGHT = "images/buttons/Rectangle_Button_Highlight.png"
+        // 버튼 배경들 - 직사각형
+        const val BUTTON_BG_CANCEL = "images/buttons/blue/Rectangle_Button_nag.png"
+        const val BUTTON_BG_CONFIRM = "images/buttons/blue/Rectangle_Button_pos.png"
+        const val BUTTON_BG_HIGHLIGHT = "images/buttons/blue/Rectangle_Button_evt.png"
 
         // 버튼 배경들 - 정사각형
-        const val SQUARE_BUTTON_1 = "images/buttons/Square_Button_1.png"
-        const val SQUARE_BUTTON_2 = "images/buttons/Square_Button_2.png"
-        const val SQUARE_BUTTON_3 = "images/buttons/Square_Button_3.png"
-        const val SQUARE_BUTTON_HIGHLIGHT = "images/buttons/Square_Button_Highlight.png"
+        const val SQUARE_BUTTON_1 = "images/buttons/blue/Square_Button_pos.png"
+        const val SQUARE_BUTTON_2 = "images/buttons/blue/Square_Button_nag.png"
+        const val SQUARE_BUTTON_HIGHLIGHT = "images/buttons/blue/Square_Button_evt.png"
+        const val SQUARE_MENU_BUTTON_EVENT = "images/buttons/blue/Square_Menu_Button_evt.png"
 
         // 게임 오브젝트들
         const val BASE_ORB = "images/orbs/Base_orb.png"
+
+        // 모달 패널들
+        const val SQUARE_PANEL_320 = "images/panels/Square_panel_320.png"
+        const val RECTANGLE_PANEL_430_278 = "images/panels/Rectangle_panel_430_278.png"
+        const val VICTORY_PANEL = "images/panels/Victory_Panel_340_366.png"
     }
 
     // 텍스처 캐시
@@ -61,11 +64,14 @@ object ResourceManager {
     fun getHomeButtonDrawable(): TextureRegionDrawable = getDrawable(Images.HOME_BUTTON)
     fun getPlayButtonDrawable(): TextureRegionDrawable = getDrawable(Images.PLAY_BUTTON)
     fun getRestartButtonDrawable(): TextureRegionDrawable = getDrawable(Images.RESTART_BUTTON)
-    fun getArrowLeftDrawable(): TextureRegionDrawable = getDrawable(Images.ARROW_LEFT)
-    fun getArrowRightDrawable(): TextureRegionDrawable = getDrawable(Images.ARROW_RIGHT)
 
     // 게임 오브젝트들을 위한 편의 메소드
     fun getBaseOrbDrawable(): TextureRegionDrawable = getDrawable(Images.BASE_ORB)
+
+    // 모달 패널들을 위한 편의 메소드
+    fun getSquarePanel320(): TextureRegionDrawable = getDrawable(Images.SQUARE_PANEL_320)
+    fun getRectanglePanel430278(): TextureRegionDrawable = getDrawable(Images.RECTANGLE_PANEL_430_278)
+    fun getVictoryPanel(): TextureRegionDrawable = getDrawable(Images.VICTORY_PANEL)
 
     // 버튼 배경들을 위한 편의 메소드 - 직사각형
     fun getButtonCancelBg(): TextureRegionDrawable = getDrawable(Images.BUTTON_BG_CANCEL)
@@ -75,8 +81,8 @@ object ResourceManager {
     // 버튼 배경들을 위한 편의 메소드 - 정사각형
     fun getSquareButton1(): TextureRegionDrawable = getDrawable(Images.SQUARE_BUTTON_1)
     fun getSquareButton2(): TextureRegionDrawable = getDrawable(Images.SQUARE_BUTTON_2)
-    fun getSquareButton3(): TextureRegionDrawable = getDrawable(Images.SQUARE_BUTTON_3)
     fun getSquareButtonHighlight(): TextureRegionDrawable = getDrawable(Images.SQUARE_BUTTON_HIGHLIGHT)
+    fun getSquareMenuButtonEvent(): TextureRegionDrawable = getDrawable(Images.SQUARE_MENU_BUTTON_EVENT)
 
     /**
      * 모든 캐시된 텍스처 해제 (게임 종료 시 호출)

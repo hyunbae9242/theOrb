@@ -7,7 +7,6 @@ import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.Touchable
 import com.badlogic.gdx.scenes.scene2d.ui.*
-import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.example.theorb.util.ResourceManager
 
@@ -79,11 +78,7 @@ class SettingsModal(private val stage: Stage, private val skin: Skin) {
         onRestart: () -> Unit
     ) {
         dialogContainer = Table().apply {
-            background = createRoundedRectWithBorder(
-                350, 250, 15,
-                com.example.theorb.screens.BaseScreen.PANEL_BG,
-                com.example.theorb.screens.BaseScreen.BORDER, 3
-            )
+            background = ResourceManager.getSquarePanel320()
             pad(40f)
         }
 
@@ -95,38 +90,92 @@ class SettingsModal(private val stage: Stage, private val skin: Skin) {
         // 버튼들을 가로로 배치
         val buttonTable = Table()
 
-        // 홈 버튼
-        val homeButton = ImageButton(ResourceManager.getHomeButtonDrawable()).apply {
-            addListener(object : ChangeListener() {
-                override fun changed(event: ChangeEvent?, actor: Actor?) {
+        // 홈 버튼 - Stack으로 오버레이 구현 (원래 이미지 위에 이벤트 이미지 겹침)
+        val homeButtonIcon = Image(ResourceManager.getHomeButtonDrawable())
+        val homeButtonOverlay = Image(ResourceManager.getSquareMenuButtonEvent()).apply {
+            isVisible = false
+        }
+        val homeButton = Stack().apply {
+            add(homeButtonIcon)
+            add(homeButtonOverlay)
+
+            addListener(object : com.badlogic.gdx.scenes.scene2d.InputListener() {
+                override fun enter(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
+                    homeButtonOverlay.isVisible = true
+                }
+                override fun exit(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, toActor: Actor?) {
+                    homeButtonOverlay.isVisible = false
+                }
+                override fun touchDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, button: Int): Boolean {
+                    homeButtonOverlay.isVisible = true
+                    return true
+                }
+                override fun touchUp(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, button: Int) {
+                    homeButtonOverlay.isVisible = false
                     onHome()
                 }
             })
         }
 
-        // 플레이 버튼
-        val playButton = ImageButton(ResourceManager.getPlayButtonDrawable()).apply {
-            addListener(object : ChangeListener() {
-                override fun changed(event: ChangeEvent?, actor: Actor?) {
+        // 플레이 버튼 - Stack으로 오버레이 구현 (원래 이미지 위에 이벤트 이미지 겹침)
+        val playButtonIcon = Image(ResourceManager.getPlayButtonDrawable())
+        val playButtonOverlay = Image(ResourceManager.getSquareMenuButtonEvent()).apply {
+            isVisible = false
+        }
+        val playButton = Stack().apply {
+            add(playButtonIcon)
+            add(playButtonOverlay)
+
+            addListener(object : com.badlogic.gdx.scenes.scene2d.InputListener() {
+                override fun enter(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
+                    playButtonOverlay.isVisible = true
+                }
+                override fun exit(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, toActor: Actor?) {
+                    playButtonOverlay.isVisible = false
+                }
+                override fun touchDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, button: Int): Boolean {
+                    playButtonOverlay.isVisible = true
+                    return true
+                }
+                override fun touchUp(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, button: Int) {
+                    playButtonOverlay.isVisible = false
                     onPlay()
                     hide()
                 }
             })
         }
 
-        // 재시작 버튼
-        val restartButton = ImageButton(ResourceManager.getRestartButtonDrawable()).apply {
-            addListener(object : ChangeListener() {
-                override fun changed(event: ChangeEvent?, actor: Actor?) {
+        // 재시작 버튼 - Stack으로 오버레이 구현 (원래 이미지 위에 이벤트 이미지 겹침)
+        val restartButtonIcon = Image(ResourceManager.getRestartButtonDrawable())
+        val restartButtonOverlay = Image(ResourceManager.getSquareMenuButtonEvent()).apply {
+            isVisible = false
+        }
+        val restartButton = Stack().apply {
+            add(restartButtonIcon)
+            add(restartButtonOverlay)
+
+            addListener(object : com.badlogic.gdx.scenes.scene2d.InputListener() {
+                override fun enter(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
+                    restartButtonOverlay.isVisible = true
+                }
+                override fun exit(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, toActor: Actor?) {
+                    restartButtonOverlay.isVisible = false
+                }
+                override fun touchDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, button: Int): Boolean {
+                    restartButtonOverlay.isVisible = true
+                    return true
+                }
+                override fun touchUp(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, button: Int) {
+                    restartButtonOverlay.isVisible = false
                     onRestart()
                 }
             })
         }
 
         // 버튼들 배치 (가로) - 아이콘 이미지 크기
-        buttonTable.add(homeButton).size(56f, 56f).pad(10f).padRight(10f)
-        buttonTable.add(playButton).size(56f, 56f).pad(10f).padRight(10f)
-        buttonTable.add(restartButton).size(56f, 56f).pad(10f)
+        buttonTable.add(homeButton).size(42f, 42f).pad(10f).padRight(10f)
+        buttonTable.add(playButton).size(42f, 42f).pad(10f).padRight(10f)
+        buttonTable.add(restartButton).size(42f, 42f).pad(10f)
 
         // 레이아웃 구성
         dialogContainer!!.apply {

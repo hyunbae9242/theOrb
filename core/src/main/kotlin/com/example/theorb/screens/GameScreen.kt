@@ -7,18 +7,16 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Stage
-import com.badlogic.gdx.scenes.scene2d.ui.ImageButton
+import com.badlogic.gdx.scenes.scene2d.ui.Image
 import com.badlogic.gdx.scenes.scene2d.ui.Label
+import com.badlogic.gdx.scenes.scene2d.ui.Stack
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
-import com.example.theorb.upgrades.UpgradeManager
+import com.example.theorb.balance.EnemyType
 import com.example.theorb.data.SaveManager
 import com.example.theorb.effects.Effect
 import com.example.theorb.effects.EffectManager
-import com.example.theorb.balance.Balance
-import com.example.theorb.balance.EnemyType
-import com.example.theorb.upgrades.InGameUpgradeManager
 import com.example.theorb.entities.Enemy
 import com.example.theorb.entities.EnemyFactory
 import com.example.theorb.entities.Player
@@ -28,6 +26,9 @@ import com.example.theorb.ui.DamageText
 import com.example.theorb.ui.InGameUpgradePanel
 import com.example.theorb.ui.ModalDialog
 import com.example.theorb.ui.SettingsModal
+import com.example.theorb.ui.VictoryModal
+import com.example.theorb.upgrades.InGameUpgradeManager
+import com.example.theorb.upgrades.UpgradeManager
 import com.example.theorb.util.ResourceManager
 import com.example.theorb.util.formatNumber
 
@@ -62,13 +63,20 @@ class GameScreen : BaseScreen() {
     private var spawnTimer = 0f
     private var bossSpawnTimer = 60f // 1분마다 보스 스폰
     private var gameTimer = 0f
-    private val maxGameTime = 600f // 10분 (초)
+    private val maxGameTime = 60f // 10분 (초)
     private var isPaused = false
     private var isGameOver = false
+    private var isVictory = false
     private var animationTime = 0f
     private lateinit var settingsModal: SettingsModal
     private lateinit var modalDialog: ModalDialog
     private lateinit var upgradePanel: InGameUpgradePanel
+    private lateinit var victoryModal: VictoryModal
+
+    // 게임 통계 추적
+    private var initialGold = 0
+    private var initialGems = 0
+    private val skillDamageStats = mutableMapOf<String, Long>()
 
     override fun show() {
         initSharedResources()
@@ -76,9 +84,15 @@ class GameScreen : BaseScreen() {
         // 게임 시작 시 인게임 진행도 초기화
         resetInGameProgress()
 
+        // 게임 시작 시 초기 통계 저장
+        initialGold = gameObject.saveData.gold
+        initialGems = gameObject.saveData.gems
+        skillDamageStats.clear()
+
         Gdx.input.inputProcessor = uiStage
         settingsModal = SettingsModal(uiStage, skin)
         modalDialog = ModalDialog(uiStage, skin)
+        victoryModal = VictoryModal(uiStage, skin)
         upgradePanel = InGameUpgradePanel(gameObject.saveData)
         setupUi()
         loadSaveData()
@@ -117,9 +131,28 @@ class GameScreen : BaseScreen() {
             add(gemLabel).left().row()
         }
 
-        val gearButton = ImageButton(ResourceManager.getPauseButtonDrawable()).apply {
-            addListener(object : ChangeListener() {
-                override fun changed(event: ChangeEvent?, actor: Actor?) {
+        // 설정 버튼 - Stack으로 오버레이 구현 (원래 이미지 위에 이벤트 이미지 겹침)
+        val gearButtonIcon = Image(ResourceManager.getPauseButtonDrawable())
+        val gearButtonOverlay = Image(ResourceManager.getSquareMenuButtonEvent()).apply {
+            isVisible = false
+        }
+        val gearButton = Stack().apply {
+            add(gearButtonIcon)
+            add(gearButtonOverlay)
+
+            addListener(object : com.badlogic.gdx.scenes.scene2d.InputListener() {
+                override fun enter(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
+                    gearButtonOverlay.isVisible = true
+                }
+                override fun exit(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, toActor: Actor?) {
+                    gearButtonOverlay.isVisible = false
+                }
+                override fun touchDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, button: Int): Boolean {
+                    gearButtonOverlay.isVisible = true
+                    return true
+                }
+                override fun touchUp(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, button: Int) {
+                    gearButtonOverlay.isVisible = false
                     pauseGame()
                     showSettingsModal()
                 }
@@ -143,8 +176,8 @@ class GameScreen : BaseScreen() {
         }
 
         val topRight = Table().apply {
-            add(gearButton).size(56f).padBottom(8f).row() // 14px * 4 = 56px (4배 스케일링)
-            add(speedButton).size(56f, 56f).top() // 정사각형 배경 이미지 크기 56x56
+            add(gearButton).size(42f).padBottom(8f).row() // 14px * 3 = 42px (3배 스케일링)
+            add(speedButton).size(42f, 42f).top() // 정사각형 배경 이미지 크기 42x42
         }
 
         topUIContainer.add(topLeft).left().top().padLeft(12f)
@@ -153,9 +186,9 @@ class GameScreen : BaseScreen() {
 
         // 메인 레이아웃 구성 (퍼센트 기반)
         val screenHeight = viewport.worldHeight
-        mainLayout.add(topUIContainer).expandX().fillX().padTop(20f).height(screenHeight * topUIHeightRatio).row()
+        mainLayout.add(topUIContainer).expandX().fillX().padTop(12f).height(screenHeight * topUIHeightRatio).row()
         mainLayout.add(gameArea).expandX().fillX().height(screenHeight * gameAreaHeightRatio).row()
-        mainLayout.add(upgradeContainer).expandX().fillX().height(screenHeight * upgradeUIHeightRatio)
+        mainLayout.add(upgradeContainer).expandX().fillX().padBottom(12f).height(screenHeight * upgradeUIHeightRatio)
 
         // 중앙 상단에 타이머 추가
         timerLabel = Label("10:00", skin.get("label-default", Label.LabelStyle::class.java)).apply {
@@ -239,14 +272,14 @@ class GameScreen : BaseScreen() {
         // 플레이어 위치를 게임 영역 중앙으로 조정 (퍼센트 기반)
         player = Player(skills = skills, saveData = saveData).apply {
             val gameAreaStartY = viewport.worldHeight * upgradeUIHeightRatio
-            val gameAreaHeight = viewport.worldHeight * gameAreaHeightRatio
+            val gameAreaHeight = viewport.worldHeight * (gameAreaHeightRatio + (topUIHeightRatio / 2))
             y = gameAreaStartY + (gameAreaHeight / 2f)
         }
     }
 
     override fun render(delta: Float) {
         // ======= Update =======
-        if (!isPaused && !isGameOver) {
+        if (!isPaused && !isVictory) {
             // 배속 적용
             val speedMultiplier = gameObject.saveData.currentSpeedMultiplier
             val adjustedDelta = delta * speedMultiplier
@@ -255,14 +288,15 @@ class GameScreen : BaseScreen() {
             if (gameTimer >= maxGameTime) {
                 isGameOver = true
                 gameTimer = maxGameTime
-                // 게임 오버 처리 (향후 추가 가능)
+                // 타이머 종료 후에도 게임은 계속 진행되어야 함 (적 처치를 위해)
             }
 
-            // 적 스폰 (업그레이드 효과 적용)
-            val spawnSpeedMultiplier = InGameUpgradeManager.getEnemySpawnSpeedMultiplier(gameObject.saveData)
-            spawnTimer -= adjustedDelta * spawnSpeedMultiplier
+            // 적 스폰 (10분 이후에는 스폰하지 않음)
+            if (gameTimer < maxGameTime) {
+                val spawnSpeedMultiplier = InGameUpgradeManager.getEnemySpawnSpeedMultiplier(gameObject.saveData)
+                spawnTimer -= adjustedDelta * spawnSpeedMultiplier
 
-            if (spawnTimer <= 0f) {
+                if (spawnTimer <= 0f) {
                 // 기본 적 1마리 + 업그레이드 효과로 추가 적들
                 val baseSpawnCount = 1
                 val bonusSpawnCount = InGameUpgradeManager.getEnemySpawnCountBonus(gameObject.saveData)
@@ -274,23 +308,26 @@ class GameScreen : BaseScreen() {
                     enemies.add(EnemyFactory.spawnRandom(viewport.worldWidth, gameAreaHeight, gameAreaStartY, gameTimer))
                 }
 
-                spawnTimer = 1f // 1초마다 적 추가
-            }
+                    spawnTimer = 1f // 1초마다 적 추가
+                }
 
-            // 보스 스폰 (1분마다)
-            bossSpawnTimer -= adjustedDelta
-            if (bossSpawnTimer <= 0f) {
+                // 보스 스폰 (1분마다)
+                bossSpawnTimer -= adjustedDelta
+                if (bossSpawnTimer <= 0f) {
                 val gameAreaStartY = viewport.worldHeight * upgradeUIHeightRatio
                 val gameAreaHeight = viewport.worldHeight * gameAreaHeightRatio
                 val boss = EnemyFactory.spawnBoss(viewport.worldWidth, gameAreaHeight, gameAreaStartY, gameTimer)
                 enemies.add(boss)
                 currentBoss = boss
-                bossSpawnTimer = 60f // 1분 후 다시 스폰
-                showBossHealthBar()
+                    bossSpawnTimer = 60f // 1분 후 다시 스폰
+                    showBossHealthBar()
+                }
             }
 
-            player.update(adjustedDelta, enemies, projectiles, effects) { damage, x, y, element ->
+            player.update(adjustedDelta, enemies, projectiles, effects) { damage, x, y, element, skillName ->
                 addDamageText(damage, x, y, element)
+                // 스킬별 데미지 통계 추적 (실제 스킬 이름 사용)
+                trackSkillDamage(skillName, damage.toLong())
             }
 
             enemies.forEach { it.update(adjustedDelta, player) }
@@ -303,6 +340,12 @@ class GameScreen : BaseScreen() {
 
         // 애니메이션 시간은 일시정지와 관계없이 계속 진행
         animationTime += delta
+
+        // 승리 조건 체크 (10분 완료 후 모든 적 처치)
+        if (isGameOver && !isVictory && enemies.isEmpty()) {
+            isVictory = true
+            showVictoryScreen()
+        }
 
         // 적 사망 체크 → 이펙트 추가
         val deadEnemies = enemies.filter { it.isDead() }
@@ -466,7 +509,13 @@ class GameScreen : BaseScreen() {
         bossSpawnTimer = 60f
         gameTimer = 0f
         isGameOver = false
+        isVictory = false
         hideBossHealthBar()
+
+        // 통계 초기화
+        initialGold = gameObject.saveData.gold
+        initialGems = gameObject.saveData.gems
+        skillDamageStats.clear()
 
         // 재시작 시 인게임 진행도 초기화
         resetInGameProgress()
@@ -484,6 +533,30 @@ class GameScreen : BaseScreen() {
 
     fun addDamageText(damage: Int, x: Float, y: Float, element: com.example.theorb.balance.Element) {
         damageTexts.add(DamageText(damage, x, y, element))
+    }
+
+    private fun trackSkillDamage(skillName: String, damage: Long) {
+        skillDamageStats[skillName] = skillDamageStats.getOrDefault(skillName, 0L) + damage
+    }
+
+    private fun showVictoryScreen() {
+        isPaused = true
+        val goldEarned = gameObject.saveData.gold - initialGold
+        val gemsEarned = gameObject.saveData.gems - initialGems
+
+        victoryModal.show(
+            goldEarned = goldEarned,
+            gemsEarned = gemsEarned,
+            skillStats = skillDamageStats,
+            onHome = {
+                victoryModal.hide()
+                gameObject.setScreen(HomeScreen(gameObject))
+            },
+            onRestart = {
+                victoryModal.hide()
+                restartGame()
+            }
+        )
     }
 
     private fun showBossHealthBar() {
