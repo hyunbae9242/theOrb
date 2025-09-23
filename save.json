@@ -1,12 +1,21 @@
 {
-gold: 2010886
-gems: 355
+gold: 2541
+gems: 367
 permanentUpgrades: {
 	class: java.util.LinkedHashMap
 	RANGE: 14
+	DAMAGE: 43
+	HEALTH: 3
+	CRITICAL_CHANCE: 17
+	CRITICAL_DAMAGE: 16
+	COOLDOWN_REDUCTION: 20
+	MOVEMENT_SPEED: 10
+	GOLD_BONUS: 20
 }
 equippedSkills: [
 	DivineNova
 ]
+selectedOrb: angel
 currentSpeedMultiplier: 2
+silver: 6
 }

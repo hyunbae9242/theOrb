@@ -32,6 +32,8 @@ import com.example.theorb.upgrades.InGameUpgradeManager
 import com.example.theorb.upgrades.UpgradeManager
 import com.example.theorb.util.ResourceManager
 import com.example.theorb.util.formatNumber
+import com.example.theorb.data.OrbRegistry
+import com.example.theorb.util.OrbManager
 
 class GameScreen : BaseScreen() {
     private val shape = ShapeRenderer()
@@ -65,7 +67,7 @@ class GameScreen : BaseScreen() {
     private var spawnTimer = 0f
     private var bossSpawnTimer = 60f // 1분마다 보스 스폰
     private var gameTimer = 0f
-    private val maxGameTime = 60f // 10분 (초)
+    private val maxGameTime = 600f // 10분 (초)
     private var isPaused = false
     private var isGameOver = false
     private var isVictory = false
@@ -275,6 +277,20 @@ class GameScreen : BaseScreen() {
     private fun loadSaveData() {
         val saveData = gameObject.saveData
         val skills = saveData.equippedSkills.map { SkillRegistry.createSkill(it) }.toMutableList()
+
+        // 오브 능력치 로깅 (디버깅용)
+        Gdx.app.log("GameScreen", "=== 오브 능력치 확인 ===")
+        Gdx.app.log("GameScreen", "선택된 오브: ${saveData.selectedOrb}")
+        val selectedOrb = OrbRegistry.getOrbById(saveData.selectedOrb)
+        selectedOrb?.let { orb ->
+            Gdx.app.log("GameScreen", "오브 이름: ${orb.name}")
+            Gdx.app.log("GameScreen", "오브 설명: ${orb.description}")
+            orb.abilities.forEach { ability ->
+                Gdx.app.log("GameScreen", "능력: ${ability.type} = ${ability.value}")
+            }
+        }
+        OrbManager.logOrbEffects(saveData)
+
         // 플레이어 위치를 게임 영역 중앙으로 조정 (퍼센트 기반)
         player = Player(skills = skills, saveData = saveData).apply {
             val gameAreaStartY = viewport.worldHeight * upgradeUIHeightRatio
@@ -429,8 +445,10 @@ class GameScreen : BaseScreen() {
         // --- 게임 요소들 (SpriteBatch) ---
         batch.begin()
 
-        // Player (base_orb 이미지)
-        val orbDrawable = ResourceManager.getOrb01Drawable()
+        // Player (선택된 오브 이미지)
+        val selectedOrbData = OrbRegistry.getOrbById(gameObject.saveData.selectedOrb)
+            ?: OrbRegistry.getOrbById("base")!!
+        val orbDrawable = selectedOrbData.getDrawable()
         val orbSize = 50f
         orbDrawable.draw(batch, player.x - orbSize/2, player.y - orbSize/2, orbSize, orbSize)
 

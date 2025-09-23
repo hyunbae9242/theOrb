@@ -13,7 +13,7 @@ enum class EffectType(val path: String, val row: Int, val rows: Int, val cols: I
     // lightning strike
     LIGHTNING_STRIKE("effects/skills/lightningStrike/lightning_strike.png", 4, 9, 8, 16f, 2f),
     // divine nova
-    DIVINE_NOVA_FLY("effects/skills/divineNova/divin_nova_fly.png", 5, 9, 11, 16f, 4f),
+    DIVINE_NOVA_CAST("effects/skills/divineNova/divine_nova_cast.png", 5, 9, 10, 10f, 4f),
 
 
     // enemies

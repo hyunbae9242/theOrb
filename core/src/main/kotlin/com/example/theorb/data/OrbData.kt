@@ -78,7 +78,7 @@ data class OrbData(
 object OrbRegistry {
     private val orbs = listOf(
         OrbData(
-            id = "base_orb",
+            id = "base",
             name = "기본 오브",
             description = "특별한 능력이 없는 기본 오브입니다.",
             imagePath = "images/orbs/Base_orb.png",
@@ -87,7 +87,7 @@ object OrbRegistry {
             )
         ),
         OrbData(
-            id = "orb_01",
+            id = "balance",
             name = "균형의 오브",
             description = "모든 데미지가 15% 증가하고 쿨다운이 10% 감소합니다.",
             imagePath = "images/orbs/Balance_orb.png",
@@ -97,17 +97,8 @@ object OrbRegistry {
             )
         ),
         OrbData(
-            id = "orb_02",
-            name = "신속의 오브",
-            description = "스킬 쿨다운이 20% 감소합니다.",
-            imagePath = "images/orbs/Orb_02.png",
-            abilities = listOf(
-                OrbAbility(OrbAbilityType.COOLDOWN_REDUCTION, 0.8f)
-            )
-        ),
-        OrbData(
-            id = "orb_03",
-            name = "화염 마스터",
+            id = "fire",
+            name = "폭염의 오브",
             description = "화염 속성 데미지가 30% 증가합니다.",
             imagePath = "images/orbs/Fire_orb.png",
             abilities = listOf(
@@ -115,105 +106,105 @@ object OrbRegistry {
             )
         ),
         OrbData(
-            id = "orb_04",
+            id = "lightning",
             name = "뇌전의 오브",
-            description = "번개 속성 데미지가 25% 증가하고 치명타 확률이 10% 증가합니다.",
+            description = "번개 속성 데미지가 20% 증가하고 치명타 확률이 10% 증가합니다.",
             imagePath = "images/orbs/Lightning_orb.png",
             abilities = listOf(
-                OrbAbility(OrbAbilityType.LIGHTNING_DAMAGE_INCREASE, 1.25f),
+                OrbAbility(OrbAbilityType.LIGHTNING_DAMAGE_INCREASE, 1.20f),
                 OrbAbility(OrbAbilityType.CRIT_CHANCE, 0.10f)
             )
         ),
         OrbData(
-            id = "orb_05",
+            id = "ice",
             name = "빙결의 오브",
-            description = "얼음 속성 데미지가 25% 증가하고 쿨다운이 10% 감소합니다.",
+            description = "얼음 속성 데미지가 20% 증가하고 쿨다운이 10% 감소합니다.",
             imagePath = "images/orbs/Ice_orb.png",
             abilities = listOf(
-                OrbAbility(OrbAbilityType.COLD_DAMAGE_INCREASE, 1.25f),
+                OrbAbility(OrbAbilityType.COLD_DAMAGE_INCREASE, 1.20f),
                 OrbAbility(OrbAbilityType.COOLDOWN_REDUCTION, 0.9f)
             )
         ),
         OrbData(
-            id = "orb_06",
-            name = "성스러운 오브",
-            description = "신성 속성 데미지가 35% 증가하고 체력이 30% 증가합니다.",
-            imagePath = "images/orbs/Orb_01.png",
+            id = "angel",
+            name = "천사의 오브",
+            description = "신성 속성 데미지가 30% 증가하고 사정거리가 15% 증가합니다.",
+            imagePath = "images/orbs/Angel_orb.png",
             abilities = listOf(
-                OrbAbility(OrbAbilityType.ANGEL_DAMAGE_INCREASE, 1.35f),
-                OrbAbility(OrbAbilityType.HEALTH_BOOST, 1.3f)
-            )
-        ),
-        OrbData(
-            id = "orb_07",
-            name = "확장의 오브",
-            description = "사정거리가 25% 증가하고 모든 데미지가 10% 증가합니다.",
-            imagePath = "images/orbs/Orb_01.png",
-            abilities = listOf(
-                OrbAbility(OrbAbilityType.RANGE_INCREASE, 1.25f),
-                OrbAbility(OrbAbilityType.DAMAGE_INCREASE, 1.10f)
-            )
-        ),
-        OrbData(
-            id = "orb_08",
-            name = "치명의 오브",
-            description = "치명타 확률이 15% 증가하고 모든 데미지가 12% 증가합니다.",
-            imagePath = "images/orbs/Orb_01.png",
-            abilities = listOf(
-                OrbAbility(OrbAbilityType.CRIT_CHANCE, 0.15f),
-                OrbAbility(OrbAbilityType.DAMAGE_INCREASE, 1.12f)
-            )
-        ),
-        OrbData(
-            id = "orb_09",
-            name = "수호의 오브",
-            description = "최대 체력이 50% 증가하고 사정거리가 15% 증가합니다.",
-            imagePath = "images/orbs/Orb_01.png",
-            abilities = listOf(
-                OrbAbility(OrbAbilityType.HEALTH_BOOST, 1.5f),
+                OrbAbility(OrbAbilityType.ANGEL_DAMAGE_INCREASE, 1.30f),
                 OrbAbility(OrbAbilityType.RANGE_INCREASE, 1.15f)
             )
         ),
         OrbData(
-            id = "orb_10",
-            name = "파워 오브",
-            description = "데미지가 50 추가되고 모든 데미지가 15% 증가합니다.",
-            imagePath = "images/orbs/Orb_01.png",
+            id = "demon",
+            name = "악마의 오브",
+            description = "악마 속성 데미지가 20% 증가하고 모든 최종 데미지가 20% 증폭됩니다.",
+            imagePath = "images/orbs/Demon_orb.png",
             abilities = listOf(
-                OrbAbility(OrbAbilityType.DAMAGE_ADDITION, 50f),
-                OrbAbility(OrbAbilityType.DAMAGE_INCREASE, 1.15f)
-            )
-        ),
-        OrbData(
-            id = "orb_11",
-            name = "증폭의 오브",
-            description = "모든 데미지가 25% 증폭됩니다.",
-            imagePath = "images/orbs/Orb_01.png",
-            abilities = listOf(
-                OrbAbility(OrbAbilityType.DAMAGE_AMPLIFY, 1.25f)
-            )
-        ),
-        OrbData(
-            id = "orb_12",
-            name = "마스터 오브",
-            description = "데미지가 100 추가되고, 모든 데미지가 30% 증가하며, 최종적으로 20% 증폭됩니다.",
-            imagePath = "images/orbs/Orb_01.png",
-            abilities = listOf(
-                OrbAbility(OrbAbilityType.DAMAGE_ADDITION, 100f),
-                OrbAbility(OrbAbilityType.DAMAGE_INCREASE, 1.30f),
+                OrbAbility(OrbAbilityType.DEMON_DAMAGE_AMPLIFY, 1.20f),
                 OrbAbility(OrbAbilityType.DAMAGE_AMPLIFY, 1.20f)
             )
         ),
         OrbData(
-            id = "orb_13",
-            name = "데몬 로드 오브",
-            description = "악마 속성 데미지가 40% 증가하고 최종적으로 15% 증폭됩니다.",
-            imagePath = "images/orbs/Orb_01.png",
+            id = "critical",
+            name = "치명의 오브",
+            description = "치명타 확률이 15% 증가하고 치명타 데미지가 40% 증가합니다.",
+            imagePath = "images/orbs/Critical_orb.png",
             abilities = listOf(
-                OrbAbility(OrbAbilityType.DEMON_DAMAGE_INCREASE, 1.40f),
-                OrbAbility(OrbAbilityType.DEMON_DAMAGE_AMPLIFY, 1.15f)
+                OrbAbility(OrbAbilityType.CRIT_CHANCE, 0.15f),
+                OrbAbility(OrbAbilityType.CRIT_DAMAGE, 1.40f)
             )
-        )
+        ),
+//        OrbData(
+//            id = "orb_09",
+//            name = "수호의 오브",
+//            description = "최대 체력이 50% 증가하고 사정거리가 15% 증가합니다.",
+//            imagePath = "images/orbs/Orb_01.png",
+//            abilities = listOf(
+//                OrbAbility(OrbAbilityType.HEALTH_BOOST, 1.5f),
+//                OrbAbility(OrbAbilityType.RANGE_INCREASE, 1.15f)
+//            )
+//        ),
+//        OrbData(
+//            id = "orb_10",
+//            name = "파워 오브",
+//            description = "데미지가 50 추가되고 모든 데미지가 15% 증가합니다.",
+//            imagePath = "images/orbs/Orb_01.png",
+//            abilities = listOf(
+//                OrbAbility(OrbAbilityType.DAMAGE_ADDITION, 50f),
+//                OrbAbility(OrbAbilityType.DAMAGE_INCREASE, 1.15f)
+//            )
+//        ),
+//        OrbData(
+//            id = "orb_11",
+//            name = "증폭의 오브",
+//            description = "모든 데미지가 25% 증폭됩니다.",
+//            imagePath = "images/orbs/Orb_01.png",
+//            abilities = listOf(
+//                OrbAbility(OrbAbilityType.DAMAGE_AMPLIFY, 1.25f)
+//            )
+//        ),
+//        OrbData(
+//            id = "orb_12",
+//            name = "마스터 오브",
+//            description = "데미지가 100 추가되고, 모든 데미지가 30% 증가하며, 최종적으로 20% 증폭됩니다.",
+//            imagePath = "images/orbs/Orb_01.png",
+//            abilities = listOf(
+//                OrbAbility(OrbAbilityType.DAMAGE_ADDITION, 100f),
+//                OrbAbility(OrbAbilityType.DAMAGE_INCREASE, 1.30f),
+//                OrbAbility(OrbAbilityType.DAMAGE_AMPLIFY, 1.20f)
+//            )
+//        ),
+//        OrbData(
+//            id = "orb_13",
+//            name = "데몬 로드 오브",
+//            description = "악마 속성 데미지가 40% 증가하고 최종적으로 15% 증폭됩니다.",
+//            imagePath = "images/orbs/Orb_01.png",
+//            abilities = listOf(
+//                OrbAbility(OrbAbilityType.DEMON_DAMAGE_INCREASE, 1.40f),
+//                OrbAbility(OrbAbilityType.DEMON_DAMAGE_AMPLIFY, 1.15f)
+//            )
+//        )
     )
 
     fun getAllOrbs(): List<OrbData> = orbs

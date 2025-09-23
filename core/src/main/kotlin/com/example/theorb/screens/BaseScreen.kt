@@ -35,11 +35,17 @@ abstract class BaseScreen : ScreenAdapter() {
         val SUCCESS = Color(0x2ECC71FF.toInt())             // 성공 민트그린
         val WARNING = Color(0xF39C12FF.toInt())             // 경고 주황
         val DANGER = Color(0xE74C3CFF.toInt())              // 위험 빨강
+
+        // 공통 패딩 설정
+        const val SCREEN_PADDING = 12f                       // 화면 전체 패딩
+        const val COMPONENT_PADDING = 12f                    // 컴포넌트 간 패딩
         lateinit var gameObject: TheOrb
         lateinit var fontSm: BitmapFont
         lateinit var fontMd: BitmapFont
         lateinit var fontLg: BitmapFont
         lateinit var fontSmBold: BitmapFont
+        lateinit var fontMdBold: BitmapFont
+        lateinit var fontLgBold: BitmapFont
         lateinit var skin: Skin
         private var initialized = false
 
@@ -48,10 +54,12 @@ abstract class BaseScreen : ScreenAdapter() {
                 // --- object ---
                 gameObject = Gdx.app.applicationListener as TheOrb
                 // --- Fonts ---
-                fontSm = FontUtil.load(18)
-                fontMd = FontUtil.load(22)
-                fontLg = FontUtil.load(28)
-                fontSmBold = FontUtil.loadBold(18)
+                fontSm = FontUtil.load(16)
+                fontMd = FontUtil.load(20)
+                fontLg = FontUtil.load(26)
+                fontSmBold = FontUtil.loadBold(16)
+                fontMdBold = FontUtil.loadBold(20)
+                fontLgBold = FontUtil.loadBold(26)
 
                 // --- Skin ---
                 skin = Skin().apply {
@@ -65,6 +73,8 @@ abstract class BaseScreen : ScreenAdapter() {
                     add("label-default", Label.LabelStyle(fontMd, Color.WHITE))
                     add("label-large", Label.LabelStyle(fontLg, Color.WHITE))
                     add("label-small-bold", Label.LabelStyle(fontSmBold, Color.WHITE))
+                    add("label-default-bold", Label.LabelStyle(fontMdBold, Color.WHITE))
+                    add("label-large-bold", Label.LabelStyle(fontLgBold, Color.WHITE))
 
                     // 버튼 스타일
                     val btn = TextButton.TextButtonStyle().apply {

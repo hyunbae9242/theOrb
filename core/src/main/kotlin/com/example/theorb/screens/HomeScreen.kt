@@ -14,12 +14,15 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Stack
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.Align
 import com.example.theorb.TheOrb
 import com.example.theorb.data.OrbRegistry
 import com.example.theorb.data.SaveManager
 import com.example.theorb.ui.BackgroundRenderer
+import com.example.theorb.ui.BottomNavigation
 import com.example.theorb.ui.OrbSelectionModal
 import com.example.theorb.util.ResourceManager
 import com.example.theorb.util.formatNumber
@@ -45,11 +48,14 @@ class HomeScreen(private val game: Game) : BaseScreen() {
     }
 
     private fun setupUi() {
-        val root = Table().apply { setFillParent(true) }
+        val root = Table().apply {
+            setFillParent(true)
+            pad(SCREEN_PADDING)
+        }
         stage.addActor(root)
 
         // ===== 상단 바 =====
-        val top = Table().apply { pad(12f) }
+        val top = Table().apply { pad(COMPONENT_PADDING) }
 
         val gold = Label("골드: ${formatNumber(gameObject.saveData.gold)}", skin.get("label-small", Label.LabelStyle::class.java)).apply {
             color = TEXT_PRIMARY
@@ -61,22 +67,24 @@ class HomeScreen(private val game: Game) : BaseScreen() {
             add(gold).right().row()
             add(gem).right()
         }
-        val profile = square(40f) // 흰 정사각형(프로필 자리)
+        val menuIcon = Image(ResourceManager.getDrawable("images/buttons/blue/Menu_icon.png")).apply {
+            setSize(40f, 40f)
+            touchable = com.badlogic.gdx.scenes.scene2d.Touchable.enabled
+            // 추후 메뉴 기능 추가 가능
+        }
 
         top.add(left).left().expandX()
-        top.add(profile).right()
-        // 상단 하얀 선
-        val lineTop = line()
+        top.add(menuIcon).right()
 
         // ===== 중앙(오브 + 스테이지 선택) =====
         val center = Table()
 
         // 선택된 오브 이미지
         val selectedOrbData = OrbRegistry.getOrbById(gameObject.saveData.selectedOrb)
-            ?: OrbRegistry.getOrbById("base_orb")!!
+            ?: OrbRegistry.getOrbById("base")!!
 
         val orb = Image(selectedOrbData.getDrawable()).apply {
-            setSize(60f, 60f)
+            setSize(45f, 45f)
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.enabled
             addListener(object : com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
                 override fun clicked(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float) {
@@ -105,48 +113,24 @@ class HomeScreen(private val game: Game) : BaseScreen() {
             add(stageLabel).padRight(16f)
         }
 
-        center.add(orb).padTop(24f).padBottom(24f).row()
+        center.add(orb).pad(60f).row()
         center.add(stageRow).padBottom(12f).row()
 
         val startBtn = TextButton("게임 시작", skin.get("btn", TextButton.TextButtonStyle::class.java).apply { font = fontLg })
-        startBtn.addChangeListener {
-            Gdx.app.log("Home", "게임 시작 버튼 클릭됨")
-            game.setScreen(GameScreen())
-        }
-
+        startBtn.addListener(object : ChangeListener() {
+            override fun changed(event: ChangeEvent?, actor: Actor?) {
+                Gdx.app.log("Home", "게임 시작 버튼 클릭됨")
+                game.setScreen(GameScreen())
+            }
+        })
         // ===== 하단 탭 =====
-        val bottomLine = line()
-        val bottom = Table().apply { pad(6f) }
-
-        val tabs = listOf("상점", "카드", "메인", "업그레이드", "스킬")
-        tabs.forEach { name ->
-            val t = TextButton(name, skin.get("btn", TextButton.TextButtonStyle::class.java).apply {
-                font = fontLg
-            }).apply {
-                label.setAlignment(Align.center)
-            }
-            // '메인' 탭 강조: 아래 선을 조금 두껍게
-//            if (name == "메인") addActionLineBelow(height = 2f) else addActionLineBelow()
-            t.addChangeListener {
-                when (name) {
-                    "업그레이드" -> {
-                        Gdx.app.log("Tab", "업그레이드 탭 클릭")
-                        game.setScreen(UpgradeScreen(game as TheOrb))
-                    }
-                    else -> {
-                        Gdx.app.log("Tab", "$name 클릭")
-                    }
-                }
-            }
-            bottom.add(t).expandX().pad(4f)
-        }
+        val bottomNavigation = BottomNavigation(game, skin, BottomNavigation.Tab.MAIN)
+        val bottom = bottomNavigation.createBottomNavigation()
 
         // ===== 루트 조립 =====
         root.add(top).growX().row()
-        root.add(lineTop).height(1f).growX().row()
         root.add(center).expand().row()
-        root.add(startBtn).pad(12f).growX().height(80f).row()
-        root.add(bottomLine).height(1f).growX().row()
+        root.add(startBtn).pad(COMPONENT_PADDING).growX().height(80f).row()
         root.add(bottom).growX().padBottom(6f)
         // root.debugAll() // 디버그 모드 비활성화
     }
@@ -179,37 +163,6 @@ class HomeScreen(private val game: Game) : BaseScreen() {
         return Image(TextureRegionDrawable(tex)).apply { setSize(diameter, diameter) }
     }
 
-    private fun TextButton.addActionLineBelow(height: Float = 1f) {
-        val underline = Image(Texture(Pixmap(1, 1, Pixmap.Format.RGBA8888).apply {
-            setColor(Color.WHITE)
-            fill()
-        })).apply {
-            setSize(this@addActionLineBelow.width, height)
-            color = Color.WHITE
-        }
-
-        val stack = Stack().apply {
-            add(this@addActionLineBelow) // 버튼
-            add(underline)              // 밑줄
-        }
-
-        // 버튼의 부모 컨테이너에 교체 삽입
-        this.parent?.let { parent ->
-            if (parent is Table) {
-                val index = parent.children.indexOf(this, true)
-                parent.removeActor(this)
-                parent.addActorAt(index, stack)
-            }
-        }
-    }
-
-    private fun TextButton.addChangeListener(block: () -> Unit) {
-        addListener(object : com.badlogic.gdx.scenes.scene2d.utils.ChangeListener() {
-            override fun changed(event: com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent?, actor: Actor?) {
-                block()
-            }
-        })
-    }
 
     override fun render(delta: Float) {
         Gdx.gl.glClearColor(BACKGROUND.r, BACKGROUND.g, BACKGROUND.b, BACKGROUND.a)

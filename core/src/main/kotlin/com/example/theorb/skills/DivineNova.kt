@@ -14,7 +14,7 @@ class DivineNova : Skill(
     baseCooldown = 2.0f,
     baseElement = Element.ANGEL,
     damageMul = 2.5f, // AOE이므로 단일 타겟 대비 데미지 조정
-    castEffectType = EffectType.DIVINE_NOVA_FLY, // 시전자 중심에서 한 번만 발동
+    castEffectType = EffectType.DIVINE_NOVA_CAST, // 시전자 중심에서 한 번만 발동
     hitEffectType = EffectType.FIREBALL_HIT,
     flyEffectType = null, // AOE 스킬이므로 개별 projectile fly 효과 없음
     isInstant = true, // 즉발 스킬

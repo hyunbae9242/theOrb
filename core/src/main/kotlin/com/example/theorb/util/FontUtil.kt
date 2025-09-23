@@ -12,7 +12,7 @@ object FontUtil {
         return sb.toString()
     }
 
-    fun load(size: Int, path: String = "fonts/NanumGothic.ttf"): BitmapFont {
+    fun load(size: Int, path: String = "fonts/Galmuri11.ttf"): BitmapFont {
         val gen = FreeTypeFontGenerator(Gdx.files.internal(path))
         val p = FreeTypeFontGenerator.FreeTypeFontParameter().apply {
             this.size = size
@@ -29,7 +29,7 @@ object FontUtil {
         return font
     }
 
-    fun loadBold(size: Int, path: String = "fonts/NanumGothicBold.ttf"): BitmapFont {
+    fun loadBold(size: Int, path: String = "fonts/Galmuri11-Bold.ttf"): BitmapFont {
         val gen = FreeTypeFontGenerator(Gdx.files.internal(path))
         val p = FreeTypeFontGenerator.FreeTypeFontParameter().apply {
             this.size = size

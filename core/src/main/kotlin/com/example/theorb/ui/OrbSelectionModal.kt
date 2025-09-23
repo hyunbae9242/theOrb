@@ -6,6 +6,7 @@ import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.Touchable
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.example.theorb.data.OrbData
 import com.example.theorb.data.OrbRegistry
 import com.example.theorb.data.SaveData
@@ -21,7 +22,7 @@ class OrbSelectionModal(
     private var backgroundOverlay: Image? = null
     private var dialogContainer: Table? = null
     private var selectedOrbData: OrbData = OrbRegistry.getOrbById(saveData.selectedOrb)
-        ?: OrbRegistry.getOrbById("base_orb")!!
+        ?: OrbRegistry.getOrbById("base")!!
 
     fun show(onClose: () -> Unit, onOrbSelected: (OrbData) -> Unit) {
         // 반투명 배경
@@ -40,18 +41,18 @@ class OrbSelectionModal(
         stage.addActor(backgroundOverlay)
         stage.addActor(dialogContainer)
 
-        // 중앙 정렬 (480x600 크기 기준)
+        // 중앙 정렬 (430x590 크기 기준)
         dialogContainer!!.setPosition(
-            (stageWidth - 480f) / 2f,
-            (stageHeight - 600f) / 2f
+            (stageWidth - 430f) / 2f,
+            (stageHeight - 590f) / 2f
         )
     }
 
     private fun createDialogContainer(onClose: () -> Unit, onOrbSelected: (OrbData) -> Unit) {
         dialogContainer = Table().apply {
-            background = ResourceManager.getRectanglePanel430278()
+            background = ResourceManager.getRectanglePanel430590()
             pad(20f)
-            setSize(480f, 600f)
+            setSize(430f, 590f)
         }
 
         // 제목
@@ -80,12 +81,13 @@ class OrbSelectionModal(
             })
         }
 
-        // 레이아웃 구성
+        // 레이아웃 구성 (전체 높이 590f 기준)
+        // 타이틀: 10% (59f), 선택된 오브: 20% (118f), 오브 리스트: 60% (354f), 닫기: 10% (59f)
         dialogContainer!!.apply {
-            add(titleLabel).center().padBottom(20f).row()
-            add(selectedOrbSection).growX().padBottom(20f).row()
-            add(orbGridSection).grow().padBottom(20f).row()
-            add(closeButton).size(100f, 40f).center()
+            add(titleLabel).center().height(59f).padBottom(10f).row()
+            add(selectedOrbSection).growX().height(118f).padBottom(10f).row()
+            add(orbGridSection).grow().height(354f).padBottom(10f).row()
+            add(closeButton).size(100f, 40f).height(59f).center()
         }
     }
 
@@ -96,9 +98,9 @@ class OrbSelectionModal(
             pad(15f)
         }
 
-        // 선택된 오브 이미지
+        // 선택된 오브 이미지 (높이 118f에 맞게 조정)
         val selectedOrbImage = Image(selectedOrbData.getDrawable()).apply {
-            setSize(80f, 80f)
+            setSize(60f, 60f)
         }
 
         // 선택된 오브 정보
@@ -119,7 +121,7 @@ class OrbSelectionModal(
         }
 
         section.apply {
-            add(selectedOrbImage).left().padRight(20f)
+            add(selectedOrbImage).size(60f, 60f).left().padRight(20f)
             add(infoTable).expandX().fillX().left()
         }
 
@@ -139,7 +141,7 @@ class OrbSelectionModal(
         for (orb in unlockedOrbs) {
             val orbButton = createOrbButton(orb, onOrbSelected)
 
-            gridTable.add(orbButton).size(120f, 120f).pad(10f)
+            gridTable.add(orbButton).size(90f, 90f).pad(8f)
 
             col++
             if (col >= columns) {
@@ -166,21 +168,15 @@ class OrbSelectionModal(
         }
 
         val orbImage = Image(orb.getDrawable()).apply {
-            setSize(60f, 60f)
-        }
-
-        val nameLabel = Label(orb.name, skin.get("label-small", Label.LabelStyle::class.java)).apply {
-            color = BaseScreen.TEXT_PRIMARY
-            wrap = true
+            setSize(45f, 45f)
         }
 
         buttonTable.apply {
-            add(orbImage).center().padBottom(5f).row()
-            add(nameLabel).center().width(100f)
+            add(orbImage).center()
 
             touchable = Touchable.enabled
-            addListener(object : ChangeListener() {
-                override fun changed(event: ChangeEvent?, actor: Actor?) {
+            addListener(object : ClickListener() {
+                override fun clicked(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float) {
                     selectedOrbData = orb
                     saveData.selectedOrb = orb.id
                     onOrbSelected(orb)

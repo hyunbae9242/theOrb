@@ -9,6 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.Touchable
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
+import com.badlogic.gdx.utils.Align
 import com.example.theorb.util.ResourceManager
 
 class ModalDialog(private val stage: Stage, private val skin: Skin) {
@@ -105,6 +106,7 @@ class ModalDialog(private val stage: Stage, private val skin: Skin) {
         val messageLabel = Label(message, this@ModalDialog.skin.get("label-default", Label.LabelStyle::class.java)).apply {
             color = com.example.theorb.screens.BaseScreen.TEXT_SECONDARY
             setWrap(true)
+            setAlignment(Align.center)
         }
 
         // 버튼들
@@ -147,9 +149,9 @@ class ModalDialog(private val stage: Stage, private val skin: Skin) {
 
         // 레이아웃 구성
         dialogContainer!!.apply {
-            add(titleLabel).padBottom(20f).row()
-            add(messageLabel).width(300f).padBottom(30f).row()
-            add(buttonTable).row()
+            add(titleLabel).center().padBottom(20f).row()
+            add(messageLabel).center().width(300f).padBottom(30f).row()
+            add(buttonTable).center().row()
         }
     }
 

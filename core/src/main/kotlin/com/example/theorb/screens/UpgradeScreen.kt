@@ -13,16 +13,27 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.viewport.FitViewport
 import com.example.theorb.TheOrb
 import com.example.theorb.data.SaveManager
+import com.example.theorb.ui.BackgroundRenderer
+import com.example.theorb.ui.BottomNavigation
 import com.example.theorb.ui.ModalDialog
 import com.example.theorb.upgrades.UpgradeManager
 import com.example.theorb.upgrades.UpgradeType
+import com.example.theorb.upgrades.UpgradeCategory
+import com.example.theorb.util.ResourceManager
 
 class UpgradeScreen(private val game: TheOrb) : BaseScreen() {
     private val uiStage = Stage(viewport)
+    private val backgroundRenderer = BackgroundRenderer()
     private lateinit var goldLabel: Label
     private val upgradeLabels = mutableMapOf<UpgradeType, Label>()
-    private val upgradeButtons = mutableMapOf<UpgradeType, TextButton>()
+    private val upgradeButtons = mutableMapOf<UpgradeType, ImageButton>()
     private lateinit var modalDialog: ModalDialog
+
+    private var selectedTab = UpgradeCategory.ATTACK
+    private val tabButtons = mutableMapOf<UpgradeCategory, ImageButton>()
+    private lateinit var upgradeScrollPane: ScrollPane
+    private var isUIInitialized = false
+    private var needsUpdate = false
 
     private fun createRoundedRectWithBorder(width: Int, height: Int,
                                           bgColor: Color, borderColor: Color, borderWidth: Int): TextureRegionDrawable {
@@ -45,13 +56,18 @@ class UpgradeScreen(private val game: TheOrb) : BaseScreen() {
         initSharedResources()
         Gdx.input.inputProcessor = uiStage
         modalDialog = ModalDialog(uiStage, skin)
+
+        // 홈화면과 동일한 배경 설정
+        backgroundRenderer.setBackground("clouds02")
+        backgroundRenderer.addToStage(uiStage, viewport.worldWidth, viewport.worldHeight)
+
         setupUI()
     }
 
     private fun setupUI() {
         val root = Table().apply {
             setFillParent(true)
-            pad(20f)
+            pad(SCREEN_PADDING)
         }
         uiStage.addActor(root)
 
@@ -61,107 +77,139 @@ class UpgradeScreen(private val game: TheOrb) : BaseScreen() {
         }
         root.add(goldLabel).padBottom(20f).row()
 
-        // 제목
-        val titleLabel = Label("BASE UPGRADE", skin.get("label-large", Label.LabelStyle::class.java)).apply {
-            color = TEXT_PRIMARY
+        // 탭 + 리스트 전체를 하나의 패널로 감싸기
+        val mainPanel = Table().apply {
+            background = ResourceManager.getRectanglePanel430590()
+            pad(20f)
         }
-        root.add(titleLabel).padBottom(30f).row()
+
+        // 탭 버튼들
+        val tabRow = createTabButtons()
+        mainPanel.add(tabRow).padBottom(20f).row()
 
         // 업그레이드 목록
-        val scrollPane = createUpgradeList()
-        root.add(scrollPane).expand().fill().padBottom(20f).row()
+        upgradeScrollPane = createUpgradeList()
+        mainPanel.add(upgradeScrollPane).expand().fill().row()
 
-        // 버튼들
-        val buttonTable = Table()
-
-        val backButtonWidth = (virtualWidth * 0.3f).toInt()
-        val backButtonHeight = (virtualHeight * 0.075f).toInt()
-
-        val backButton = TextButton("뒤로가기", TextButton.TextButtonStyle().apply {
-            font = skin.get("btn", TextButton.TextButtonStyle::class.java).font
-            up = createRoundedRectWithBorder(backButtonWidth, backButtonHeight, ACCENT, BORDER, 2)
-            down = createRoundedRectWithBorder(backButtonWidth, backButtonHeight, ACCENT.cpy().mul(0.8f), BORDER, 2)
-            over = createRoundedRectWithBorder(backButtonWidth, backButtonHeight, ACCENT.cpy().mul(1.2f), BORDER, 2)
-            fontColor = Color.WHITE
-        })
-        backButton.addListener(object : ChangeListener() {
-            override fun changed(event: ChangeEvent?, actor: Actor?) {
-                game.setScreen(HomeScreen(game))
-            }
+        // 초기화 버튼을 패널 안에 추가
+        val resetButton = ImageButton(ImageButton.ImageButtonStyle().apply {
+            up = ResourceManager.getButtonCancelBg()
+            down = ResourceManager.getButtonConfirmBg()
+            over = ResourceManager.getButtonHighlightBg()
         })
 
-        val resetButton = TextButton("초기화", TextButton.TextButtonStyle().apply {
-            font = skin.get("btn", TextButton.TextButtonStyle::class.java).font
-            up = createRoundedRectWithBorder(backButtonWidth, backButtonHeight, DANGER, BORDER, 2)
-            down = createRoundedRectWithBorder(backButtonWidth, backButtonHeight, DANGER.cpy().mul(0.8f), BORDER, 2)
-            over = createRoundedRectWithBorder(backButtonWidth, backButtonHeight, DANGER.cpy().mul(1.2f), BORDER, 2)
-            fontColor = Color.WHITE
-        })
+        val resetLabel = Label("초기화", skin.get("label-default", Label.LabelStyle::class.java)).apply {
+            color = Color(0.7f, 0.3f, 0.3f, 1f)  // 부드러운 적색 (위험한 동작 표시)
+        }
+        resetButton.add(resetLabel)
         resetButton.addListener(object : ChangeListener() {
             override fun changed(event: ChangeEvent?, actor: Actor?) {
                 showResetConfirmDialog()
             }
         })
 
-        buttonTable.add(resetButton).width(virtualWidth * 0.3f).height(virtualHeight * 0.075f).padRight(20f)
-        buttonTable.add(backButton).width(virtualWidth * 0.3f).height(virtualHeight * 0.075f)
-        root.add(buttonTable)
+        mainPanel.add(resetButton).width(virtualWidth * 0.3f).height(virtualHeight * 0.06f).padTop(15f).row()
+
+        root.add(mainPanel).expand().fill().padBottom(20f).row()
+
+        // 하단 네비게이션
+        val bottomNavigation = BottomNavigation(game, skin, BottomNavigation.Tab.UPGRADE)
+        val bottom = bottomNavigation.createBottomNavigation()
+        root.add(bottom).growX().padBottom(6f)
+
+        // UI 초기화 완료 플래그 설정
+        isUIInitialized = true
+        needsUpdate = true
     }
 
-    private fun createUpgradeList(): ScrollPane {
-        val table = Table()
+    private fun createTabButtons(): Table {
+        val tabTable = Table()
 
-        for (upgradeType in UpgradeType.values()) {
-            val upgradeTable = Table()
-            upgradeTable.background = skin.getDrawable("white")
-            upgradeTable.color = PANEL_BG // 다크 테마 패널 색상
-            upgradeTable.pad(15f)
-
-            // 업그레이드 정보
-            val nameLabel = Label(upgradeType.displayName, skin.get("label-default", Label.LabelStyle::class.java)).apply {
-                color = TEXT_PRIMARY
-            }
-            val descLabel = Label(upgradeType.description, skin.get("label-small", Label.LabelStyle::class.java)).apply {
-                color = TEXT_SECONDARY
-            }
-
-            val levelLabel = Label("", skin.get("label-small", Label.LabelStyle::class.java)).apply {
-                color = TEXT_SECONDARY
-            }
-            upgradeLabels[upgradeType] = levelLabel
-
-            // 업그레이드 버튼
+        for (category in UpgradeCategory.values()) {
+            val isSelected = category == selectedTab
             val buttonWidth = (virtualWidth * 0.25f).toInt()
             val buttonHeight = (virtualHeight * 0.06f).toInt()
-            val upgradeButton = TextButton("LEVEL UP", TextButton.TextButtonStyle().apply {
-                font = skin.get("btn", TextButton.TextButtonStyle::class.java).font
-                up = createRoundedRectWithBorder(buttonWidth, buttonHeight, SUCCESS, BORDER, 2)
-                down = createRoundedRectWithBorder(buttonWidth, buttonHeight, SUCCESS.cpy().mul(0.8f), BORDER, 2)
-                over = createRoundedRectWithBorder(buttonWidth, buttonHeight, SUCCESS.cpy().mul(1.2f), BORDER, 2)
-                disabled = createRoundedRectWithBorder(buttonWidth, buttonHeight, Color.GRAY, BORDER, 2)
-                fontColor = Color.WHITE
-            })
-            upgradeButtons[upgradeType] = upgradeButton
 
-            upgradeButton.addListener(object : ChangeListener() {
+            val tabButton = ImageButton(ImageButton.ImageButtonStyle().apply {
+                up = if (isSelected) {
+                    ResourceManager.getButtonHighlightBg()
+                } else {
+                    ResourceManager.getButtonCancelBg()
+                }
+                down = ResourceManager.getButtonConfirmBg()
+                over = ResourceManager.getButtonHighlightBg()
+            })
+
+            // 탭 버튼에 텍스트 라벨 추가
+            val tabLabel = Label(category.displayName, skin.get("label-large", Label.LabelStyle::class.java)).apply {
+                color = TEXT_PRIMARY
+            }
+            tabButton.add(tabLabel)
+
+            tabButtons[category] = tabButton
+
+            tabButton.addListener(object : ChangeListener() {
                 override fun changed(event: ChangeEvent?, actor: Actor?) {
-                    if (UpgradeManager.purchaseUpgrade(game.saveData, upgradeType)) {
-                        SaveManager.save(game.saveData)
-                        updateUpgradeDisplay()
+                    if (selectedTab != category) {
+                        selectedTab = category
+                        updateTabButtons()
+                        updateUpgradeList()
+                        needsUpdate = true
                     }
                 }
             })
 
-            // 레이아웃
-            val leftTable = Table()
-            leftTable.add(nameLabel).expand().left().row()
-            leftTable.add(descLabel).expand().left().row()
-            leftTable.add(levelLabel).expand().left()
+            tabTable.add(tabButton).width(virtualWidth * 0.25f).height(virtualHeight * 0.06f).pad(4f)
+        }
 
-            upgradeTable.add(leftTable).expand().fill().left().padLeft(10f)
-            upgradeTable.add(upgradeButton).width(virtualWidth * 0.3f).height(virtualHeight * 0.06f).right().padRight(10f)
+        return tabTable
+    }
 
-            table.add(upgradeTable).fillX().width(virtualWidth * 0.85f).padBottom(10f).row()
+    private fun updateTabButtons() {
+        for ((category, button) in tabButtons) {
+            val isSelected = category == selectedTab
+            val style = button.style as ImageButton.ImageButtonStyle
+            style.up = if (isSelected) {
+                ResourceManager.getButtonHighlightBg()
+            } else {
+                ResourceManager.getButtonCancelBg()
+            }
+
+            // 라벨 색상 업데이트
+            val label = button.children.firstOrNull() as? Label
+            label?.color = Color(0.2f, 0.3f, 0.5f, 1f)  // 부드러운 짙은 파랑
+        }
+    }
+
+    private fun updateUpgradeList() {
+        val table = Table()
+        val filteredUpgrades = UpgradeType.values().filter { it.category == selectedTab }
+
+        // 이전 탭의 버튼/라벨 참조들 클리어
+        upgradeButtons.clear()
+        upgradeLabels.clear()
+
+        for (upgradeType in filteredUpgrades) {
+            val upgradeTable = createUpgradeRow(upgradeType)
+            val rowWidth = virtualWidth * 0.75f
+            val rowHeight = rowWidth * (88f / 376f)  // 376x88 비율 유지
+            table.add(upgradeTable).size(rowWidth, rowHeight).padBottom(8f).row()
+        }
+
+        upgradeScrollPane.actor = table
+        // 새로운 버튼들이 생성되었으므로 업데이트 필요
+        needsUpdate = true
+    }
+
+    private fun createUpgradeList(): ScrollPane {
+        val table = Table()
+        val filteredUpgrades = UpgradeType.values().filter { it.category == selectedTab }
+
+        for (upgradeType in filteredUpgrades) {
+            val upgradeTable = createUpgradeRow(upgradeType)
+            val rowWidth = virtualWidth * 0.75f
+            val rowHeight = rowWidth * (88f / 376f)  // 376x88 비율 유지
+            table.add(upgradeTable).size(rowWidth, rowHeight).padBottom(8f).row()
         }
 
         return ScrollPane(table, skin).apply {
@@ -169,34 +217,119 @@ class UpgradeScreen(private val game: TheOrb) : BaseScreen() {
         }
     }
 
+    private fun createUpgradeRow(upgradeType: UpgradeType): Table {
+        val upgradeTable = Table()
+        upgradeTable.background = ResourceManager.getListRowPanel37688()
+        upgradeTable.pad(12f)
+
+        // 업그레이드 정보
+        val nameLabel = Label(upgradeType.displayName, skin.get("label-default", Label.LabelStyle::class.java)).apply {
+            color = TEXT_PRIMARY
+        }
+
+        val valueLabel = Label("", skin.get("label-default", Label.LabelStyle::class.java)).apply {
+            color = TEXT_PRIMARY
+        }
+        upgradeLabels[upgradeType] = valueLabel
+
+        // 업그레이드 버튼
+        val upgradeButton = ImageButton(ImageButton.ImageButtonStyle().apply {
+            up = ResourceManager.getButtonConfirmBg()
+            down = ResourceManager.getButtonConfirmBg()
+            over = ResourceManager.getButtonHighlightBg()
+            disabled = ResourceManager.getButtonCancelBg()
+        })
+
+        // 버튼에 "Lv UP (cost)" 텍스트 추가 - 초기값으로 설정, 실제 값은 updateUpgradeDisplay에서 업데이트
+        val currentLevel = UpgradeManager.getUpgradeLevel(game.saveData, upgradeType)
+        val initialCost = if (currentLevel < upgradeType.maxLevel) upgradeType.getCostForLevel(currentLevel) else -1
+        val initialText = if (currentLevel >= upgradeType.maxLevel) "MAX" else "Lv UP (${initialCost}G)"
+
+        val buttonLabel = Label(initialText, skin.get("label-small", Label.LabelStyle::class.java)).apply {
+            color = Color(0.2f, 0.3f, 0.5f, 1f)  // 부드러운 짙은 파랑
+        }
+        upgradeButton.add(buttonLabel)
+        upgradeButtons[upgradeType] = upgradeButton
+
+        upgradeButton.addListener(object : ChangeListener() {
+            override fun changed(event: ChangeEvent?, actor: Actor?) {
+                if (UpgradeManager.purchaseUpgrade(game.saveData, upgradeType)) {
+                    SaveManager.save(game.saveData)
+                    // 즉시 업데이트 플래그 설정
+                    needsUpdate = true
+                }
+            }
+        })
+
+        // 레이아웃
+        val leftTable = Table()
+        leftTable.add(nameLabel).expand().left().row()
+        leftTable.add(valueLabel).expand().left()
+
+        upgradeTable.add(leftTable).expand().fill().left().padLeft(8f)
+        upgradeTable.add(upgradeButton).width(120f).height(35f).right().padRight(8f)
+
+        return upgradeTable
+    }
+
     private fun updateUpgradeDisplay() {
         goldLabel.setText("GOLD: ${game.saveData.gold}")
 
-        for (upgradeType in UpgradeType.values()) {
+        // 현재 선택된 탭의 업그레이드만 업데이트
+        val filteredUpgrades = UpgradeType.values().filter { it.category == selectedTab }
+
+        for (upgradeType in filteredUpgrades) {
             val level = UpgradeManager.getUpgradeLevel(game.saveData, upgradeType)
             val maxLevel = upgradeType.maxLevel
             val currentValue = UpgradeManager.getUpgradeValue(game.saveData, upgradeType)
             val cost = if (level < maxLevel) upgradeType.getCostForLevel(level) else -1
 
-            val levelText = if (level >= maxLevel) {
-                "레벨: $level/$maxLevel (최대)"
+            // 새로운 형식: "+12 (6/50)"
+            val valueText = if (level >= maxLevel) {
+                "${formatValue(upgradeType, currentValue)} ($level/$maxLevel)"
             } else {
-                "레벨: $level/$maxLevel\n현재 효과: ${formatValue(upgradeType, currentValue)}\n비용: ${cost} GOLD"
+                "${formatValue(upgradeType, currentValue)} ($level/$maxLevel)"
             }
 
-            upgradeLabels[upgradeType]?.setText(levelText)
+            upgradeLabels[upgradeType]?.setText(valueText)
 
-            val button = upgradeButtons[upgradeType]!!
-            val canUpgrade = UpgradeManager.canUpgrade(game.saveData, upgradeType)
-            button.isDisabled = !canUpgrade
+            // 현재 탭에 표시된 버튼만 업데이트
+            upgradeButtons[upgradeType]?.let { button ->
+                val canUpgrade = UpgradeManager.canUpgrade(game.saveData, upgradeType)
+                button.isDisabled = !canUpgrade
+
+                // 버튼 텍스트 업데이트: "Lv UP (xxG)"
+                val buttonLabel = button.children.firstOrNull() as? Label
+                val buttonText = if (level >= maxLevel) {
+                    "MAX"
+                } else {
+                    "Lv UP (${cost}G)"
+                }
+                buttonLabel?.setText(buttonText)
+                buttonLabel?.invalidateHierarchy()  // UI 강제 새로고침
+
+                // 버튼 상태에 따른 글자색 설정
+                buttonLabel?.color = if (canUpgrade) {
+                    Color(0.2f, 0.3f, 0.5f, 1f)  // 활성화된 버튼 (부드러운 짙은 파랑)
+                } else {
+                    Color(0.6f, 0.6f, 0.6f, 1f)  // 비활성화된 버튼 (부드러운 회색)
+                }
+            }
         }
     }
 
     private fun formatValue(upgradeType: UpgradeType, value: Float): String {
         return when (upgradeType) {
             UpgradeType.DAMAGE -> "+${value.toInt()}"
-            UpgradeType.RANGE -> "+${(value * 100).toInt()} %" // % 형태로 표시
-            UpgradeType.COOLDOWN_REDUCTION -> "-${(value * 100).toInt()} %"
+            UpgradeType.CRITICAL_CHANCE -> "+${(value).toInt()}%"
+            UpgradeType.CRITICAL_DAMAGE -> "+${(value).toInt()}%"
+            UpgradeType.HEALTH -> "+${value.toInt()}"
+            UpgradeType.ARMOR -> "+${value.toInt()}"
+            UpgradeType.REGENERATION -> "+${value.toInt()}/s"
+            UpgradeType.RANGE -> "+${(value * 100).toInt()}%"
+            UpgradeType.COOLDOWN_REDUCTION -> "-${(value * 100).toInt()}%"
+            UpgradeType.MOVEMENT_SPEED -> "+${(value * 100).toInt()}%"
+            UpgradeType.GOLD_BONUS -> "+${(value * 100).toInt()}%"
         }
     }
 
@@ -215,7 +348,8 @@ class UpgradeScreen(private val game: TheOrb) : BaseScreen() {
     private fun performReset() {
         val refundAmount = UpgradeManager.resetAllUpgrades(game.saveData)
         SaveManager.save(game.saveData)
-        updateUpgradeDisplay()
+        // 즉시 업데이트 플래그 설정
+        needsUpdate = true
 
         Gdx.app.log("UpgradeScreen", "업그레이드 초기화 완료! 환불된 골드: $refundAmount")
     }
@@ -224,7 +358,11 @@ class UpgradeScreen(private val game: TheOrb) : BaseScreen() {
         Gdx.gl.glClearColor(BACKGROUND.r, BACKGROUND.g, BACKGROUND.b, BACKGROUND.a)
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
 
-        updateUpgradeDisplay()
+        // UI가 초기화된 후에 업데이트 필요 시에만 업데이트
+        if (isUIInitialized && needsUpdate) {
+            updateUpgradeDisplay()
+            needsUpdate = false
+        }
 
         uiStage.act(delta)
         uiStage.draw()
@@ -233,6 +371,7 @@ class UpgradeScreen(private val game: TheOrb) : BaseScreen() {
     override fun dispose() {
         super.dispose()
         uiStage.dispose()
+        backgroundRenderer.dispose()
         disposeSharedResources()
     }
 }
