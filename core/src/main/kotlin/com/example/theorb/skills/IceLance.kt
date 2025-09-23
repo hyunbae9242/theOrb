@@ -9,15 +9,15 @@ import com.example.theorb.entities.Enemy
 import com.example.theorb.entities.Player
 import com.example.theorb.entities.Projectile
 
-class Fireball : Skill(
-    name = "화염구",
-    baseCooldown = 0.9f,
-    baseElement = Element.FIRE,
-    damageMul = 1.8f,
-    hitEffectType = EffectType.FIREBALL_HIT,
-    flyEffectType = EffectType.FIREBALL_FLY
+class IceLance : Skill(
+    name = "얼음창",
+    baseCooldown = 0.75f,
+    baseElement = Element.COLD,
+    damageMul = 1.6f,
+    hitEffectType = EffectType.ICE_LANCE_HIT,
+    flyEffectType = EffectType.ICE_LANCE_FLY
 ) {
-    override fun createProjectile(x: Float, y: Float, target: Enemy, caster: Player, preCalculatedDamage: Int, effects: MutableList<Effect>, onDamage: ((Int, Float, Float, com.example.theorb.balance.Element, String) -> Unit)?): Projectile {
+    override fun createProjectile(x: Float, y: Float, target: Enemy, caster: Player, preCalculatedDamage: Int, effects: MutableList<Effect>, onDamage: ((Int, Float, Float, Element, String) -> Unit)?): Projectile {
         return Projectile(x, y, target, caster, this, preCalculatedDamage, onHit = {enemy ->
             effects.add(
                 Effect(

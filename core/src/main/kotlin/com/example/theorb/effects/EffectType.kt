@@ -6,9 +6,14 @@ enum class EffectType(val path: String, val row: Int, val rows: Int, val cols: I
     // skills
     // fireball
     FIREBALL_HIT("effects/skills/fireball/fireball_hit.png", 7, 9, 12, 24f, 1.3f),
-    FIREBALL_FLY("effects/skills/fireball/fireball_fly.png", 7, 9, 10, 20f, 0.7f),
+    FIREBALL_FLY("effects/skills/fireball/fireball_fly.png", 7, 9, 14, 28f, 0.7f),
+    // ice lance
+    ICE_LANCE_HIT("effects/skills/fireball/fireball_hit.png", 2, 9, 12, 24f, 1.3f),
+    ICE_LANCE_FLY("effects/skills/fireball/fireball_fly.png", 2, 9, 14, 28f, 0.7f),
     // lightning strike
-    LIGHTNING_STRIKE("effects/skills/lightningStrike/lightning_strike.png", 4, 9, 8, 12f, 2f),
+    LIGHTNING_STRIKE("effects/skills/lightningStrike/lightning_strike.png", 4, 9, 8, 16f, 2f),
+    // divine nova
+    DIVINE_NOVA_FLY("effects/skills/divineNova/divin_nova_fly.png", 5, 9, 11, 16f, 4f),
 
 
     // enemies

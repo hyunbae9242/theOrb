@@ -27,11 +27,25 @@ object ResourceManager {
 
         // 게임 오브젝트들
         const val BASE_ORB = "images/orbs/Base_orb.png"
+        const val ORB_01 = "images/orbs/Orb_01.png"
 
         // 모달 패널들
         const val SQUARE_PANEL_320 = "images/panels/Square_panel_320.png"
         const val RECTANGLE_PANEL_430_278 = "images/panels/Rectangle_panel_430_278.png"
         const val VICTORY_PANEL = "images/panels/Victory_Panel_340_366.png"
+
+        // 배경 이미지들 - clouds01
+        const val BACKGROUND_CLOUDS01_1 = "images/background/clouds01/1.png"
+        const val BACKGROUND_CLOUDS01_2 = "images/background/clouds01/2.png"
+        const val BACKGROUND_CLOUDS01_3 = "images/background/clouds01/3.png"
+        const val BACKGROUND_CLOUDS01_4 = "images/background/clouds01/4.png"
+        const val BACKGROUND_CLOUDS01_5 = "images/background/clouds01/5.png"
+
+        // 배경 이미지들 - clouds02
+        const val BACKGROUND_CLOUDS02_1 = "images/background/clouds02/1.png"
+        const val BACKGROUND_CLOUDS02_2 = "images/background/clouds02/2.png"
+        const val BACKGROUND_CLOUDS02_3 = "images/background/clouds02/3.png"
+        const val BACKGROUND_CLOUDS02_4 = "images/background/clouds02/4.png"
     }
 
     // 텍스처 캐시
@@ -67,6 +81,7 @@ object ResourceManager {
 
     // 게임 오브젝트들을 위한 편의 메소드
     fun getBaseOrbDrawable(): TextureRegionDrawable = getDrawable(Images.BASE_ORB)
+    fun getOrb01Drawable(): TextureRegionDrawable = getDrawable(Images.ORB_01)
 
     // 모달 패널들을 위한 편의 메소드
     fun getSquarePanel320(): TextureRegionDrawable = getDrawable(Images.SQUARE_PANEL_320)
@@ -83,6 +98,52 @@ object ResourceManager {
     fun getSquareButton2(): TextureRegionDrawable = getDrawable(Images.SQUARE_BUTTON_2)
     fun getSquareButtonHighlight(): TextureRegionDrawable = getDrawable(Images.SQUARE_BUTTON_HIGHLIGHT)
     fun getSquareMenuButtonEvent(): TextureRegionDrawable = getDrawable(Images.SQUARE_MENU_BUTTON_EVENT)
+
+    // 배경 이미지들을 위한 편의 메소드 - clouds01
+    fun getBackgroundClouds01Layer1(): TextureRegionDrawable = getDrawable(Images.BACKGROUND_CLOUDS01_1)
+    fun getBackgroundClouds01Layer2(): TextureRegionDrawable = getDrawable(Images.BACKGROUND_CLOUDS01_2)
+    fun getBackgroundClouds01Layer3(): TextureRegionDrawable = getDrawable(Images.BACKGROUND_CLOUDS01_3)
+    fun getBackgroundClouds01Layer4(): TextureRegionDrawable = getDrawable(Images.BACKGROUND_CLOUDS01_4)
+    fun getBackgroundClouds01Layer5(): TextureRegionDrawable = getDrawable(Images.BACKGROUND_CLOUDS01_5)
+
+    // 배경 이미지들을 위한 편의 메소드 - clouds02
+    fun getBackgroundClouds02Layer1(): TextureRegionDrawable = getDrawable(Images.BACKGROUND_CLOUDS02_1)
+    fun getBackgroundClouds02Layer2(): TextureRegionDrawable = getDrawable(Images.BACKGROUND_CLOUDS02_2)
+    fun getBackgroundClouds02Layer3(): TextureRegionDrawable = getDrawable(Images.BACKGROUND_CLOUDS02_3)
+    fun getBackgroundClouds02Layer4(): TextureRegionDrawable = getDrawable(Images.BACKGROUND_CLOUDS02_4)
+
+    /**
+     * 배경 레이어들을 순서대로 반환
+     */
+    fun getBackgroundClouds01Layers(): List<TextureRegionDrawable> {
+        return listOf(
+            getBackgroundClouds01Layer1(),
+            getBackgroundClouds01Layer2(),
+            getBackgroundClouds01Layer3(),
+            getBackgroundClouds01Layer4(),
+            getBackgroundClouds01Layer5()
+        )
+    }
+
+    fun getBackgroundClouds02Layers(): List<TextureRegionDrawable> {
+        return listOf(
+            getBackgroundClouds02Layer1(),
+            getBackgroundClouds02Layer2(),
+            getBackgroundClouds02Layer3(),
+            getBackgroundClouds02Layer4()
+        )
+    }
+
+    /**
+     * 배경 이름에 따라 해당 배경의 레이어들을 반환
+     */
+    fun getBackgroundLayers(backgroundName: String): List<TextureRegionDrawable> {
+        return when (backgroundName) {
+            "clouds01" -> getBackgroundClouds01Layers()
+            "clouds02" -> getBackgroundClouds02Layers()
+            else -> getBackgroundClouds01Layers() // 기본값
+        }
+    }
 
     /**
      * 모든 캐시된 텍스처 해제 (게임 종료 시 호출)

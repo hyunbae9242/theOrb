@@ -2,6 +2,7 @@ package com.example.theorb.upgrades
 
 import com.example.theorb.balance.InGameUpgrades
 import com.example.theorb.data.SaveData
+import com.example.theorb.util.OrbManager
 
 object InGameUpgradeManager {
 
@@ -27,7 +28,9 @@ object InGameUpgradeManager {
 
     // 치명타 확률 (인게임 업그레이드만)
     fun getCriticalChance(saveData: SaveData): Float {
-        return saveData.criticalChance // 이미 계산된 값 사용
+        val baseCritChance = saveData.criticalChance // 이미 계산된 값 사용
+        val orbCritBonus = OrbManager.getCritChanceBonus(saveData) * 100f // 0.15 -> 15%
+        return baseCritChance + orbCritBonus
     }
 
     // 치명타 데미지 (인게임 업그레이드만)

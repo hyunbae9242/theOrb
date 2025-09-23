@@ -11,6 +11,7 @@ data class SaveData(
     var upgrades: MutableMap<String, Int> = mutableMapOf(), // ex) "atkPower" -> 2
     var permanentUpgrades: MutableMap<String, Int> = mutableMapOf(), // 영구 업그레이드 레벨
     var equippedSkills: MutableList<String> = mutableListOf(),
+    var selectedOrb: String = "base_orb", // 선택된 오브 ID
     var currentSpeedMultiplier: Float = 1.0f, // 현재 선택된 배속 (1.0, 2.0, 3.0)
     var maxSpeedMultiplier: Float = 2.0f, // 최대 사용 가능한 배속 (과금으로 3.0까지 확장)
 

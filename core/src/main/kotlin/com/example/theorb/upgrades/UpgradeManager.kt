@@ -1,6 +1,7 @@
 package com.example.theorb.upgrades
 
 import com.example.theorb.data.SaveData
+import com.example.theorb.util.OrbManager
 
 object UpgradeManager {
 
@@ -37,21 +38,26 @@ object UpgradeManager {
         return (baseDamage + damageBonus).toInt()
     }
 
-    // 데미지 계산용 - 배수 형태로 반환
+    // 데미지 계산용 - 배수 형태로 반환 (오브 효과 포함)
     fun getDamageMultiplier(saveData: SaveData): Float {
         val damageBonus = getUpgradeValue(saveData, UpgradeType.DAMAGE)
-        // 기본 데미지 10 기준으로 배수 계산 (10 + bonus) / 10
-        return (10f + damageBonus) / 10f
+        val upgradeMultiplier = (10f + damageBonus) / 10f
+        val orbMultiplier = OrbManager.getDamageMultiplier(saveData)
+        return upgradeMultiplier * orbMultiplier
     }
 
     fun getEffectiveRange(saveData: SaveData, baseRange: Float): Float {
         val rangeMultiplier = getUpgradeValue(saveData, UpgradeType.RANGE)
-        return baseRange * (1f + rangeMultiplier) // 기본 사정거리 * (1 + 업그레이드 비율)
+        val upgradeRange = baseRange * (1f + rangeMultiplier)
+        val orbRangeMultiplier = OrbManager.getRangeMultiplier(saveData)
+        return upgradeRange * orbRangeMultiplier // 업그레이드 사정거리 * 오브 배율
     }
 
     fun getCooldownMultiplier(saveData: SaveData): Float {
         val reductionPercent = getUpgradeValue(saveData, UpgradeType.COOLDOWN_REDUCTION)
-        return 1f - reductionPercent // 3% 감소면 0.97 반환
+        val upgradeMultiplier = 1f - reductionPercent // 3% 감소면 0.97 반환
+        val orbMultiplier = OrbManager.getCooldownMultiplier(saveData)
+        return upgradeMultiplier * orbMultiplier // 업그레이드 * 오브 효과
     }
 
     // 업그레이드 초기화 - 사용한 골드를 모두 환불

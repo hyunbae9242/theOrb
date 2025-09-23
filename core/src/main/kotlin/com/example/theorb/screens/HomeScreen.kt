@@ -17,16 +17,30 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.Align
 import com.example.theorb.TheOrb
+import com.example.theorb.data.OrbRegistry
+import com.example.theorb.data.SaveManager
+import com.example.theorb.ui.BackgroundRenderer
+import com.example.theorb.ui.OrbSelectionModal
 import com.example.theorb.util.ResourceManager
 import com.example.theorb.util.formatNumber
 
 class HomeScreen(private val game: Game) : BaseScreen() {
     private val stage = Stage(viewport)
     private var stageIndex = 1
+    private val backgroundRenderer = BackgroundRenderer()
+    private lateinit var orbSelectionModal: OrbSelectionModal
 
     override fun show() {
         initSharedResources()
         Gdx.input.inputProcessor = stage
+
+        // 배경 설정 (미리 정의된 투명도가 자동 적용됨)
+        backgroundRenderer.setBackground("clouds02") // clouds02 배경 사용 (투명도 1.0f 자동 적용)
+        backgroundRenderer.addToStage(stage, viewport.worldWidth, viewport.worldHeight)
+
+        // 오브 선택 모달 초기화
+        orbSelectionModal = OrbSelectionModal(stage, skin, gameObject.saveData)
+
         setupUi()
     }
 
@@ -57,8 +71,31 @@ class HomeScreen(private val game: Game) : BaseScreen() {
         // ===== 중앙(오브 + 스테이지 선택) =====
         val center = Table()
 
-        val orb = Image(ResourceManager.getBaseOrbDrawable()).apply {
+        // 선택된 오브 이미지
+        val selectedOrbData = OrbRegistry.getOrbById(gameObject.saveData.selectedOrb)
+            ?: OrbRegistry.getOrbById("base_orb")!!
+
+        val orb = Image(selectedOrbData.getDrawable()).apply {
             setSize(60f, 60f)
+            touchable = com.badlogic.gdx.scenes.scene2d.Touchable.enabled
+            addListener(object : com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
+                override fun clicked(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float) {
+                    Gdx.app.log("HomeScreen", "오브 클릭됨!")
+                    // 오브 선택 모달 열기
+                    orbSelectionModal.show(
+                        onClose = {
+                            orbSelectionModal.hide()
+                        },
+                        onOrbSelected = { newOrbData ->
+                            // 선택된 오브가 바뀌었을 때 이미지 업데이트
+                            this@apply.drawable = newOrbData.getDrawable()
+                            // 세이브 데이터 저장
+                            gameObject.saveData.selectedOrb = newOrbData.id
+                            SaveManager.save(gameObject.saveData)
+                        }
+                    )
+                }
+            })
         }
         val stageLabel = Label("스테이지 $stageIndex", skin.get("label-large", Label.LabelStyle::class.java)).apply {
             color = TEXT_PRIMARY
@@ -111,6 +148,7 @@ class HomeScreen(private val game: Game) : BaseScreen() {
         root.add(startBtn).pad(12f).growX().height(80f).row()
         root.add(bottomLine).height(1f).growX().row()
         root.add(bottom).growX().padBottom(6f)
+        // root.debugAll() // 디버그 모드 비활성화
     }
 
     // ---- helpers ----
@@ -187,6 +225,7 @@ class HomeScreen(private val game: Game) : BaseScreen() {
     override fun dispose() {
         super.dispose()
         stage.dispose()
+        backgroundRenderer.dispose()
         disposeSharedResources()
     }
 }

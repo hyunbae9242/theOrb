@@ -22,6 +22,7 @@ import com.example.theorb.entities.EnemyFactory
 import com.example.theorb.entities.Player
 import com.example.theorb.entities.Projectile
 import com.example.theorb.skills.SkillRegistry
+import com.example.theorb.ui.BackgroundRenderer
 import com.example.theorb.ui.DamageText
 import com.example.theorb.ui.InGameUpgradePanel
 import com.example.theorb.ui.ModalDialog
@@ -35,6 +36,7 @@ import com.example.theorb.util.formatNumber
 class GameScreen : BaseScreen() {
     private val shape = ShapeRenderer()
     private val batch = SpriteBatch()
+    private val backgroundRenderer = BackgroundRenderer()
 
     // 레이아웃 비율 (퍼센트 기반) - 더 많은 여유공간
     private val topUIHeightRatio = 0.15f // 15% - 상단 UI
@@ -88,6 +90,10 @@ class GameScreen : BaseScreen() {
         initialGold = gameObject.saveData.gold
         initialGems = gameObject.saveData.gems
         skillDamageStats.clear()
+
+        // 배경 설정 (미리 정의된 투명도가 자동 적용됨)
+        backgroundRenderer.setBackground("clouds02") // clouds02 배경 사용 (투명도 1.0f 자동 적용)
+        backgroundRenderer.initForSpriteBatch(viewport.worldWidth, viewport.worldHeight)
 
         Gdx.input.inputProcessor = uiStage
         settingsModal = SettingsModal(uiStage, skin)
@@ -402,7 +408,15 @@ class GameScreen : BaseScreen() {
         camera.update()
         shape.projectionMatrix = camera.combined
 
-        // 사정거리 표시 (Line 모드로 원의 테두리만 그리기)
+        // --- 이펙트와 플레이어 (SpriteBatch) ---
+        batch.begin()
+
+        // 배경 그리기 (맨 먼저)
+        backgroundRenderer.drawWithSpriteBatch(batch)
+
+        batch.end()
+
+        // 사정거리 표시 (배경 위에 그리기)
         shape.begin(ShapeRenderer.ShapeType.Line)
         shape.color = Color.GRAY
         val effectiveRange = UpgradeManager.getEffectiveRange(gameObject.saveData, player.baseRange)
@@ -412,11 +426,11 @@ class GameScreen : BaseScreen() {
         shape.begin(ShapeRenderer.ShapeType.Filled)
         shape.end()
 
-        // --- 이펙트와 플레이어 (SpriteBatch) ---
+        // --- 게임 요소들 (SpriteBatch) ---
         batch.begin()
 
         // Player (base_orb 이미지)
-        val orbDrawable = ResourceManager.getBaseOrbDrawable()
+        val orbDrawable = ResourceManager.getOrb01Drawable()
         val orbSize = 50f
         orbDrawable.draw(batch, player.x - orbSize/2, player.y - orbSize/2, orbSize, orbSize)
 
@@ -651,6 +665,7 @@ class GameScreen : BaseScreen() {
         super.dispose()
         shape.dispose()
         batch.dispose()
+        backgroundRenderer.dispose()
         disposeSharedResources()
     }
 }
