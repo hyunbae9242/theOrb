@@ -1,11 +1,9 @@
 package com.example.theorb.ui
 
 import com.badlogic.gdx.graphics.Color
-import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.Touchable
 import com.badlogic.gdx.scenes.scene2d.ui.*
-import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.example.theorb.screens.BaseScreen
 import com.example.theorb.util.ResourceManager
 import com.example.theorb.util.formatNumber
@@ -53,7 +51,7 @@ class VictoryModal(private val stage: Stage, private val skin: Skin) {
         onRestart: () -> Unit
     ) {
         dialogContainer = Table().apply {
-            background = ResourceManager.getVictoryPanel()
+            background = ResourceManager.getSquarePanel360()
             pad(20f)
             // Victory Panel 크기에 맞게 고정 크기 설정 (340x366)
             setSize(340f, 366f)
@@ -61,7 +59,7 @@ class VictoryModal(private val stage: Stage, private val skin: Skin) {
 
         // 승리 제목
         val titleLabel = Label("Victory!", skin.get("label-large", Label.LabelStyle::class.java)).apply {
-            color = Color.GOLD
+            color = BaseScreen.ACCENT
         }
 
         // 골드/젬 획득 정보
@@ -89,7 +87,7 @@ class VictoryModal(private val stage: Stage, private val skin: Skin) {
                 color = BaseScreen.TEXT_SECONDARY
             }
             val damageLabel = Label(formatNumber(damage.toInt()), skin.get("label-small", Label.LabelStyle::class.java)).apply {
-                color = Color.WHITE
+                color = BaseScreen.TEXT_PRIMARY
             }
 
             statsTable.add(skillLabel).left().padRight(15f)
@@ -99,32 +97,28 @@ class VictoryModal(private val stage: Stage, private val skin: Skin) {
         // 버튼들
         val buttonTable = Table()
 
-        val homeButton = TextButton("홈으로", TextButton.TextButtonStyle().apply {
-            font = skin.get("btn", TextButton.TextButtonStyle::class.java).font
-            fontColor = Color.WHITE
-            up = ResourceManager.getButtonCancelBg()
-            down = ResourceManager.getButtonHighlightBg()
-            over = ResourceManager.getButtonHighlightBg()
-        }).apply {
-            addListener(object : ChangeListener() {
-                override fun changed(event: ChangeEvent?, actor: Actor?) {
-                    onHome()
-                }
-            })
+        val homeButton = RetroButton.createTextButton(
+            text = "홈으로",
+            skin = skin,
+            labelStyle = "label-default-bold",
+            textColor = BaseScreen.TEXT_PRIMARY,
+            defaultImage = ResourceManager.getRetroRectangleNagDefault(),
+            eventImage = ResourceManager.getRetroRectangleNagEvent(),
+            buttonSize = 40f
+        ) {
+            onHome()
         }
 
-        val restartButton = TextButton("다시하기", TextButton.TextButtonStyle().apply {
-            font = skin.get("btn", TextButton.TextButtonStyle::class.java).font
-            fontColor = Color.WHITE
-            up = ResourceManager.getButtonConfirmBg()
-            down = ResourceManager.getButtonHighlightBg()
-            over = ResourceManager.getButtonHighlightBg()
-        }).apply {
-            addListener(object : ChangeListener() {
-                override fun changed(event: ChangeEvent?, actor: Actor?) {
-                    onRestart()
-                }
-            })
+        val restartButton = RetroButton.createTextButton(
+            text = "다시하기",
+            skin = skin,
+            labelStyle = "label-default-bold",
+            textColor = BaseScreen.TEXT_PRIMARY,
+            defaultImage = ResourceManager.getRetroRectanglePosDefault(),
+            eventImage = ResourceManager.getRetroRectanglePosEvent(),
+            buttonSize = 40f
+        ) {
+            onRestart()
         }
 
         buttonTable.add(homeButton).size(100f, 40f).padRight(15f)

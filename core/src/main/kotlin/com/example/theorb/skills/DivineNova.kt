@@ -13,13 +13,23 @@ class DivineNova : Skill(
     name = "성스러운파동",
     baseCooldown = 2.0f,
     baseElement = Element.ANGEL,
-    damageMul = 2.5f, // AOE이므로 단일 타겟 대비 데미지 조정
+    baseDamageMul = 2.5f, // AOE이므로 단일 타겟 대비 데미지 조정
     castEffectType = EffectType.DIVINE_NOVA_CAST, // 시전자 중심에서 한 번만 발동
     hitEffectType = EffectType.FIREBALL_HIT,
     flyEffectType = null, // AOE 스킬이므로 개별 projectile fly 효과 없음
     isInstant = true, // 즉발 스킬
     isAOE = true // AOE 스킬
 ) {
+
+    // DivineNova 전용 등급 배율 (AOE 스킬 특성)
+    override fun getRankMultipliers(): Map<SkillRank, Float> = mapOf(
+        SkillRank.C to 1.0f,
+        SkillRank.B to 1.5f,
+        SkillRank.A to 2.2f,
+        SkillRank.S to 3.2f,
+        SkillRank.SS to 4.5f,
+        SkillRank.SSS to 6.0f
+    )
     override fun createProjectile(x: Float, y: Float, target: Enemy, caster: Player, preCalculatedDamage: Int, effects: MutableList<Effect>, onDamage: ((Int, Float, Float, Element, String) -> Unit)?): Projectile {
         return Projectile(x, y, target, caster, this, preCalculatedDamage, onHit = {enemy ->
             effects.add(
@@ -45,7 +55,8 @@ class DivineNova : Skill(
                     y,
                     castEffectType.scale,
                     0f,
-                    Anchor.CENTER
+                    Anchor.CENTER,
+                    0.5f // 50% 불투명도
                 )
             )
         }

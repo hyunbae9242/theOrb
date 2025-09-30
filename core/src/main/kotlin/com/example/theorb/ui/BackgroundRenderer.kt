@@ -117,6 +117,20 @@ class BackgroundRenderer {
     }
 
     /**
+     * 런타임에 배경 변경 (Stage용)
+     */
+    fun changeBackground(stage: com.badlogic.gdx.scenes.scene2d.Stage, newBackgroundName: String, screenWidth: Float, screenHeight: Float) {
+        // 기존 배경 제거
+        backgroundLayers.forEach { it.remove() }
+
+        // 새 배경 설정
+        setBackground(newBackgroundName)
+
+        // 새 배경 추가
+        addToStage(stage, screenWidth, screenHeight)
+    }
+
+    /**
      * 배경 위치 업데이트 (화면 크기 변경 시)
      */
     fun updateSize(screenWidth: Float, screenHeight: Float) {

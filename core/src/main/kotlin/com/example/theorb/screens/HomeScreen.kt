@@ -24,62 +24,52 @@ import com.example.theorb.data.SaveManager
 import com.example.theorb.ui.BackgroundRenderer
 import com.example.theorb.ui.BottomNavigation
 import com.example.theorb.ui.OrbSelectionModal
+import com.example.theorb.ui.SettingsModal
+import com.example.theorb.ui.TopBar
 import com.example.theorb.util.ResourceManager
 import com.example.theorb.util.formatNumber
 
 class HomeScreen(private val game: Game) : BaseScreen() {
     private val stage = Stage(viewport)
     private var stageIndex = 1
-    private val backgroundRenderer = BackgroundRenderer()
     private lateinit var orbSelectionModal: OrbSelectionModal
+    private lateinit var topBar: TopBar
 
     override fun show() {
         initSharedResources()
         Gdx.input.inputProcessor = stage
 
-        // 배경 설정 (미리 정의된 투명도가 자동 적용됨)
-        backgroundRenderer.setBackground("clouds02") // clouds02 배경 사용 (투명도 1.0f 자동 적용)
-        backgroundRenderer.addToStage(stage, viewport.worldWidth, viewport.worldHeight)
 
-        // 오브 선택 모달 초기화
+        // UI 컴포넌트들 초기화
         orbSelectionModal = OrbSelectionModal(stage, skin, gameObject.saveData)
+        topBar = TopBar(stage, skin)
 
         setupUi()
     }
 
     private fun setupUi() {
-        val root = Table().apply {
-            setFillParent(true)
-            pad(SCREEN_PADDING)
-        }
-        stage.addActor(root)
+        // 공통 레이아웃 시스템 사용
+        val root = createRootLayout(stage)
 
         // ===== 상단 바 =====
-        val top = Table().apply { pad(COMPONENT_PADDING) }
+        val topBarTable = topBar.createTopBar()
+        addTopBar(root, topBarTable)
 
-        val gold = Label("골드: ${formatNumber(gameObject.saveData.gold)}", skin.get("label-small", Label.LabelStyle::class.java)).apply {
-            color = TEXT_PRIMARY
-        }
-        val gem  = Label("젬: 5",    skin.get("label-small", Label.LabelStyle::class.java)).apply {
-            color = TEXT_PRIMARY
-        }
-        val left = Table().apply {
-            add(gold).right().row()
-            add(gem).right()
-        }
-        val menuIcon = Image(ResourceManager.getDrawable("images/buttons/blue/Menu_icon.png")).apply {
-            setSize(40f, 40f)
-            touchable = com.badlogic.gdx.scenes.scene2d.Touchable.enabled
-            // 추후 메뉴 기능 추가 가능
-        }
+        // ===== 중앙 컨텐츠 =====
+        val mainContent = createMainContent()
+        addMainContent(root, mainContent)
 
-        top.add(left).left().expandX()
-        top.add(menuIcon).right()
+        // ===== 하단 네비게이션 =====
+        val bottomNavigation = BottomNavigation(game, skin, BottomNavigation.Tab.MAIN)
+        val bottomNav = bottomNavigation.createBottomNavigation()
+        addBottomNavigation(root, bottomNav)
+    }
 
-        // ===== 중앙(오브 + 스테이지 선택) =====
-        val center = Table()
 
-        // 선택된 오브 이미지
+    private fun createMainContent(): Table {
+        val mainContent = Table()
+
+        // 오브 + 스테이지 정보
         val selectedOrbData = OrbRegistry.getOrbById(gameObject.saveData.selectedOrb)
             ?: OrbRegistry.getOrbById("base")!!
 
@@ -88,16 +78,12 @@ class HomeScreen(private val game: Game) : BaseScreen() {
             touchable = com.badlogic.gdx.scenes.scene2d.Touchable.enabled
             addListener(object : com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
                 override fun clicked(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float) {
-                    Gdx.app.log("HomeScreen", "오브 클릭됨!")
-                    // 오브 선택 모달 열기
                     orbSelectionModal.show(
                         onClose = {
                             orbSelectionModal.hide()
                         },
                         onOrbSelected = { newOrbData ->
-                            // 선택된 오브가 바뀌었을 때 이미지 업데이트
                             this@apply.drawable = newOrbData.getDrawable()
-                            // 세이브 데이터 저장
                             gameObject.saveData.selectedOrb = newOrbData.id
                             SaveManager.save(gameObject.saveData)
                         }
@@ -105,62 +91,24 @@ class HomeScreen(private val game: Game) : BaseScreen() {
                 }
             })
         }
+
         val stageLabel = Label("스테이지 $stageIndex", skin.get("label-large", Label.LabelStyle::class.java)).apply {
             color = TEXT_PRIMARY
         }
 
-        val stageRow = Table().apply {
-            add(stageLabel).padRight(16f)
-        }
-
-        center.add(orb).pad(60f).row()
-        center.add(stageRow).padBottom(12f).row()
-
         val startBtn = TextButton("게임 시작", skin.get("btn", TextButton.TextButtonStyle::class.java).apply { font = fontLg })
         startBtn.addListener(object : ChangeListener() {
             override fun changed(event: ChangeEvent?, actor: Actor?) {
-                Gdx.app.log("Home", "게임 시작 버튼 클릭됨")
                 game.setScreen(GameScreen())
             }
         })
-        // ===== 하단 탭 =====
-        val bottomNavigation = BottomNavigation(game, skin, BottomNavigation.Tab.MAIN)
-        val bottom = bottomNavigation.createBottomNavigation()
 
-        // ===== 루트 조립 =====
-        root.add(top).growX().row()
-        root.add(center).expand().row()
-        root.add(startBtn).pad(COMPONENT_PADDING).growX().height(80f).row()
-        root.add(bottom).growX().padBottom(6f)
-        // root.debugAll() // 디버그 모드 비활성화
-    }
+        // 레이아웃 구성
+        mainContent.add(orb).pad(60f).row()
+        mainContent.add(stageLabel).padBottom(40f).row()
+        mainContent.add(startBtn).pad(COMPONENT_PADDING).width(280f).height(80f)
 
-    // ---- helpers ----
-    private fun line(): Image =
-        Image(skin.getDrawable("white")).apply { color = Color.WHITE }
-
-    private fun square(size: Float): Image {
-        val pm = Pixmap(size.toInt(), size.toInt(), Pixmap.Format.RGBA8888)
-        pm.setColor(Color.WHITE); pm.fill()
-        val tex = Texture(pm); pm.dispose()
-        return Image(TextureRegionDrawable(tex)).apply {
-            this.setSize(size, size)
-        }
-    }
-
-    private fun circle(diameter: Float): Image {
-        val d = diameter.toInt().coerceAtLeast(2)
-        val pm = Pixmap(d, d, Pixmap.Format.RGBA8888)
-        pm.setColor(Color.CLEAR); pm.fill()
-        pm.setColor(Color.WHITE)
-        val r = d / 2f
-        for (y in 0 until d) for (x in 0 until d) {
-            val dx = x - r + 0.5f
-            val dy = y - r + 0.5f
-            if (dx*dx + dy*dy <= r*r) pm.drawPixel(x, y)
-        }
-        val tex = Texture(pm); pm.dispose()
-        return Image(TextureRegionDrawable(tex)).apply { setSize(diameter, diameter) }
+        return mainContent
     }
 
 
@@ -178,7 +126,6 @@ class HomeScreen(private val game: Game) : BaseScreen() {
     override fun dispose() {
         super.dispose()
         stage.dispose()
-        backgroundRenderer.dispose()
         disposeSharedResources()
     }
 }

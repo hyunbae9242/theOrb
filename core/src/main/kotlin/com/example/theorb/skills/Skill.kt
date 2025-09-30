@@ -11,13 +11,28 @@ abstract class Skill(
     val name: String,
     val baseCooldown: Float,
     val baseElement: Element,
-    val damageMul: Float,
+    val baseDamageMul: Float,
     val castEffectType: EffectType? = null,
     val flyEffectType: EffectType? = null,
     val hitEffectType: EffectType,
     val isInstant: Boolean = false, // 즉발 스킬 여부
     val isAOE: Boolean = false, // AOE 스킬 여부
+    var rank: SkillRank = SkillRank.C // 기본 등급은 C
 ) {
+
+    // 스킬별 등급 배율 정의 (서브클래스에서 오버라이드)
+    open fun getRankMultipliers(): Map<SkillRank, Float> = mapOf(
+        SkillRank.C to 1.0f,
+        SkillRank.B to 1.3f,
+        SkillRank.A to 1.7f,
+        SkillRank.S to 2.2f,
+        SkillRank.SS to 2.8f,
+        SkillRank.SSS to 3.5f
+    )
+
+    // 등급을 적용한 최종 데미지 배율
+    val damageMul: Float
+        get() = baseDamageMul * (getRankMultipliers()[rank] ?: 1.0f)
     var cooldownTimer: Float = 0f
         private set
 

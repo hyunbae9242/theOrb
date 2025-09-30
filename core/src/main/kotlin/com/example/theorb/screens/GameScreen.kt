@@ -7,11 +7,10 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Stage
-import com.badlogic.gdx.scenes.scene2d.ui.Image
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Stack
 import com.badlogic.gdx.scenes.scene2d.ui.Table
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.example.theorb.balance.EnemyType
 import com.example.theorb.data.SaveManager
@@ -26,7 +25,7 @@ import com.example.theorb.ui.BackgroundRenderer
 import com.example.theorb.ui.DamageText
 import com.example.theorb.ui.InGameUpgradePanel
 import com.example.theorb.ui.ModalDialog
-import com.example.theorb.ui.SettingsModal
+import com.example.theorb.ui.PauseModal
 import com.example.theorb.ui.VictoryModal
 import com.example.theorb.upgrades.InGameUpgradeManager
 import com.example.theorb.upgrades.UpgradeManager
@@ -38,7 +37,6 @@ import com.example.theorb.util.OrbManager
 class GameScreen : BaseScreen() {
     private val shape = ShapeRenderer()
     private val batch = SpriteBatch()
-    private val backgroundRenderer = BackgroundRenderer()
 
     // 레이아웃 비율 (퍼센트 기반) - 더 많은 여유공간
     private val topUIHeightRatio = 0.15f // 15% - 상단 UI
@@ -62,7 +60,7 @@ class GameScreen : BaseScreen() {
     private lateinit var bossHealthBarFill: Table
     private lateinit var bossNameLabel: Label
     private var currentBoss: Enemy? = null
-    private lateinit var speedButton: TextButton
+    private lateinit var speedButton: Stack
 
     private var spawnTimer = 0f
     private var bossSpawnTimer = 60f // 1분마다 보스 스폰
@@ -72,7 +70,7 @@ class GameScreen : BaseScreen() {
     private var isGameOver = false
     private var isVictory = false
     private var animationTime = 0f
-    private lateinit var settingsModal: SettingsModal
+    private lateinit var pauseModal: PauseModal
     private lateinit var modalDialog: ModalDialog
     private lateinit var upgradePanel: InGameUpgradePanel
     private lateinit var victoryModal: VictoryModal
@@ -93,12 +91,12 @@ class GameScreen : BaseScreen() {
         initialGems = gameObject.saveData.gems
         skillDamageStats.clear()
 
-        // 배경 설정 (미리 정의된 투명도가 자동 적용됨)
-        backgroundRenderer.setBackground("clouds02") // clouds02 배경 사용 (투명도 1.0f 자동 적용)
+        // 배경 설정 (공통 배경 렌더러 사용)
+        val backgroundRenderer = getSharedBackgroundRenderer()
         backgroundRenderer.initForSpriteBatch(viewport.worldWidth, viewport.worldHeight)
 
         Gdx.input.inputProcessor = uiStage
-        settingsModal = SettingsModal(uiStage, skin)
+        pauseModal = PauseModal(uiStage, skin)
         modalDialog = ModalDialog(uiStage, skin)
         victoryModal = VictoryModal(uiStage, skin)
         upgradePanel = InGameUpgradePanel(gameObject.saveData)
@@ -119,7 +117,8 @@ class GameScreen : BaseScreen() {
         val gameArea = Table()
 
         // 하단 업그레이드 패널 영역
-        val upgradeContainer = upgradePanel.createUI()
+        val upgradeAreaHeight = viewport.worldHeight * upgradeUIHeightRatio
+        val upgradeContainer = upgradePanel.createUI(upgradeAreaHeight)
 
         // 좌측: 골드, 젬, 실버 정보
         goldLabel = Label("골드: ${formatNumber(gameObject.saveData.gold)}", skin.get("label-small", Label.LabelStyle::class.java)).apply {
@@ -139,53 +138,33 @@ class GameScreen : BaseScreen() {
             add(gemLabel).left().row()
         }
 
-        // 설정 버튼 - Stack으로 오버레이 구현 (원래 이미지 위에 이벤트 이미지 겹침)
-        val gearButtonIcon = Image(ResourceManager.getPauseButtonDrawable())
-        val gearButtonOverlay = Image(ResourceManager.getSquareMenuButtonEvent()).apply {
-            isVisible = false
-        }
-        val gearButton = Stack().apply {
-            add(gearButtonIcon)
-            add(gearButtonOverlay)
-
-            addListener(object : com.badlogic.gdx.scenes.scene2d.InputListener() {
-                override fun enter(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
-                    gearButtonOverlay.isVisible = true
-                }
-                override fun exit(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, toActor: Actor?) {
-                    gearButtonOverlay.isVisible = false
-                }
-                override fun touchDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, button: Int): Boolean {
-                    gearButtonOverlay.isVisible = true
-                    return true
-                }
-                override fun touchUp(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, button: Int) {
-                    gearButtonOverlay.isVisible = false
+        // 설정 버튼 - Retro 스타일 (이미지 교체 방식)
+        val pauseButton = ImageButton(ImageButton.ImageButtonStyle().apply {
+            up = ResourceManager.getRetroPauseDefault()
+            down = ResourceManager.getRetroPauseEvent()
+            over = ResourceManager.getRetroPauseEvent()
+        }).apply {
+            addListener(object : ChangeListener() {
+                override fun changed(event: ChangeEvent?, actor: Actor?) {
                     pauseGame()
                     showSettingsModal()
                 }
             })
         }
 
-        // 배속 버튼 (정사각형 배경 이미지 사용)
-        val speedButtonStyle = TextButton.TextButtonStyle().apply {
-            font = skin.get("btn", TextButton.TextButtonStyle::class.java).font
-            fontColor = Color.WHITE
-            up = ResourceManager.getSquareButton2()
-            down = ResourceManager.getSquareButtonHighlight()
-            over = ResourceManager.getSquareButtonHighlight()
-        }
-        speedButton = TextButton(getSpeedText(), speedButtonStyle).apply {
-            addListener(object : ChangeListener() {
-                override fun changed(event: ChangeEvent?, actor: Actor?) {
-                    toggleGameSpeed()
-                }
-            })
+        // 배속 버튼 - Retro 스타일 (RetroButton 유틸리티 사용)
+        speedButton = com.example.theorb.ui.RetroButton.createTextButton(
+            text = getSpeedText(),
+            skin = skin,
+            textColor = BaseScreen.TEXT_PRIMARY
+        ) {
+            toggleGameSpeed()
         }
 
         val topRight = Table().apply {
-            add(gearButton).size(42f).padBottom(8f).row() // 14px * 3 = 42px (3배 스케일링)
-            add(speedButton).size(42f, 42f).top() // 정사각형 배경 이미지 크기 42x42
+            val buttonSize = getSquareButtonSize()
+            add(pauseButton).size(buttonSize).padBottom(8f).row()
+            add(speedButton).size(buttonSize, buttonSize).top()
         }
 
         topUIContainer.add(topLeft).left().top().padLeft(12f)
@@ -276,7 +255,33 @@ class GameScreen : BaseScreen() {
 
     private fun loadSaveData() {
         val saveData = gameObject.saveData
-        val skills = saveData.equippedSkills.map { SkillRegistry.createSkill(it) }.toMutableList()
+        val skills = saveData.equippedSkills.mapNotNull { skillId ->
+            try {
+                if (skillId.contains(":")) {
+                    // 새로운 형식: "SkillType:Rank"
+                    val parts = skillId.split(":")
+                    if (parts.size == 2) {
+                        val skillType = parts[0]
+                        val rank = com.example.theorb.skills.SkillRank.valueOf(parts[1])
+                        val skill = SkillRegistry.createSkill(skillType)
+                        skill.rank = rank
+                        skill
+                    } else null
+                } else {
+                    // 이전 형식: "SkillType"만 (호환성 유지)
+                    SkillRegistry.createSkill(skillId)
+                }
+            } catch (e: Exception) {
+                Gdx.app.log("GameScreen", "스킬 로드 실패: $skillId - ${e.message}")
+                null
+            }
+        }.toMutableList()
+
+        // 스킬 로깅 (디버깅용)
+        Gdx.app.log("GameScreen", "=== 로드된 스킬 확인 ===")
+        skills.forEach { skill ->
+            Gdx.app.log("GameScreen", "스킬: ${skill.name}, 등급: ${skill.rank.displayName}, 데미지 배율: ${skill.damageMul}")
+        }
 
         // 오브 능력치 로깅 (디버깅용)
         Gdx.app.log("GameScreen", "=== 오브 능력치 확인 ===")
@@ -428,7 +433,7 @@ class GameScreen : BaseScreen() {
         batch.begin()
 
         // 배경 그리기 (맨 먼저)
-        backgroundRenderer.drawWithSpriteBatch(batch)
+        getSharedBackgroundRenderer().drawWithSpriteBatch(batch)
 
         batch.end()
 
@@ -496,10 +501,9 @@ class GameScreen : BaseScreen() {
     }
 
     private fun showSettingsModal() {
-        settingsModal.show(
+        pauseModal.show(
             onHome = { showExitConfirmation() },
-            onPlay = { resumeGame() },
-            onRestart = { showRestartConfirmation() }
+            onPlay = { resumeGame() }
         )
     }
 
@@ -509,7 +513,7 @@ class GameScreen : BaseScreen() {
             message = "게임을 나가시겠습니까?",
             confirmText = "나가기",
             cancelText = "취소",
-            confirmColor = Color.RED,
+            confirmColor = DANGER,
             onConfirm = {
                 gameObject.setScreen(HomeScreen(gameObject))
             },
@@ -517,19 +521,6 @@ class GameScreen : BaseScreen() {
         )
     }
 
-    private fun showRestartConfirmation() {
-        modalDialog.show(
-            title = "게임 재시작",
-            message = "게임을 다시 시작하시겠습니까?",
-            confirmText = "재시작",
-            cancelText = "취소",
-            confirmColor = Color.ORANGE,
-            onConfirm = {
-                restartGame()
-            },
-            onCancel = { showSettingsModal() } // 설정 모달로 돌아가기
-        )
-    }
 
     private fun restartGame() {
         // 게임 상태 초기화
@@ -557,10 +548,10 @@ class GameScreen : BaseScreen() {
 
         // 게임 재개
         resumeGame()
-        settingsModal.hide()
+        pauseModal.hide()
 
         // 배속 버튼 텍스트 업데이트
-        speedButton.setText(getSpeedText())
+        com.example.theorb.ui.RetroButton.updateText(speedButton, getSpeedText())
     }
 
     fun addDamageText(damage: Int, x: Float, y: Float, element: com.example.theorb.balance.Element) {
@@ -655,7 +646,7 @@ class GameScreen : BaseScreen() {
             else -> saveData.currentSpeedMultiplier = 1.0f
         }
 
-        speedButton.setText(getSpeedText())
+        com.example.theorb.ui.RetroButton.updateText(speedButton, getSpeedText())
         SaveManager.save(saveData)
     }
 
@@ -683,7 +674,6 @@ class GameScreen : BaseScreen() {
         super.dispose()
         shape.dispose()
         batch.dispose()
-        backgroundRenderer.dispose()
         disposeSharedResources()
     }
 }

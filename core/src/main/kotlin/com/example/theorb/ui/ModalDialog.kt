@@ -10,9 +10,16 @@ import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.Align
+import com.example.theorb.screens.BaseScreen
 import com.example.theorb.util.ResourceManager
 
 class ModalDialog(private val stage: Stage, private val skin: Skin) {
+
+    // 비율 기반 크기 계산
+    private val virtualWidth get() = stage.viewport.worldWidth
+    private val virtualHeight get() = stage.viewport.worldHeight
+    private fun getButtonHeight(): Float = virtualHeight * 0.0525f // 42/800
+    private fun getRectangleButtonWidth(): Float = virtualWidth * 0.175f // 84/480
 
     private var backgroundOverlay: Image? = null
     private var dialogContainer: Table? = null
@@ -39,7 +46,7 @@ class ModalDialog(private val stage: Stage, private val skin: Skin) {
         message: String,
         confirmText: String = "확인",
         cancelText: String = "취소",
-        confirmColor: Color = Color.RED,
+        confirmColor: Color = BaseScreen.DANGER,
         onConfirm: () -> Unit,
         onCancel: (() -> Unit)? = null
     ) {
@@ -93,7 +100,7 @@ class ModalDialog(private val stage: Stage, private val skin: Skin) {
         onCancel: (() -> Unit)?
     ) {
         dialogContainer = Table().apply {
-            background = ResourceManager.getSquarePanel320()
+            background = ResourceManager.getSquarePanel360()
             pad(30f)
         }
 
@@ -104,7 +111,7 @@ class ModalDialog(private val stage: Stage, private val skin: Skin) {
 
         // 메시지
         val messageLabel = Label(message, this@ModalDialog.skin.get("label-default", Label.LabelStyle::class.java)).apply {
-            color = com.example.theorb.screens.BaseScreen.TEXT_SECONDARY
+            color = com.example.theorb.screens.BaseScreen.TEXT_PRIMARY
             setWrap(true)
             setAlignment(Align.center)
         }
@@ -112,40 +119,36 @@ class ModalDialog(private val stage: Stage, private val skin: Skin) {
         // 버튼들
         val buttonTable = Table()
 
-        val confirmButton = TextButton(confirmText, TextButton.TextButtonStyle().apply {
-            font = this@ModalDialog.skin.get("btn", TextButton.TextButtonStyle::class.java).font
-            up = ResourceManager.getButtonConfirmBg()
-            down = ResourceManager.getButtonHighlightBg()
-            over = ResourceManager.getButtonHighlightBg()
-            fontColor = Color.WHITE
-        }).apply {
-            addListener(object : ChangeListener() {
-                override fun changed(event: ChangeEvent?, actor: Actor?) {
-                    onConfirm()
-                    hide()
-                }
-            })
+        val confirmButton = RetroButton.createTextButton(
+            text = confirmText,
+            skin = this@ModalDialog.skin,
+            labelStyle = "label-default-bold",
+            textColor = confirmColor,
+            defaultImage = ResourceManager.getRetroRectanglePosDefault(),
+            eventImage = ResourceManager.getRetroRectanglePosEvent(),
+            buttonSize = getButtonHeight()
+        ) {
+            onConfirm()
+            hide()
         }
 
         if (onCancel != null) {
-            val cancelButton = TextButton(cancelText, TextButton.TextButtonStyle().apply {
-                font = this@ModalDialog.skin.get("btn", TextButton.TextButtonStyle::class.java).font
-                up = ResourceManager.getButtonCancelBg()
-                down = ResourceManager.getButtonHighlightBg()
-                over = ResourceManager.getButtonHighlightBg()
-                fontColor = Color.WHITE
-            }).apply {
-                addListener(object : ChangeListener() {
-                    override fun changed(event: ChangeEvent?, actor: Actor?) {
-                        onCancel()
-                        hide()
-                    }
-                })
+            val cancelButton = RetroButton.createTextButton(
+                text = cancelText,
+                skin = this@ModalDialog.skin,
+                labelStyle = "label-default-bold",
+                textColor = BaseScreen.TEXT_SECONDARY,
+                defaultImage = ResourceManager.getRetroRectangleNagDefault(),
+                eventImage = ResourceManager.getRetroRectangleNagEvent(),
+                buttonSize = getButtonHeight()
+            ) {
+                onCancel()
+                hide()
             }
-            buttonTable.add(cancelButton).width(112f).height(56f).padRight(20f) // 새로운 배경 이미지 크기
+            buttonTable.add(cancelButton).width(getRectangleButtonWidth()).height(getButtonHeight()).padRight(20f)
         }
 
-        buttonTable.add(confirmButton).width(112f).height(56f) // 새로운 배경 이미지 크기
+        buttonTable.add(confirmButton).width(getRectangleButtonWidth()).height(getButtonHeight())
 
         // 레이아웃 구성
         dialogContainer!!.apply {

@@ -1,21 +1,82 @@
 {
-gold: 2541
-gems: 367
+gold: 370923
+gems: 242
 permanentUpgrades: {
 	class: java.util.LinkedHashMap
-	RANGE: 14
-	DAMAGE: 43
-	HEALTH: 3
-	CRITICAL_CHANCE: 17
-	CRITICAL_DAMAGE: 16
-	COOLDOWN_REDUCTION: 20
-	MOVEMENT_SPEED: 10
-	GOLD_BONUS: 20
+	RANGE: 7
+	COOLDOWN_REDUCTION: 7
+	DAMAGE: 24
+	CRITICAL_CHANCE: 14
+	CRITICAL_DAMAGE: 22
 }
 equippedSkills: [
-	DivineNova
+	Fireball:C
+	Fireball:B
+	IceLance:C
 ]
-selectedOrb: angel
+skillInventory: [
+	{
+		class: java.util.LinkedHashMap
+		skillType: {
+			class: java.lang.String
+			value: Fireball
+		}
+		rank: {
+			class: java.lang.String
+			value: C
+		}
+		id: {
+			class: java.lang.String
+			value: 67915cd2-6066-46c9-a62a-1af9b247e97d
+		}
+	}
+	{
+		class: java.util.LinkedHashMap
+		skillType: {
+			class: java.lang.String
+			value: Fireball
+		}
+		rank: {
+			class: java.lang.String
+			value: B
+		}
+		id: {
+			class: java.lang.String
+			value: 0e901777-43f1-44fd-afc2-9c4e13359d69
+		}
+	}
+	{
+		class: java.util.LinkedHashMap
+		skillType: {
+			class: java.lang.String
+			value: IceLance
+		}
+		rank: {
+			class: java.lang.String
+			value: C
+		}
+		id: {
+			class: java.lang.String
+			value: d57bb4f8-1810-44f6-9bd5-e193bb84b9a7
+		}
+	}
+]
+unlockedSkills: {
+	class: java.util.LinkedHashSet
+	items: [
+		Fireball:C
+		Fireball:B
+		IceLance:C
+	]
+}
+maxSkillSlots: 3
+selectedOrb: lightning
+selectedBackground: clouds01
 currentSpeedMultiplier: 2
-silver: 6
+silver: 59
+inGameUpgrades: {
+	class: java.util.LinkedHashMap
+	DAMAGE_INCREASE: 3
+	GOLD_INCREASE: 2
+}
 }

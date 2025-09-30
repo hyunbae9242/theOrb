@@ -1,42 +1,32 @@
 package com.example.theorb.ui
 
 import com.badlogic.gdx.graphics.Color
-import com.badlogic.gdx.graphics.Pixmap
-import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.Touchable
 import com.badlogic.gdx.scenes.scene2d.ui.*
-import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
+import com.badlogic.gdx.utils.Align
+import com.example.theorb.screens.BaseScreen
 import com.example.theorb.util.ResourceManager
 
 class SettingsModal(private val stage: Stage, private val skin: Skin) {
 
     private var backgroundOverlay: Image? = null
     private var dialogContainer: Table? = null
+    private var currentBackgroundIndex = 0
+    private val availableBackgrounds = listOf("clouds01", "clouds02", "city01", "city02", "city03")
 
-    private fun createRoundedRectWithBorder(width: Int, height: Int, cornerRadius: Int,
-                                          bgColor: Color, borderColor: Color, borderWidth: Int): TextureRegionDrawable {
-        val pixmap = Pixmap(width, height, Pixmap.Format.RGBA8888)
-
-        // 전체를 테두리 색으로 채우기
-        pixmap.setColor(borderColor)
-        pixmap.fill()
-
-        // 내부를 배경색으로 채우기 (테두리를 남기기 위해 안쪽 영역만)
-        pixmap.setColor(bgColor)
-        pixmap.fillRectangle(borderWidth, borderWidth, width - 2 * borderWidth, height - 2 * borderWidth)
-
-        val texture = Texture(pixmap)
-        pixmap.dispose()
-        return TextureRegionDrawable(texture)
-    }
+    private var onBackgroundChanged: ((String) -> Unit)? = null
 
     fun show(
-        onHome: () -> Unit,
-        onPlay: () -> Unit,
-        onRestart: () -> Unit
+        currentBackground: String,
+        onClose: () -> Unit,
+        onBackgroundChange: (String) -> Unit
     ) {
+        this.onBackgroundChanged = onBackgroundChange
+        currentBackgroundIndex = availableBackgrounds.indexOf(currentBackground).coerceAtLeast(0)
+
         // 기존 다이얼로그가 있으면 제거
         hide()
 
@@ -45,10 +35,10 @@ class SettingsModal(private val stage: Stage, private val skin: Skin) {
         val stageHeight = stage.viewport.worldHeight
 
         // 반투명 배경 오버레이 생성
-        createBackgroundOverlay(stageWidth, stageHeight)
+        createBackgroundOverlay(stageWidth, stageHeight, onClose)
 
         // 다이얼로그 컨테이너 생성
-        createDialogContainer(onHome, onPlay, onRestart)
+        createDialogContainer(onClose)
 
         // 스테이지에 추가
         stage.addActor(backgroundOverlay)
@@ -58,129 +48,134 @@ class SettingsModal(private val stage: Stage, private val skin: Skin) {
         centerDialog(stageWidth, stageHeight)
     }
 
-    private fun createBackgroundOverlay(stageWidth: Float, stageHeight: Float) {
-        val pixmap = Pixmap(1, 1, Pixmap.Format.RGBA8888)
-        pixmap.setColor(0f, 0f, 0f, 0.5f) // 50% 투명도
-        pixmap.fill()
-        val texture = Texture(pixmap)
-        pixmap.dispose()
-
-        backgroundOverlay = Image(TextureRegionDrawable(texture)).apply {
+    private fun createBackgroundOverlay(stageWidth: Float, stageHeight: Float, onClose: () -> Unit) {
+        backgroundOverlay = Image(skin.getDrawable("white")).apply {
+            color = Color(0f, 0f, 0f, 0.7f)
             setSize(stageWidth, stageHeight)
             setPosition(0f, 0f)
             touchable = Touchable.enabled
+            addListener(object : ChangeListener() {
+                override fun changed(event: ChangeEvent?, actor: Actor?) {
+                    onClose()
+                }
+            })
         }
     }
 
-    private fun createDialogContainer(
-        onHome: () -> Unit,
-        onPlay: () -> Unit,
-        onRestart: () -> Unit
-    ) {
+    private fun createDialogContainer(onClose: () -> Unit) {
         dialogContainer = Table().apply {
-            background = ResourceManager.getSquarePanel320()
-            pad(40f)
+            background = ResourceManager.getSquarePanel360()
+            setSize(360f, 360f)
+            pad(30f)
         }
 
         // 제목
-        val titleLabel = Label("게임 일시정지", this@SettingsModal.skin.get("label-large", Label.LabelStyle::class.java)).apply {
+        val titleLabel = Label("설정", skin.get("label-large", Label.LabelStyle::class.java)).apply {
             color = com.example.theorb.screens.BaseScreen.TEXT_PRIMARY
         }
 
-        // 버튼들을 가로로 배치
-        val buttonTable = Table()
+        // 배경화면 섹션
+        val backgroundSection = createBackgroundSection()
 
-        // 홈 버튼 - Stack으로 오버레이 구현 (원래 이미지 위에 이벤트 이미지 겹침)
-        val homeButtonIcon = Image(ResourceManager.getHomeButtonDrawable())
-        val homeButtonOverlay = Image(ResourceManager.getSquareMenuButtonEvent()).apply {
-            isVisible = false
+        // 닫기 버튼
+        val closeButton = RetroButton.createTextButton(
+            text = "닫기",
+            skin = skin,
+            labelStyle = "label-default-bold",
+            textColor = BaseScreen.TEXT_PRIMARY,
+            defaultImage = ResourceManager.getRetroRectanglePosDefault(),
+            eventImage = ResourceManager.getRetroRectanglePosEvent(),
+            buttonSize = 42f
+        ) {
+            onClose()
         }
-        val homeButton = Stack().apply {
-            add(homeButtonIcon)
-            add(homeButtonOverlay)
-
-            addListener(object : com.badlogic.gdx.scenes.scene2d.InputListener() {
-                override fun enter(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
-                    homeButtonOverlay.isVisible = true
-                }
-                override fun exit(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, toActor: Actor?) {
-                    homeButtonOverlay.isVisible = false
-                }
-                override fun touchDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, button: Int): Boolean {
-                    homeButtonOverlay.isVisible = true
-                    return true
-                }
-                override fun touchUp(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, button: Int) {
-                    homeButtonOverlay.isVisible = false
-                    onHome()
-                }
-            })
-        }
-
-        // 플레이 버튼 - Stack으로 오버레이 구현 (원래 이미지 위에 이벤트 이미지 겹침)
-        val playButtonIcon = Image(ResourceManager.getPlayButtonDrawable())
-        val playButtonOverlay = Image(ResourceManager.getSquareMenuButtonEvent()).apply {
-            isVisible = false
-        }
-        val playButton = Stack().apply {
-            add(playButtonIcon)
-            add(playButtonOverlay)
-
-            addListener(object : com.badlogic.gdx.scenes.scene2d.InputListener() {
-                override fun enter(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
-                    playButtonOverlay.isVisible = true
-                }
-                override fun exit(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, toActor: Actor?) {
-                    playButtonOverlay.isVisible = false
-                }
-                override fun touchDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, button: Int): Boolean {
-                    playButtonOverlay.isVisible = true
-                    return true
-                }
-                override fun touchUp(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, button: Int) {
-                    playButtonOverlay.isVisible = false
-                    onPlay()
-                    hide()
-                }
-            })
-        }
-
-        // 재시작 버튼 - Stack으로 오버레이 구현 (원래 이미지 위에 이벤트 이미지 겹침)
-        val restartButtonIcon = Image(ResourceManager.getRestartButtonDrawable())
-        val restartButtonOverlay = Image(ResourceManager.getSquareMenuButtonEvent()).apply {
-            isVisible = false
-        }
-        val restartButton = Stack().apply {
-            add(restartButtonIcon)
-            add(restartButtonOverlay)
-
-            addListener(object : com.badlogic.gdx.scenes.scene2d.InputListener() {
-                override fun enter(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
-                    restartButtonOverlay.isVisible = true
-                }
-                override fun exit(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, toActor: Actor?) {
-                    restartButtonOverlay.isVisible = false
-                }
-                override fun touchDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, button: Int): Boolean {
-                    restartButtonOverlay.isVisible = true
-                    return true
-                }
-                override fun touchUp(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, button: Int) {
-                    restartButtonOverlay.isVisible = false
-                    onRestart()
-                }
-            })
-        }
-
-        // 버튼들 배치 (가로) - 아이콘 이미지 크기
-        buttonTable.add(homeButton).size(42f, 42f).pad(10f).padRight(10f)
-        buttonTable.add(playButton).size(42f, 42f).pad(10f).padRight(10f)
-        buttonTable.add(restartButton).size(42f, 42f).pad(10f)
 
         // 레이아웃 구성
         dialogContainer!!.apply {
-            add(titleLabel).padBottom(30f).row()
-            add(buttonTable).row()
+            add(titleLabel).center().padBottom(30f).row()
+            add(backgroundSection).center().padBottom(30f).row()
+            add(closeButton).center().width(100f).height(42f).row()
+        }
+    }
+
+    private fun createBackgroundSection(): Table {
+        val section = Table()
+
+        // 배경화면 라벨
+        val backgroundLabel = Label("배경화면", skin.get("label-default", Label.LabelStyle::class.java)).apply {
+            color = BaseScreen.TEXT_PRIMARY
+        }
+
+        // 배경화면 선택 컨트롤
+        val backgroundControl = Table()
+
+        // 좌측 화살표
+        val leftArrow = RetroButton.createTextButton(
+            text = "<",
+            skin = skin,
+            labelStyle = "label-default-bold",
+            textColor = BaseScreen.TEXT_PRIMARY,
+            defaultImage = ResourceManager.getRetroSquareNagDefault(),
+            eventImage = ResourceManager.getRetroSquareNagEvent(),
+            buttonSize = 42f
+        ) {
+            changeBackground(-1)
+        }
+
+        // 현재 배경화면 이름 표시
+        val currentBackgroundLabel = Label(
+            getCurrentBackgroundDisplayName(),
+            skin.get("label-default", Label.LabelStyle::class.java)
+        ).apply {
+            color = com.example.theorb.screens.BaseScreen.TEXT_PRIMARY
+            setAlignment(Align.center)
+        }
+
+        // 우측 화살표
+        val rightArrow = RetroButton.createTextButton(
+            text = ">",
+            skin = skin,
+            labelStyle = "label-default-bold",
+            textColor = BaseScreen.TEXT_PRIMARY,
+            defaultImage = ResourceManager.getRetroSquarePosDefault(),
+            eventImage = ResourceManager.getRetroSquarePosEvent(),
+            buttonSize = 42f
+        ) {
+            changeBackground(1)
+        }
+
+        backgroundControl.add(leftArrow).size(42f)
+        backgroundControl.add(currentBackgroundLabel).width(80f).center()
+        backgroundControl.add(rightArrow).size(42f)
+
+        section.add(backgroundLabel).center().padRight(20f)
+        section.add(backgroundControl).center()
+
+        return section
+    }
+
+    private fun getCurrentBackgroundDisplayName(): String {
+        return availableBackgrounds[currentBackgroundIndex]
+    }
+
+    private fun changeBackground(direction: Int) {
+        currentBackgroundIndex = (currentBackgroundIndex + direction + availableBackgrounds.size) % availableBackgrounds.size
+        val newBackground = availableBackgrounds[currentBackgroundIndex]
+
+        // 배경화면 즉시 변경
+        onBackgroundChanged?.invoke(newBackground)
+
+        // 라벨 업데이트
+        updateBackgroundLabel()
+    }
+
+    private fun updateBackgroundLabel() {
+        dialogContainer?.let { container ->
+            // 배경화면 라벨 찾아서 업데이트
+            val backgroundSection = container.children[1] as Table
+            val backgroundControl = backgroundSection.children[1] as Table
+            val currentBackgroundLabel = backgroundControl.children[1] as Label
+            currentBackgroundLabel.setText(getCurrentBackgroundDisplayName())
         }
     }
 

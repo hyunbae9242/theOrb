@@ -4,9 +4,13 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.Touchable
-import com.badlogic.gdx.scenes.scene2d.ui.*
+import com.badlogic.gdx.scenes.scene2d.ui.Image
+import com.badlogic.gdx.scenes.scene2d.ui.Label
+import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane
+import com.badlogic.gdx.scenes.scene2d.ui.Skin
+import com.badlogic.gdx.scenes.scene2d.ui.Table
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.example.theorb.data.OrbData
 import com.example.theorb.data.OrbRegistry
 import com.example.theorb.data.SaveData
@@ -30,7 +34,7 @@ class OrbSelectionModal(
         val stageHeight = stage.viewport.worldHeight
 
         backgroundOverlay = Image(skin.getDrawable("white")).apply {
-            color = Color(0f, 0f, 0f, 0.7f)
+            color = Color(BaseScreen.BACKGROUND.r, BaseScreen.BACKGROUND.g, BaseScreen.BACKGROUND.b, 0.7f)
             setSize(stageWidth, stageHeight)
             setPosition(0f, 0f)
             touchable = Touchable.enabled
@@ -41,24 +45,36 @@ class OrbSelectionModal(
         stage.addActor(backgroundOverlay)
         stage.addActor(dialogContainer)
 
-        // 중앙 정렬 (430x590 크기 기준)
+        // 중앙 정렬 (동적 크기 기준)
+        val panelWidth = stage.viewport.worldWidth * 0.95f
+        val panelHeight = stage.viewport.worldHeight * 0.8f
         dialogContainer!!.setPosition(
-            (stageWidth - 430f) / 2f,
-            (stageHeight - 590f) / 2f
+            (stageWidth - panelWidth) / 2f,
+            (stageHeight - panelHeight) / 2f
         )
     }
 
     private fun createDialogContainer(onClose: () -> Unit, onOrbSelected: (OrbData) -> Unit) {
+        val panelWidth = stage.viewport.worldWidth * 0.95f
+        val panelHeight = stage.viewport.worldHeight * 0.8f
+
         dialogContainer = Table().apply {
-            background = ResourceManager.getRectanglePanel430590()
+            background = ResourceManager.getRectanglePanel340448()
             pad(20f)
-            setSize(430f, 590f)
+            setSize(panelWidth, panelHeight)
         }
 
-        // 제목
+        // 제목 섹션 (배경 포함)
+        val titleSection = Table().apply {
+            background = ResourceManager.getRetroRectanglePosEvent()
+            pad(15f)
+        }
+
         val titleLabel = Label("오브 선택", skin.get("label-large", Label.LabelStyle::class.java)).apply {
             color = BaseScreen.TEXT_PRIMARY
         }
+
+        titleSection.add(titleLabel).center()
 
         // 상단: 선택된 오브 정보
         val selectedOrbSection = createSelectedOrbSection()
@@ -66,35 +82,32 @@ class OrbSelectionModal(
         // 중하단: 오브 그리드 리스트
         val orbGridSection = createOrbGridSection(onOrbSelected)
 
-        // 닫기 버튼
-        val closeButton = TextButton("닫기", TextButton.TextButtonStyle().apply {
-            font = skin.get("btn", TextButton.TextButtonStyle::class.java).font
-            fontColor = Color.WHITE
-            up = ResourceManager.getButtonCancelBg()
-            down = ResourceManager.getButtonHighlightBg()
-            over = ResourceManager.getButtonHighlightBg()
-        }).apply {
-            addListener(object : ChangeListener() {
-                override fun changed(event: ChangeEvent?, actor: Actor?) {
-                    onClose()
-                }
-            })
+        // 닫기 버튼 - Retro 스타일
+        val closeButton = com.example.theorb.ui.RetroButton.createTextButton(
+            text = "닫기",
+            skin = skin,
+            labelStyle = "label-default-bold",
+            textColor = BaseScreen.TEXT_SECONDARY,
+            defaultImage = ResourceManager.getRetroRectangleNagDefault(),
+            eventImage = ResourceManager.getRetroRectangleNagEvent(),
+            buttonSize = (panelHeight * 0.1f)
+        ) {
+            onClose()
         }
 
-        // 레이아웃 구성 (전체 높이 590f 기준)
-        // 타이틀: 10% (59f), 선택된 오브: 20% (118f), 오브 리스트: 60% (354f), 닫기: 10% (59f)
+        // 레이아웃 구성 - 퍼센트 기반 높이
+        // 타이틀: 10%, 선택된 오브: 20%, 오브 리스트: 60%, 닫기: 10%
         dialogContainer!!.apply {
-            add(titleLabel).center().height(59f).padBottom(10f).row()
-            add(selectedOrbSection).growX().height(118f).padBottom(10f).row()
-            add(orbGridSection).grow().height(354f).padBottom(10f).row()
-            add(closeButton).size(100f, 40f).height(59f).center()
+            add(titleSection).width(panelWidth * 0.4f).height(panelHeight * 0.1f).padBottom(10f).row()
+            add(selectedOrbSection).growX().height(panelHeight * 0.2f).padBottom(10f).row()
+            add(orbGridSection).grow().height(panelHeight * 0.6f).padBottom(10f).row()
+            add(closeButton).width(panelWidth * 0.25f).height(panelHeight * 0.1f).center()
         }
     }
 
     private fun createSelectedOrbSection(): Table {
         val section = Table().apply {
-            background = BaseScreen.skin.getDrawable("white")
-            color = Color(0.2f, 0.2f, 0.2f, 0.8f)
+            background = ResourceManager.getRetroRectangleNagEvent()
             pad(15f)
         }
 
@@ -156,37 +169,26 @@ class OrbSelectionModal(
         return container
     }
 
-    private fun createOrbButton(orb: OrbData, onOrbSelected: (OrbData) -> Unit): Table {
-        val buttonTable = Table().apply {
-            // 선택된 오브인지 확인
-            val isSelected = orb.id == selectedOrbData.id
-            background = if (isSelected) {
-                ResourceManager.getSquareButtonHighlight()
-            } else {
-                ResourceManager.getSquareButton1()
-            }
+    private fun createOrbButton(orb: OrbData, onOrbSelected: (OrbData) -> Unit): com.badlogic.gdx.scenes.scene2d.ui.Stack {
+        // 선택된 오브인지 확인
+        val isSelected = orb.id == selectedOrbData.id
+
+        // RetroButton을 사용하여 오브 버튼 생성
+        val orbButton = com.example.theorb.ui.RetroButton.createImageButton(
+            image = orb.getDrawable(),
+            imageSize = 45f,
+            defaultImage = if (isSelected) ResourceManager.getRetroSquarePosDefault() else ResourceManager.getRetroSquareNagDefault(),
+            eventImage = if (isSelected) ResourceManager.getRetroSquarePosEvent() else ResourceManager.getRetroSquareNagEvent(),
+            buttonSize = 90f
+        ) {
+            selectedOrbData = orb
+            saveData.selectedOrb = orb.id
+            onOrbSelected(orb)
+            // 모달 새로고침
+            refreshModal(onOrbSelected) { hide() }
         }
 
-        val orbImage = Image(orb.getDrawable()).apply {
-            setSize(45f, 45f)
-        }
-
-        buttonTable.apply {
-            add(orbImage).center()
-
-            touchable = Touchable.enabled
-            addListener(object : ClickListener() {
-                override fun clicked(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float) {
-                    selectedOrbData = orb
-                    saveData.selectedOrb = orb.id
-                    onOrbSelected(orb)
-                    // 모달 새로고침
-                    refreshModal(onOrbSelected) { hide() }
-                }
-            })
-        }
-
-        return buttonTable
+        return orbButton
     }
 
     private fun refreshModal(onOrbSelected: (OrbData) -> Unit, onClose: () -> Unit) {

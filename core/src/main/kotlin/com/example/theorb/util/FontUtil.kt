@@ -1,6 +1,7 @@
 package com.example.theorb.util
 
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator
@@ -16,6 +17,8 @@ object FontUtil {
         val gen = FreeTypeFontGenerator(Gdx.files.internal(path))
         val p = FreeTypeFontGenerator.FreeTypeFontParameter().apply {
             this.size = size
+            borderWidth = 1f
+            borderStraight = true
             // 픽셀 느낌 유지 (블러 없이 또렷)
             magFilter = Texture.TextureFilter.Nearest
             minFilter = Texture.TextureFilter.Nearest
@@ -33,6 +36,8 @@ object FontUtil {
         val gen = FreeTypeFontGenerator(Gdx.files.internal(path))
         val p = FreeTypeFontGenerator.FreeTypeFontParameter().apply {
             this.size = size
+            borderWidth = 1f
+            borderStraight = true
             // 픽셀 느낌 유지 (블러 없이 또렷)
             magFilter = Texture.TextureFilter.Nearest
             minFilter = Texture.TextureFilter.Nearest

@@ -10,6 +10,7 @@ import com.badlogic.gdx.utils.Align
 import com.example.theorb.TheOrb
 import com.example.theorb.screens.BaseScreen
 import com.example.theorb.screens.HomeScreen
+import com.example.theorb.screens.SkillScreen
 import com.example.theorb.screens.UpgradeScreen
 import com.example.theorb.util.ResourceManager
 
@@ -46,28 +47,19 @@ class BottomNavigation(
 
         Tab.values().forEach { tab ->
             val isSelected = tab == currentTab
-            val button = ImageButton(ImageButton.ImageButtonStyle().apply {
-                up = if (isSelected) {
-                    ResourceManager.getNavButtonHighlightBg()
-                } else {
-                    ResourceManager.getNavButtonCancelBg()
-                }
-                down = ResourceManager.getNavButtonConfirmBg()
-                over = ResourceManager.getNavButtonHighlightBg()
-            })
 
-            // 버튼에 텍스트 라벨 추가
-            val buttonLabel = Label(tab.displayName, skin.get("label-small-bold", Label.LabelStyle::class.java)).apply {
-                color = if (isSelected) Color.WHITE else BaseScreen.TEXT_SECONDARY
-                setAlignment(Align.center)
+            // Retro 스타일 버튼 생성
+            val button = RetroButton.createTextButton(
+                text = tab.displayName,
+                skin = skin,
+                labelStyle = "label-small-bold",
+                textColor = if (isSelected) BaseScreen.TEXT_PRIMARY else BaseScreen.TEXT_SECONDARY,
+                defaultImage = if (isSelected) ResourceManager.getRetroRectanglePosDefault() else ResourceManager.getRetroRectangleNagDefault(),
+                eventImage = if (isSelected) ResourceManager.getRetroRectanglePosEvent() else ResourceManager.getRetroRectangleNagEvent(),
+                buttonSize = 42f
+            ) {
+                handleTabClick(tab)
             }
-            button.add(buttonLabel)
-
-            button.addListener(object : ChangeListener() {
-                override fun changed(event: ChangeEvent?, actor: Actor?) {
-                    handleTabClick(tab)
-                }
-            })
 
             bottom.add(button).width(buttonWidth).height(42f).pad(padding)
         }
@@ -98,8 +90,11 @@ class BottomNavigation(
                 // 추후 카드 화면 구현
             }
             Tab.SKILL -> {
-                Gdx.app.log("BottomNav", "스킬 탭 클릭 (미구현)")
-                // 추후 스킬 화면 구현
+                if (currentTab != Tab.SKILL) {
+                    Gdx.app.log("BottomNav", "스킬 탭 클릭")
+                    val theOrb = game as TheOrb
+                    game.screen = SkillScreen(game, theOrb.saveData)
+                }
             }
         }
     }

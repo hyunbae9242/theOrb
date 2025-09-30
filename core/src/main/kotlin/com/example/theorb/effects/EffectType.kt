@@ -43,11 +43,11 @@ enum class EffectType(val path: String, val row: Int, val rows: Int, val cols: I
 
     // enemies die
     // 02
-    ENEMY_DIE_02_FIRE("effects/enemies/die_02.png", 7, 9, 10, 10f, 1.5f),
-    ENEMY_DIE_02_COLD("effects/enemies/die_02.png", 2, 9, 10, 10f, 1.5f),
-    ENEMY_DIE_02_LIGHTNING("effects/enemies/die_02.png", 4, 9, 10, 10f, 1.5f),
-    ENEMY_DIE_02_ANGEL("effects/enemies/die_02.png", 5, 9, 10, 10f, 1.5f),
-    ENEMY_DIE_02_DEMON("effects/enemies/die_02.png", 1, 9, 10, 10f, 1.5f),
+    ENEMY_DIE_02_FIRE("effects/enemies/die_02.png", 7, 9, 9, 9f, 1.5f),
+    ENEMY_DIE_02_COLD("effects/enemies/die_02.png", 2, 9, 9, 9f, 1.5f),
+    ENEMY_DIE_02_LIGHTNING("effects/enemies/die_02.png", 4, 9, 9, 9f, 1.5f),
+    ENEMY_DIE_02_ANGEL("effects/enemies/die_02.png", 5, 9, 9, 9f, 1.5f),
+    ENEMY_DIE_02_DEMON("effects/enemies/die_02.png", 1, 9, 9, 9f, 1.5f),
     // 03
     ENEMY_DIE_03_FIRE("effects/enemies/die_03.png", 7, 9, 9, 9f, 1.5f),
     ENEMY_DIE_03_COLD("effects/enemies/die_03.png", 2, 9, 9, 9f, 1.5f),

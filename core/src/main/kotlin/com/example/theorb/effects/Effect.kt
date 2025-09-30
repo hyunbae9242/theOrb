@@ -13,7 +13,8 @@ class Effect(
     var y: Float,
     private var scale: Float = 1f,
     private var rotation: Float = 0f,
-    private val anchor: Anchor = Anchor.CENTER
+    private val anchor: Anchor = Anchor.CENTER,
+    private var alpha: Float = 1f
 ) {
     private var stateTime = 0f
     var finished = false
@@ -37,10 +38,20 @@ class Effect(
         this.scale = newScale
     }
 
+    fun setAlpha(newAlpha: Float) {
+        this.alpha = newAlpha
+    }
+
     fun draw(batch: SpriteBatch) {
         val frame = animation.getKeyFrame(stateTime)
         val w = frame.regionWidth * scale
         val h = frame.regionHeight * scale
+
+        // 이전 색상 저장
+        val originalColor = batch.color.cpy()
+        // 알파값 적용
+        batch.color = originalColor.cpy().apply { a = alpha }
+
         when (anchor) {
             Anchor.CENTER -> batch.draw(
                 frame,
@@ -59,5 +70,8 @@ class Effect(
                 rotation
             )
         }
+
+        // 원래 색상 복원
+        batch.color = originalColor
     }
 }

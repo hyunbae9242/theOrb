@@ -21,133 +21,221 @@ class InGameUpgradePanel(
     private var currentTab = InGameUpgrades.UpgradeTab.ATTACK
 
     // 탭 버튼들 참조
-    private lateinit var attackTabBtn: TextButton
-    private lateinit var defenseTabBtn: TextButton
-    private lateinit var utilityTabBtn: TextButton
+    private lateinit var attackTabBtn: Stack
+    private lateinit var defenseTabBtn: Stack
+    private lateinit var utilityTabBtn: Stack
 
-    fun createUI(): Table {
+    fun createUI(availableHeight: Float? = null): Table {
         // 메인 컨테이너 (할당된 영역 내에서 전체 폭 사용)
         mainContainer = Table().apply {
-            background = ResourceManager.getRectanglePanel430278()
+            background = ResourceManager.getRectanglePanel340180()
             pad(8f)
         }
 
         // 상단: 탭 버튼들 (직사각형 배경 적용)
-        val topRow = Table().apply {
-            val tabContainer = Table()
+        val topRow = createTabButtons()
 
-            // 공격 탭 버튼
-            attackTabBtn = createTabButton("공격")
-            attackTabBtn.addListener(object : ChangeListener() {
-                override fun changed(event: ChangeEvent?, actor: Actor?) {
-                    currentTab = InGameUpgrades.UpgradeTab.ATTACK
-                    updateTabStates()
-                    showTab(InGameUpgrades.UpgradeTab.ATTACK)
-                }
-            })
+        // 초기 컨텐츠를 먼저 생성
+        contentTable = createContentForTab(currentTab)
 
-            // 방어 탭 버튼
-            defenseTabBtn = createTabButton("방어")
-            defenseTabBtn.addListener(object : ChangeListener() {
-                override fun changed(event: ChangeEvent?, actor: Actor?) {
-                    currentTab = InGameUpgrades.UpgradeTab.DEFENSE
-                    updateTabStates()
-                    showTab(InGameUpgrades.UpgradeTab.DEFENSE)
-                }
-            })
-
-            // 유틸 탭 버튼
-            utilityTabBtn = createTabButton("유틸")
-            utilityTabBtn.addListener(object : ChangeListener() {
-                override fun changed(event: ChangeEvent?, actor: Actor?) {
-                    currentTab = InGameUpgrades.UpgradeTab.UTILITY
-                    updateTabStates()
-                    showTab(InGameUpgrades.UpgradeTab.UTILITY)
-                }
-            })
-
-            tabContainer.add(attackTabBtn).size(110f, 42f).pad(2f).padRight(10f)
-            tabContainer.add(defenseTabBtn).size(110f, 42f).pad(2f).padRight(10f)
-            tabContainer.add(utilityTabBtn).size(110f, 42f).pad(2f)
-
-            add(tabContainer).center().expandX().fillX()
+        // ScrollPane 생성 (완성된 컨텐츠로)
+        val maxScrollHeight = if (availableHeight != null) {
+            // GameScreen에서 넘겨받은 높이에서 탭 버튼과 패딩 공간 제외
+            availableHeight - 100f // 탭 버튼(42f) + 패딩들(58f) 대략 100f
+        } else {
+            // 기본값: 전체 높이의 35%에서 여백 제외 (fallback)
+            BaseScreen.VIRTUAL_HEIGHT * 0.35f - 100f
         }
 
-        // 기본적인 ScrollPane으로 다시 시작
-        contentTable = Table()
-
         contentScrollPane = ScrollPane(contentTable, BaseScreen.skin).apply {
-            setFadeScrollBars(false)
             setScrollingDisabled(true, false) // 세로 스크롤만 허용
-            // 스크롤 방해 최소화 설정
-            setCancelTouchFocus(false)
-            setFlickScroll(false)
-            setSmoothScrolling(false)
-            // 중요: 스크롤 감도를 위해 velocity threshold 조정
-            setVelocityX(0f)
-            setVelocityY(0f)
+            setFlickScroll(true) // 플릭 스크롤 활성화
+            setSmoothScrolling(true) // 부드러운 스크롤 활성화
+            setOverscroll(false, false) // 오버스크롤 비활성화
+
+            // 터치 이벤트 관련 설정 - 버튼 클릭과 스크롤 충돌 방지
+            setCancelTouchFocus(true) // 터치 포커스 취소 활성화
+            setClamp(true) // 스크롤 영역 제한
+
+            // ScrollPane의 높이를 명시적으로 설정
+            setHeight(maxScrollHeight)
         }
 
         // 레이아웃 구성 (전체 폭 사용)
         mainContainer.add(topRow).fillX().expandX().pad(4f).row()
-        mainContainer.add(contentScrollPane).expand().fill().pad(8f, 4f, 4f, 4f)
+        mainContainer.add(contentScrollPane).expandX().fillX().height(maxScrollHeight).pad(8f, 4f, 4f, 4f)
 
-        // 기본 탭 표시 및 상태 설정
+        // 기본 탭 상태 설정
         updateTabStates()
-        showTab(InGameUpgrades.UpgradeTab.ATTACK)
 
         return mainContainer
     }
 
-    // 탭 버튼 생성 함수
-    private fun createTabButton(text: String): TextButton {
-        val buttonStyle = TextButton.TextButtonStyle().apply {
-            font = BaseScreen.skin.get("btn-small-bold", TextButton.TextButtonStyle::class.java)?.font
-                ?: BaseScreen.skin.get("btn", TextButton.TextButtonStyle::class.java).font
-            fontColor = Color.WHITE
-            up = ResourceManager.getButtonCancelBg() // 기본 상태
-            down = ResourceManager.getButtonHighlightBg()
-            over = ResourceManager.getButtonHighlightBg()
+    private fun createTabButtons(): Table {
+        return Table().apply {
+            val tabContainer = Table()
+
+            // 공격 탭 버튼
+            attackTabBtn = RetroButton.createTextButton(
+                text = "공격",
+                skin = BaseScreen.skin,
+                labelStyle = "label-default-bold",
+                textColor = BaseScreen.TEXT_PRIMARY,
+                defaultImage = ResourceManager.getRetroRectangleNagDefault(),
+                eventImage = ResourceManager.getRetroRectangleNagEvent(),
+                buttonSize = 42f
+            ) {
+                currentTab = InGameUpgrades.UpgradeTab.ATTACK
+                updateTabStates()
+                switchToTab(InGameUpgrades.UpgradeTab.ATTACK)
+            }
+
+            // 방어 탭 버튼
+            defenseTabBtn = RetroButton.createTextButton(
+                text = "방어",
+                skin = BaseScreen.skin,
+                labelStyle = "label-default-bold",
+                textColor = BaseScreen.TEXT_PRIMARY,
+                defaultImage = ResourceManager.getRetroRectangleNagDefault(),
+                eventImage = ResourceManager.getRetroRectangleNagEvent(),
+                buttonSize = 42f
+            ) {
+                currentTab = InGameUpgrades.UpgradeTab.DEFENSE
+                updateTabStates()
+                switchToTab(InGameUpgrades.UpgradeTab.DEFENSE)
+            }
+
+            // 유틸 탭 버튼
+            utilityTabBtn = RetroButton.createTextButton(
+                text = "유틸",
+                skin = BaseScreen.skin,
+                labelStyle = "label-default-bold",
+                textColor = BaseScreen.TEXT_PRIMARY,
+                defaultImage = ResourceManager.getRetroRectangleNagDefault(),
+                eventImage = ResourceManager.getRetroRectangleNagEvent(),
+                buttonSize = 42f
+            ) {
+                currentTab = InGameUpgrades.UpgradeTab.UTILITY
+                updateTabStates()
+                switchToTab(InGameUpgrades.UpgradeTab.UTILITY)
+            }
+
+            val tabWidth = BaseScreen.VIRTUAL_WIDTH * 0.23f // 약 110px
+            val tabHeight = BaseScreen.VIRTUAL_HEIGHT * BaseScreen.BUTTON_HEIGHT_RATIO
+
+            tabContainer.add(attackTabBtn).size(tabWidth, tabHeight).pad(2f).padRight(10f)
+            tabContainer.add(defenseTabBtn).size(tabWidth, tabHeight).pad(2f).padRight(10f)
+            tabContainer.add(utilityTabBtn).size(tabWidth, tabHeight).pad(2f)
+
+            add(tabContainer).center().expandX().fillX()
         }
-        return TextButton(text, buttonStyle)
     }
 
-    // 탭 상태 업데이트 함수
+    // 탭 상태 업데이트 함수 - 선택된 탭은 pos 버튼+화이트+볼드, 비선택 탭은 nag 버튼+기본색+일반
     private fun updateTabStates() {
-        // 모든 탭을 기본 상태로 설정
-        attackTabBtn.style.up = ResourceManager.getButtonCancelBg()
-        defenseTabBtn.style.up = ResourceManager.getButtonCancelBg()
-        utilityTabBtn.style.up = ResourceManager.getButtonCancelBg()
+        // 모든 탭을 비활성 상태로 설정 (nag 이미지 + 기본 색상 + 일반 폰트)
+        RetroButton.updateTextButtonEnabled(
+            attackTabBtn, true,
+            ResourceManager.getRetroRectangleNagDefault(),
+            ResourceManager.getRetroRectangleNagEvent()
+        )
+        RetroButton.updateTextButtonStyle(
+            attackTabBtn, BaseScreen.skin, "label-default", BaseScreen.TEXT_SECONDARY
+        )
 
-        // 현재 활성 탭을 하이라이트로 설정
+        RetroButton.updateTextButtonEnabled(
+            defenseTabBtn, true,
+            ResourceManager.getRetroRectangleNagDefault(),
+            ResourceManager.getRetroRectangleNagEvent()
+        )
+        RetroButton.updateTextButtonStyle(
+            defenseTabBtn, BaseScreen.skin, "label-default", BaseScreen.TEXT_SECONDARY
+        )
+
+        RetroButton.updateTextButtonEnabled(
+            utilityTabBtn, true,
+            ResourceManager.getRetroRectangleNagDefault(),
+            ResourceManager.getRetroRectangleNagEvent()
+        )
+        RetroButton.updateTextButtonStyle(
+            utilityTabBtn, BaseScreen.skin, "label-default", BaseScreen.TEXT_SECONDARY
+        )
+
+        // 현재 활성 탭을 활성 상태로 설정 (pos 이미지 + 화이트 + 볼드)
         when (currentTab) {
-            InGameUpgrades.UpgradeTab.ATTACK -> attackTabBtn.style.up = ResourceManager.getButtonHighlightBg()
-            InGameUpgrades.UpgradeTab.DEFENSE -> defenseTabBtn.style.up = ResourceManager.getButtonHighlightBg()
-            InGameUpgrades.UpgradeTab.UTILITY -> utilityTabBtn.style.up = ResourceManager.getButtonHighlightBg()
+            InGameUpgrades.UpgradeTab.ATTACK -> {
+                RetroButton.updateTextButtonEnabled(
+                    attackTabBtn, true,
+                    ResourceManager.getRetroRectanglePosDefault(),
+                    ResourceManager.getRetroRectanglePosEvent()
+                )
+                RetroButton.updateTextButtonStyle(
+                    attackTabBtn, BaseScreen.skin, "label-default-bold", BaseScreen.TEXT_PRIMARY
+                )
+            }
+            InGameUpgrades.UpgradeTab.DEFENSE -> {
+                RetroButton.updateTextButtonEnabled(
+                    defenseTabBtn, true,
+                    ResourceManager.getRetroRectanglePosDefault(),
+                    ResourceManager.getRetroRectanglePosEvent()
+                )
+                RetroButton.updateTextButtonStyle(
+                    defenseTabBtn, BaseScreen.skin, "label-default-bold", BaseScreen.TEXT_PRIMARY
+                )
+            }
+            InGameUpgrades.UpgradeTab.UTILITY -> {
+                RetroButton.updateTextButtonEnabled(
+                    utilityTabBtn, true,
+                    ResourceManager.getRetroRectanglePosDefault(),
+                    ResourceManager.getRetroRectanglePosEvent()
+                )
+                RetroButton.updateTextButtonStyle(
+                    utilityTabBtn, BaseScreen.skin, "label-default-bold", BaseScreen.TEXT_PRIMARY
+                )
+            }
         }
     }
 
-    private fun showTab(tab: InGameUpgrades.UpgradeTab) {
-        currentTab = tab
-        contentTable.clear()
+
+    private fun createContentForTab(tab: InGameUpgrades.UpgradeTab): Table {
+        val newContentTable = Table()
 
         if (tab == InGameUpgrades.UpgradeTab.DEFENSE) {
-            contentTable.add(Label("방어 업그레이드는 준비 중입니다.", BaseScreen.skin.get("label-small", Label.LabelStyle::class.java)).apply {
+            newContentTable.add(Label("방어 업그레이드는 준비 중입니다.", BaseScreen.skin.get("label-small", Label.LabelStyle::class.java)).apply {
                 color = BaseScreen.TEXT_SECONDARY
             }).center().expand()
-            return
+            return newContentTable
         }
 
         // 해당 탭의 업그레이드들을 세로로 배치
         val upgrades = InGameUpgrades.UPGRADE_DATA.filter { it.value.tab == tab }.toList()
+
+        val rowWidth = BaseScreen.VIRTUAL_WIDTH * 0.8f
+        val rowHeight = BaseScreen.VIRTUAL_HEIGHT * 0.08f
 
         upgrades.forEachIndexed { index, (upgradeType, info) ->
             val currentLevel = saveData.inGameUpgrades[upgradeType.name] ?: 0
             val cost = InGameUpgrades.getUpgradeCost(upgradeType, currentLevel)
             val currentBonus = InGameUpgrades.getCurrentBonus(upgradeType, currentLevel)
             val upgradeRow = createUpgradeRow(upgradeType, info, currentLevel, cost, currentBonus)
-            contentTable.add(upgradeRow).fillX().pad(2f).padBottom(4f).row()
+            newContentTable.add(upgradeRow).size(rowWidth, rowHeight).pad(2f).padBottom(4f).row()
         }
+
+        return newContentTable
+    }
+
+    private fun switchToTab(tab: InGameUpgrades.UpgradeTab) {
+        currentTab = tab
+
+        // 새로운 컨텐츠 테이블 생성
+        val newContentTable = createContentForTab(tab)
+
+        // ScrollPane의 actor를 새로운 테이블로 교체
+        contentScrollPane.actor = newContentTable
+        contentTable = newContentTable
+
+        // 스크롤 위치를 맨 위로 리셋
+        contentScrollPane.scrollY = 0f
     }
 
     private fun createUpgradeRow(
@@ -158,8 +246,7 @@ class InGameUpgradePanel(
         currentBonus: Float
     ): Table {
         val upgradeRow = Table().apply {
-            background = BaseScreen.skin.getDrawable("white")
-            color = Color(0.15f, 0.15f, 0.15f, 1f)
+            background = ResourceManager.getRectanglePanel25284()
             pad(8f)
         }
 
@@ -179,76 +266,35 @@ class InGameUpgradePanel(
         }
 
         val bonusLabel = Label(bonusText, BaseScreen.skin.get("label-small", Label.LabelStyle::class.java)).apply {
-            color = Color.YELLOW
+            color = BaseScreen.WARNING
         }
 
-        // 업그레이드 버튼 - 새로운 배경 이미지 사용
+        // 업그레이드 버튼 - Retro 스타일 사용
         val canUpgrade = currentLevel < info.maxLevel && saveData.silver >= cost
         val buttonText = if (currentLevel >= info.maxLevel) "MAX" else "Level Up\n(${formatNumber(cost)} silver)"
 
-        val upgradeButtonStyle = TextButton.TextButtonStyle().apply {
-            font = BaseScreen.skin.get("btn-small-bold", TextButton.TextButtonStyle::class.java)?.font
-                ?: BaseScreen.skin.get("btn", TextButton.TextButtonStyle::class.java).font
-            fontColor = Color.WHITE
-            up = if (canUpgrade) ResourceManager.getButtonConfirmBg() else ResourceManager.getButtonCancelBg()
-            down = ResourceManager.getButtonHighlightBg()
-            over = ResourceManager.getButtonHighlightBg()
-        }
-
-        val upgradeButton = TextButton(buttonText, upgradeButtonStyle).apply {
-            // 버튼 내부 Label의 touchable을 disabled로 설정하여 터치 이벤트가 버튼으로 전달되도록 함
-            label.touchable = Touchable.disabled
-
-            // ScrollPane 환경에서 안정적인 클릭 처리
-            addListener(object : com.badlogic.gdx.scenes.scene2d.InputListener() {
-                private var isTouchDown = false
-                private var touchDownButton = -1
-                private var touchDownX = 0f
-                private var touchDownY = 0f
-
-                override fun touchDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, button: Int): Boolean {
-                    isTouchDown = true
-                    touchDownButton = button
-                    touchDownX = x
-                    touchDownY = y
-                    return true
-                }
-
-                override fun touchUp(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int, button: Int) {
-                    val eventTarget = event?.target
-                    val isTargetThisButton = eventTarget == this@apply || eventTarget == this@apply.label
-                    val isValidClick = isTouchDown && button == touchDownButton && button == 0 && isTargetThisButton
-
-                    if (isValidClick && canUpgrade) {
-                        purchaseUpgrade(upgradeType)
-                    }
-
-                    isTouchDown = false
-                    touchDownButton = -1
-                }
-
-                override fun touchDragged(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float, pointer: Int) {
-                    val dragDistance = kotlin.math.sqrt((x - touchDownX) * (x - touchDownX) + (y - touchDownY) * (y - touchDownY))
-                    if (dragDistance > 10f) {
-                        isTouchDown = false
-                    }
-                }
-            })
-
-            // 업그레이드 불가능한 경우 비활성화
-            if (!canUpgrade) {
-                color = Color(0.5f, 0.5f, 0.5f, 1f) // 회색 처리
-                // 중요: 비활성화된 버튼도 클릭 가능하도록 touchable을 enabled로 유지
-            }
-
-//            println("${upgradeType.name} 버튼 생성 완료, touchable=${touchable}")
+        val upgradeButton = RetroButton.createTextButton(
+            text = buttonText,
+            skin = BaseScreen.skin,
+            labelStyle = "label-small-bold",
+            textColor = BaseScreen.TEXT_PRIMARY,
+            defaultImage = ResourceManager.getRetroRectanglePosDefault(),
+            eventImage = ResourceManager.getRetroRectanglePosEvent(),
+            disabledImage = ResourceManager.getRetroRectangleNagDefault(),
+            buttonSize = 42f,
+            isEnabled = canUpgrade
+        ) {
+            purchaseUpgrade(upgradeType)
         }
 
         // 레이아웃 (가로 배치) - 업그레이드 버튼을 오른쪽으로 배치
-        upgradeRow.add(nameLabel).left().padRight(8f)
+        upgradeRow.add(nameLabel).left().padLeft(8f).padRight(8f)
         upgradeRow.add(levelLabel).left().padRight(8f)
         upgradeRow.add(bonusLabel).left().padRight(8f)
-        upgradeRow.add(upgradeButton).size(84f, 42f).right().expandX()
+        upgradeRow.add(upgradeButton).size(
+            BaseScreen.VIRTUAL_WIDTH * BaseScreen.RECTANGLE_BUTTON_WIDTH_RATIO,
+            BaseScreen.VIRTUAL_HEIGHT * BaseScreen.BUTTON_HEIGHT_RATIO
+        ).right().expandX().padRight(8f)
         return upgradeRow
     }
 
@@ -280,6 +326,15 @@ class InGameUpgradePanel(
     }
 
     fun refreshUI() {
-        showTab(currentTab)
+        // 현재 스크롤 위치 저장
+        val currentScrollY = contentScrollPane.scrollY
+
+        // 같은 탭 내용 새로고침 (탭 전환이 아님)
+        val newContentTable = createContentForTab(currentTab)
+        contentScrollPane.actor = newContentTable
+        contentTable = newContentTable
+
+        // 스크롤 위치 복원
+        contentScrollPane.scrollY = currentScrollY
     }
 }
