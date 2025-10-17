@@ -62,12 +62,12 @@ class VictoryModal(private val stage: Stage, private val skin: Skin) {
             color = BaseScreen.ACCENT
         }
 
-        // 골드/젬 획득 정보
+        // 골드/오브 획득 정보
         val rewardsTable = Table().apply {
             val goldLabel = Label("골드: +${formatNumber(goldEarned)}", BaseScreen.skin.get("label-small", Label.LabelStyle::class.java)).apply {
                 color = Color(1f, 0.84f, 0f, 1f) // 골드 색상
             }
-            val gemsLabel = Label("젬: +$gemsEarned", BaseScreen.skin.get("label-small", Label.LabelStyle::class.java)).apply {
+            val gemsLabel = Label("오브: +$gemsEarned", BaseScreen.skin.get("label-small", Label.LabelStyle::class.java)).apply {
                 color = Color(0.5f, 1f, 1f, 1f) // 시안 색상
             }
 

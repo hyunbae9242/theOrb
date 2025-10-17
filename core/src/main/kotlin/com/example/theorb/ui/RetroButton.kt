@@ -79,7 +79,7 @@ object RetroButton {
                 add(textLabel)
 
                 // Stack 전체가 터치 가능하도록 설정 (하지만 이벤트는 하위로 전달)
-                touchable = Touchable.childrenOnly
+                touchable = Touchable.enabled
             }
 
             // 초기 위치 설정 함수

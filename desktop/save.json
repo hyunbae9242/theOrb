@@ -1,0 +1,41 @@
+{
+gold: 8
+orbs: 2
+skillInventory: [
+	{
+		class: java.util.LinkedHashMap
+		skillType: {
+			class: java.lang.String
+			value: Fireball
+		}
+		rank: {
+			class: java.lang.String
+			value: C
+		}
+		id: {
+			class: java.lang.String
+			value: 52e8810d-e9a6-4164-bc46-0851a741bcee
+		}
+	}
+]
+subSkillInventory: {
+	class: java.util.LinkedHashMap
+	FIRE_DAMAGE: {
+		class: java.util.LinkedHashMap
+		level: {
+			class: java.lang.Integer
+			value: 1
+		}
+		exp: {
+			class: java.lang.Integer
+			value: 0
+		}
+	}
+}
+currentSpeedMultiplier: 2
+silver: 85
+inGameUpgrades: {
+	class: java.util.LinkedHashMap
+	DAMAGE_INCREASE: 2
+}
+}

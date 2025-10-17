@@ -23,9 +23,12 @@ import com.example.theorb.entities.Projectile
 import com.example.theorb.skills.SkillRegistry
 import com.example.theorb.ui.BackgroundRenderer
 import com.example.theorb.ui.DamageText
+import com.example.theorb.ui.RewardText
+import com.example.theorb.ui.RewardType
 import com.example.theorb.ui.InGameUpgradePanel
 import com.example.theorb.ui.ModalDialog
 import com.example.theorb.ui.PauseModal
+import com.example.theorb.ui.ToastMessage
 import com.example.theorb.ui.VictoryModal
 import com.example.theorb.upgrades.InGameUpgradeManager
 import com.example.theorb.upgrades.UpgradeManager
@@ -33,6 +36,8 @@ import com.example.theorb.util.ResourceManager
 import com.example.theorb.util.formatNumber
 import com.example.theorb.data.OrbRegistry
 import com.example.theorb.util.OrbManager
+import com.example.theorb.skills.SubSkillInventoryItem
+import com.example.theorb.skills.SubSkillType
 
 class GameScreen : BaseScreen() {
     private val shape = ShapeRenderer()
@@ -48,6 +53,7 @@ class GameScreen : BaseScreen() {
     private val projectiles = mutableListOf<Projectile>()
     private val effects = mutableListOf<Effect>()
     private val damageTexts = mutableListOf<DamageText>()
+    private val rewardTexts = mutableListOf<RewardText>()
 
     // UI 관련
     private val uiStage = Stage(viewport)
@@ -88,7 +94,7 @@ class GameScreen : BaseScreen() {
 
         // 게임 시작 시 초기 통계 저장
         initialGold = gameObject.saveData.gold
-        initialGems = gameObject.saveData.gems
+        initialGems = gameObject.saveData.orbs
         skillDamageStats.clear()
 
         // 배경 설정 (공통 배경 렌더러 사용)
@@ -120,12 +126,12 @@ class GameScreen : BaseScreen() {
         val upgradeAreaHeight = viewport.worldHeight * upgradeUIHeightRatio
         val upgradeContainer = upgradePanel.createUI(upgradeAreaHeight)
 
-        // 좌측: 골드, 젬, 실버 정보
+        // 좌측: 골드, 오브, 실버 정보
         goldLabel = Label("골드: ${formatNumber(gameObject.saveData.gold)}", skin.get("label-small", Label.LabelStyle::class.java)).apply {
             color = Color(1f, 0.84f, 0f, 1f) // 골드 색상
         }
-        gemLabel = Label("젬: ${gameObject.saveData.gems}", skin.get("label-small", Label.LabelStyle::class.java)).apply {
-            color = Color(0.5f, 1f, 1f, 1f) // 시안 색상 (젬)
+        gemLabel = Label("오브: ${gameObject.saveData.orbs}", skin.get("label-small", Label.LabelStyle::class.java)).apply {
+            color = Color(0.5f, 1f, 1f, 1f) // 시안 색상 (오브)
         }
         // 실버 표시 추가
         silverLabel = Label("실버: ${formatNumber(gameObject.saveData.silver)}", skin.get("label-small", Label.LabelStyle::class.java)).apply {
@@ -265,6 +271,29 @@ class GameScreen : BaseScreen() {
                         val rank = com.example.theorb.skills.SkillRank.valueOf(parts[1])
                         val skill = SkillRegistry.createSkill(skillType)
                         skill.rank = rank
+
+                        // 보조스킬 로드
+                        val equippedSubSkillsData = saveData.equippedSubSkills[skillId] ?: emptyList()
+                        skill.equippedSubSkills = equippedSubSkillsData.mapNotNull { subSkillData ->
+                            try {
+                                val typeName = subSkillData["type"] as? String
+                                val level = (subSkillData["level"] as? Number)?.toInt() ?: 1
+
+                                val subSkillType = com.example.theorb.skills.SubSkillType.values()
+                                    .find { it.effectType.name == typeName }
+
+                                if (subSkillType != null) {
+                                    val value = subSkillType.getValueForLevel(level)
+                                    subSkillType.effectType to value
+                                } else {
+                                    null
+                                }
+                            } catch (e: Exception) {
+                                Gdx.app.log("GameScreen", "보조스킬 로드 실패: $subSkillData - ${e.message}")
+                                null
+                            }
+                        }.toMap()
+
                         skill
                     } else null
                 } else {
@@ -281,6 +310,8 @@ class GameScreen : BaseScreen() {
         Gdx.app.log("GameScreen", "=== 로드된 스킬 확인 ===")
         skills.forEach { skill ->
             Gdx.app.log("GameScreen", "스킬: ${skill.name}, 등급: ${skill.rank.displayName}, 데미지 배율: ${skill.damageMul}")
+            Gdx.app.log("GameScreen", "  - 보조스킬 효과: ${skill.equippedSubSkills}")
+            Gdx.app.log("GameScreen", "  - 투사체 개수: ${skill.getProjectileCount()}")
         }
 
         // 오브 능력치 로깅 (디버깅용)
@@ -335,7 +366,7 @@ class GameScreen : BaseScreen() {
                     enemies.add(EnemyFactory.spawnRandom(viewport.worldWidth, gameAreaHeight, gameAreaStartY, gameTimer))
                 }
 
-                    spawnTimer = 1f // 1초마다 적 추가
+                    spawnTimer = 1.5f // 1.5초마다 적 추가 (초반 난이도 조정)
                 }
 
                 // 보스 스폰 (1분마다)
@@ -363,6 +394,9 @@ class GameScreen : BaseScreen() {
 
             // 데미지 텍스트 업데이트
             damageTexts.removeAll { !it.update(adjustedDelta) }
+
+            // 보상 텍스트 업데이트
+            rewardTexts.removeAll { !it.update(adjustedDelta) }
         }
 
         // 애니메이션 시간은 일시정지와 관계없이 계속 진행
@@ -392,16 +426,36 @@ class GameScreen : BaseScreen() {
             val goldReward = (baseReward * goldMultiplier).toInt()
             val silverReward = (baseReward * silverMultiplier).toInt()
 
-            gameObject.saveData.gold += goldReward
-            gameObject.saveData.silver += silverReward
+            // 골드 드롭 확률 (적 타입별)
+            val goldDropChance = when (enemy.type) {
+                EnemyType.NORMAL -> 0.10f
+                EnemyType.SPEED -> 0.15f
+                EnemyType.TANK -> 0.15f
+                EnemyType.BOSS -> 0.50f
+            }
 
-            // 보스 처치 시 젬 획득
+            if (Math.random() < goldDropChance) {
+                gameObject.saveData.gold += goldReward
+                addRewardText(goldReward, 0f, 0f, RewardType.GOLD)
+            }
+
+            // 실버는 항상 획득
+            gameObject.saveData.silver += silverReward
+            addRewardText(silverReward, 0f, 0f, RewardType.SILVER)
+
+            // 보스 처치 시 젬 획득 및 보조스킬 드롭
             if (enemy.type == EnemyType.BOSS) {
                 val baseGemReward = 1
                 val gemBonus = InGameUpgradeManager.getGemBonus(gameObject.saveData)
                 val totalGemReward = baseGemReward + gemBonus
 
-                gameObject.saveData.gems += totalGemReward
+                gameObject.saveData.orbs += totalGemReward
+                addRewardText(totalGemReward, 0f, 0f, RewardType.ORB)
+
+                // 보조스킬 30% 확률 드롭
+                if (Math.random() < 0.3) {
+                    dropRandomSubSkill()
+                }
 
                 // 보스가 죽으면 체력바 숨기기 및 현재 보스 참조 제거
                 if (enemy == currentBoss) {
@@ -454,7 +508,7 @@ class GameScreen : BaseScreen() {
         val selectedOrbData = OrbRegistry.getOrbById(gameObject.saveData.selectedOrb)
             ?: OrbRegistry.getOrbById("base")!!
         val orbDrawable = selectedOrbData.getDrawable()
-        val orbSize = 50f
+        val orbSize = 30f
         orbDrawable.draw(batch, player.x - orbSize/2, player.y - orbSize/2, orbSize, orbSize)
 
         // All enemies (스프라이트로 렌더링)
@@ -471,11 +525,14 @@ class GameScreen : BaseScreen() {
         // 데미지 텍스트 렌더링
         damageTexts.forEach { it.draw(batch, fontSm) }
 
+        // 보상 텍스트 렌더링
+        rewardTexts.forEach { it.draw(batch, fontSm) }
+
         batch.end()
 
         // --- UI ---
         goldLabel.setText("골드: ${formatNumber(gameObject.saveData.gold)}")
-        gemLabel.setText("젬: ${gameObject.saveData.gems}")
+        gemLabel.setText("오브: ${gameObject.saveData.orbs}")
         silverLabel.setText("실버: ${formatNumber(gameObject.saveData.silver)}")
         upgradePanel.refreshUI()
 
@@ -537,7 +594,7 @@ class GameScreen : BaseScreen() {
 
         // 통계 초기화
         initialGold = gameObject.saveData.gold
-        initialGems = gameObject.saveData.gems
+        initialGems = gameObject.saveData.orbs
         skillDamageStats.clear()
 
         // 재시작 시 인게임 진행도 초기화
@@ -558,6 +615,18 @@ class GameScreen : BaseScreen() {
         damageTexts.add(DamageText(damage, x, y, element))
     }
 
+    private fun addRewardText(amount: Int, x: Float, y: Float, type: RewardType) {
+        // 업그레이드 패널 바로 위쪽, 우측에 로그 쌓이게 표시
+        val upgradeAreaY = viewport.worldHeight * upgradeUIHeightRatio + 10f
+        val logX = viewport.worldWidth - 10f // 우측에서 10px 여백
+
+        // 기존 텍스트들을 위로 밀어올림
+        rewardTexts.forEach { it.moveUp(22f) }
+
+        val logY = upgradeAreaY + 10f // 업그레이드 패널에서 10px 위
+        rewardTexts.add(RewardText(amount, logX, logY, type, logY))
+    }
+
     private fun trackSkillDamage(skillName: String, damage: Long) {
         skillDamageStats[skillName] = skillDamageStats.getOrDefault(skillName, 0L) + damage
     }
@@ -565,7 +634,7 @@ class GameScreen : BaseScreen() {
     private fun showVictoryScreen() {
         isPaused = true
         val goldEarned = gameObject.saveData.gold - initialGold
-        val gemsEarned = gameObject.saveData.gems - initialGems
+        val gemsEarned = gameObject.saveData.orbs - initialGems
 
         victoryModal.show(
             goldEarned = goldEarned,
@@ -668,6 +737,69 @@ class GameScreen : BaseScreen() {
         SaveManager.save(gameObject.saveData)
 
         println("  초기화 완료 - 실버: ${gameObject.saveData.silver}, 업그레이드 개수: ${gameObject.saveData.inGameUpgrades.size}")
+    }
+
+    /**
+     * 보스 처치 시 랜덤 보조스킬 드롭 (30% 확률)
+     */
+    private fun dropRandomSubSkill() {
+        // 랜덤 보조스킬 타입 선택
+        val randomSubSkillType = SubSkillType.values().random()
+        val effectTypeName = randomSubSkillType.effectType.name
+
+        val saveData = gameObject.saveData
+
+        // 이미 보유한 보조스킬인지 확인
+        val existingData = saveData.subSkillInventory[effectTypeName]
+
+        if (existingData != null) {
+            // 중복: 경험치 추가
+            val currentLevel = (existingData["level"] as? Number)?.toInt() ?: 1
+            val currentExp = (existingData["exp"] as? Number)?.toInt() ?: 0
+
+            val item = SubSkillInventoryItem(randomSubSkillType, currentLevel, currentExp)
+            val leveledUp = item.addExp(1) // 스테이지 1은 경험치 1 획득
+
+            // 업데이트된 정보 저장
+            saveData.subSkillInventory[effectTypeName] = mapOf(
+                "level" to item.level,
+                "exp" to item.exp
+            )
+
+            if (leveledUp) {
+                // 레벨업 시
+                ToastMessage.show(
+                    uiStage,
+                    "${randomSubSkillType.displayName} 보조스킬이 Lv.${item.level}로 레벨업했습니다!",
+                    skin,
+                    duration = 2f
+                )
+            } else {
+                // 경험치만 획득
+                ToastMessage.show(
+                    uiStage,
+                    "${randomSubSkillType.displayName} 보조스킬 경험치를 획득했습니다.\n\r(${item.exp}/${item.getRequiredExpForNextLevel()})",
+                    skin,
+                    duration = 2f
+                )
+            }
+        } else {
+            // 신규 획득
+            saveData.subSkillInventory[effectTypeName] = mapOf(
+                "level" to 1,
+                "exp" to 0
+            )
+
+            ToastMessage.show(
+                uiStage,
+                "${randomSubSkillType.displayName} 보조스킬을 획득했습니다!",
+                skin,
+                duration = 2f
+            )
+        }
+
+        SaveManager.save(saveData)
+        Gdx.app.log("GameScreen", "보조스킬 드롭: ${randomSubSkillType.displayName}")
     }
 
     override fun dispose() {

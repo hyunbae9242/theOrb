@@ -2,7 +2,7 @@ package com.example.theorb.data
 
 data class SaveData(
     var gold: Int = 0,
-    var gems: Int = 0,
+    var orbs: Int = 0,
     var pBaseDmg: Int = 10,
     var pBaseHp: Int = 100,
     var pBaseCastSpeedMul: Int = 1,
@@ -14,6 +14,8 @@ data class SaveData(
     var skillInventory: MutableList<Map<String, Any>> = mutableListOf(), // 스킬 인벤토리
     var unlockedSkills: MutableSet<String> = mutableSetOf(), // 한번이라도 보유했던 스킬 (skillType:rank 형태)
     var maxSkillSlots: Int = 1, // 최대 스킬 슬롯 개수
+    var equippedSubSkills: MutableMap<String, MutableList<Map<String, Any>>> = mutableMapOf(), // 메인스킬ID -> 보조스킬 데이터 리스트 (type, level)
+    var subSkillInventory: MutableMap<String, Map<String, Any>> = mutableMapOf(), // 보조스킬 인벤토리 (effectType -> {level, exp})
     var selectedOrb: String = "base_orb", // 선택된 오브 ID
     var selectedBackground: String = "clouds02", // 선택된 배경화면 이름
     var currentSpeedMultiplier: Float = 1.0f, // 현재 선택된 배속 (1.0, 2.0, 3.0)

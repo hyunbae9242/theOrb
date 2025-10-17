@@ -1,19 +1,13 @@
 {
-gold: 370923
-gems: 242
+gold: 636
+orbs: 99
 permanentUpgrades: {
 	class: java.util.LinkedHashMap
-	RANGE: 7
-	COOLDOWN_REDUCTION: 7
-	DAMAGE: 24
-	CRITICAL_CHANCE: 14
-	CRITICAL_DAMAGE: 22
+	DAMAGE: 11
+	CRITICAL_CHANCE: 5
+	CRITICAL_DAMAGE: 4
+	RANGE: 4
 }
-equippedSkills: [
-	Fireball:C
-	Fireball:B
-	IceLance:C
-]
 skillInventory: [
 	{
 		class: java.util.LinkedHashMap
@@ -27,56 +21,135 @@ skillInventory: [
 		}
 		id: {
 			class: java.lang.String
-			value: 67915cd2-6066-46c9-a62a-1af9b247e97d
-		}
-	}
-	{
-		class: java.util.LinkedHashMap
-		skillType: {
-			class: java.lang.String
-			value: Fireball
-		}
-		rank: {
-			class: java.lang.String
-			value: B
-		}
-		id: {
-			class: java.lang.String
-			value: 0e901777-43f1-44fd-afc2-9c4e13359d69
-		}
-	}
-	{
-		class: java.util.LinkedHashMap
-		skillType: {
-			class: java.lang.String
-			value: IceLance
-		}
-		rank: {
-			class: java.lang.String
-			value: C
-		}
-		id: {
-			class: java.lang.String
-			value: d57bb4f8-1810-44f6-9bd5-e193bb84b9a7
+			value: 5d31fd2d-5efe-42f9-9953-260ae672b0ad
 		}
 	}
 ]
-unlockedSkills: {
-	class: java.util.LinkedHashSet
-	items: [
-		Fireball:C
-		Fireball:B
-		IceLance:C
-	]
-}
-maxSkillSlots: 3
-selectedOrb: lightning
-selectedBackground: clouds01
-currentSpeedMultiplier: 2
-silver: 59
-inGameUpgrades: {
+maxSkillSlots: 2
+subSkillInventory: {
 	class: java.util.LinkedHashMap
-	DAMAGE_INCREASE: 3
-	GOLD_INCREASE: 2
+	PROJECTILE_COUNT: {
+		class: java.util.LinkedHashMap
+		level: {
+			class: java.lang.Integer
+			value: 1
+		}
+		exp: {
+			class: java.lang.Integer
+			value: 9
+		}
+	}
+	COOLDOWN_REDUCTION: {
+		class: java.util.LinkedHashMap
+		level: {
+			class: java.lang.Integer
+			value: 1
+		}
+		exp: {
+			class: java.lang.Integer
+			value: 2
+		}
+	}
+	FREEZE_CHANCE: {
+		class: java.util.LinkedHashMap
+		level: {
+			class: java.lang.Integer
+			value: 1
+		}
+		exp: {
+			class: java.lang.Integer
+			value: 9
+		}
+	}
+	FIRE_DAMAGE: {
+		class: java.util.LinkedHashMap
+		level: {
+			class: java.lang.Integer
+			value: 1
+		}
+		exp: {
+			class: java.lang.Integer
+			value: 3
+		}
+	}
+	DAMAGE_INCREASE: {
+		class: java.util.LinkedHashMap
+		level: {
+			class: java.lang.Integer
+			value: 1
+		}
+		exp: {
+			class: java.lang.Integer
+			value: 3
+		}
+	}
+	SHOCK_CHANCE: {
+		class: java.util.LinkedHashMap
+		level: {
+			class: java.lang.Integer
+			value: 1
+		}
+		exp: {
+			class: java.lang.Integer
+			value: 3
+		}
+	}
+	PROJECTILE_FORK: {
+		class: java.util.LinkedHashMap
+		level: {
+			class: java.lang.Integer
+			value: 1
+		}
+		exp: {
+			class: java.lang.Integer
+			value: 4
+		}
+	}
+	PROJECTILE_CHAIN: {
+		class: java.util.LinkedHashMap
+		level: {
+			class: java.lang.Integer
+			value: 1
+		}
+		exp: {
+			class: java.lang.Integer
+			value: 3
+		}
+	}
+	ICE_DAMAGE: {
+		class: java.util.LinkedHashMap
+		level: {
+			class: java.lang.Integer
+			value: 1
+		}
+		exp: {
+			class: java.lang.Integer
+			value: 0
+		}
+	}
+	IGNITE_CHANCE: {
+		class: java.util.LinkedHashMap
+		level: {
+			class: java.lang.Integer
+			value: 1
+		}
+		exp: {
+			class: java.lang.Integer
+			value: 1
+		}
+	}
+	LIGHTNING_DAMAGE: {
+		class: java.util.LinkedHashMap
+		level: {
+			class: java.lang.Integer
+			value: 1
+		}
+		exp: {
+			class: java.lang.Integer
+			value: 2
+		}
+	}
 }
+selectedOrb: lightning
+currentSpeedMultiplier: 2
 }

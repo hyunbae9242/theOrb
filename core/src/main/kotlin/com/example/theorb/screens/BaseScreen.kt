@@ -42,17 +42,20 @@ abstract class BaseScreen : ScreenAdapter() {
         val DANGER = Color(0xA0522DFF.toInt())              // 위험 시에나브라운
 
         // 공통 패딩 설정
-        const val SCREEN_PADDING = 12f                       // 화면 전체 패딩
-        const val COMPONENT_PADDING = 12f                    // 컴포넌트 간 패딩
+        const val SCREEN_PADDING = 16f                       // 화면 전체 패딩
+        const val COMPONENT_PADDING = 16f                    // 컴포넌트 간 패딩
+        // 공통 버튼 크기
+        const val BUTTON_SIZE = 48f
+
 
         // UI 크기 비율 (기준 해상도 480x800 기준)
         const val VIRTUAL_WIDTH = 480f
         const val VIRTUAL_HEIGHT = 800f
 
         // 표준 버튼 크기 비율
-        const val BUTTON_HEIGHT_RATIO = 42f / VIRTUAL_HEIGHT  // 약 5.25%
+        const val BUTTON_HEIGHT_RATIO = 48f / VIRTUAL_HEIGHT  // 약 5.25%
         const val RECTANGLE_BUTTON_WIDTH_RATIO = 84f / VIRTUAL_WIDTH  // 약 17.5%
-        const val SQUARE_BUTTON_SIZE_RATIO = 42f / VIRTUAL_HEIGHT  // 정사각형 버튼
+        const val SQUARE_BUTTON_SIZE_RATIO = 48f / VIRTUAL_HEIGHT  // 정사각형 버튼
 
         // 기준 폰트 크기 (480x800 기준)
         const val BASE_FONT_SMALL = 16f
@@ -89,11 +92,8 @@ abstract class BaseScreen : ScreenAdapter() {
         private var sharedBackgroundRenderer: BackgroundRenderer? = null
 
         // 고정 UI 요소들의 높이
-        const val TOP_BAR_HEIGHT = 80f      // 상단바 고정 높이
-        const val BOTTOM_NAV_HEIGHT = 60f   // 하단네비 고정 높이
-        const val TOP_BAR_PADDING = 12f     // 상단바 아래 패딩
-        const val CONTENT_SIDE_PADDING = 12f // 컨텐츠 좌우 패딩
-        const val BOTTOM_NAV_PADDING = 6f   // 하단네비 아래 패딩
+        const val TOP_BAR_HEIGHT = 64f      // 상단바 고정 높이
+        const val BOTTOM_NAV_HEIGHT = 48f   // 하단네비 고정 높이
 
         fun initSharedResources() {
             if (!initialized) {
@@ -202,14 +202,6 @@ abstract class BaseScreen : ScreenAdapter() {
             }
             sharedBackgroundRenderer!!.changeBackground(stage, newBackgroundName, screenWidth, screenHeight)
         }
-
-        // UI 헬퍼 함수들을 static으로 제공
-        fun getSquareButtonSize(): Float {
-            val camera = Gdx.graphics.width.toFloat()
-            val height = Gdx.graphics.height.toFloat()
-            val virtualHeight = 800f
-            return virtualHeight * SQUARE_BUTTON_SIZE_RATIO
-        }
     }
 
     override fun resize(width: Int, height: Int) {
@@ -226,7 +218,7 @@ abstract class BaseScreen : ScreenAdapter() {
     protected fun scaleHeight(ratio: Float): Float = virtualHeight * ratio
 
     // 공통 레이아웃 시스템
-    protected fun createRootLayout(stage: Stage, horizontalPadding: Float = 12f, verticalPadding: Float = SCREEN_PADDING): Table {
+    protected fun createRootLayout(stage: Stage, horizontalPadding: Float = SCREEN_PADDING, verticalPadding: Float = SCREEN_PADDING): Table {
         val rootLayout = Table().apply {
             setSize(virtualWidth, virtualHeight)
             setPosition(0f, 0f)
@@ -244,25 +236,23 @@ abstract class BaseScreen : ScreenAdapter() {
 
     // 실제 컨텐츠가 사용할 수 있는 높이 계산
     protected fun getContentAreaHeight(): Float {
-        return virtualHeight - SCREEN_PADDING * 2 - TOP_BAR_HEIGHT - BOTTOM_NAV_HEIGHT - TOP_BAR_PADDING - BOTTOM_NAV_PADDING
+        return virtualHeight - SCREEN_PADDING * 2 - TOP_BAR_HEIGHT - BOTTOM_NAV_HEIGHT
     }
 
     // 표준 레이아웃 패턴들
     protected fun addTopBar(rootLayout: Table, topBarContent: Table?, height: Float = TOP_BAR_HEIGHT): Table? {
         return topBarContent?.also {
-            rootLayout.add(it).width(virtualWidth * 0.95f).height(height).padBottom(TOP_BAR_PADDING).row()
+            rootLayout.add(it).height(height).row()
         }
     }
 
     protected fun addMainContent(rootLayout: Table, mainContent: Table): Table {
-        Gdx.app.log("baseScreen", "getContentAreaHeight: ${getContentAreaHeight()}")
-        // expand 대신 정확한 높이 지정으로 다른 요소들이 밀리지 않도록 함
-        rootLayout.add(mainContent).height(getContentAreaHeight()).fillX().padRight(CONTENT_SIDE_PADDING).padLeft(CONTENT_SIDE_PADDING).row()
+        rootLayout.add(mainContent).height(getContentAreaHeight()).expandX().fillX().row()
         return mainContent
     }
 
     protected fun addBottomNavigation(rootLayout: Table, bottomNav: Table): Table {
-        rootLayout.add(bottomNav).growX().padBottom(BOTTOM_NAV_PADDING)
+        rootLayout.add(bottomNav).height(BOTTOM_NAV_HEIGHT).expandX().fillX()
         return bottomNav
     }
 }

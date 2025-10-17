@@ -11,7 +11,14 @@ import kotlin.random.Random
 object EnemyFactory {
 
     fun spawnRandom(width: Float = 480f, gameAreaHeight: Float = 550f, gameAreaStartY: Float = 150f, gameTimeSeconds: Float = 0f, rnd: Random = Random): Enemy {
-        val type = weightedRandom(Balance.TYPE_WEIGHTS_NO_BOSS, rnd)
+        // 시간에 따른 적 타입 가중치 결정
+        val weights = when {
+            gameTimeSeconds < 180f -> mapOf(EnemyType.NORMAL to 100) // 0~3분: 노말만
+            gameTimeSeconds < 300f -> mapOf(EnemyType.NORMAL to 90, EnemyType.TANK to 10) // 3~5분: 노말 90 탱크 10
+            else -> mapOf(EnemyType.NORMAL to 75, EnemyType.SPEED to 15, EnemyType.TANK to 10) // 5분~: 노말 75 스피드 15 탱크 10
+        }
+
+        val type = weightedRandom(weights, rnd)
         val element = weightedRandom(Balance.ELEMENT_WEIGHTS, rnd)
 
         // 스폰 위치(게임 영역의 4변 랜덤)

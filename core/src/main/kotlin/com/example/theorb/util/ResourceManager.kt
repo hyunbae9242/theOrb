@@ -3,13 +3,72 @@ package com.example.theorb.util
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
+import com.example.theorb.ui.BottomNavigation
 
 object ResourceManager {
 
     // 이미지 경로 상수들
     object Images {
+        // v01 작업분 panel
+        // common
+        const val COMMON_TOP_PANEL = "images/v01/panel/Common_top.png"
+        const val HOME_MAIN_PANEL = "images/v01/panel/Home_main.png"
+        const val HOME_ORB_SELECTION = "images/v01/panel/Home_orb_selection.png"
+        const val HOME_ORB_SELECT = "images/v01/panel/Home_orb_select.png"
+        const val SQUARE_BASE = "images/v01/panel/Square_base.png"
+        const val SQUARE_EVENT = "images/v01/panel/Square_event.png"
+
+        // v01 작업분 button
+        // common
+        const val GEAR_BASE_POS = "images/v01/button/gear/Gear_base_p.png"
+        const val GEAR_EVENT_POS = "images/v01/button/gear/Gear_event_p.png"
+        const val LEFT_BASE_POS = "images/v01/button/left/Left_base_n.png"
+        const val LEFT_EVENT_POS = "images/v01/button/left/Left_event_p.png"
+        const val LEFT_BASE_NAG = "images/v01/button/left/Left_base_n.png"
+        const val RIGHT_BASE_POS = "images/v01/button/right/Right_base_p.png"
+        const val RIGHT_EVENT_POS = "images/v01/button/right/Right_event_p.png"
+        const val RIGHT_BASE_NAG = "images/v01/button/right/Right_base_n.png"
+
+        // nav
+        const val SHOP_BASE_POS = "images/v01/button/shop/Shop_base_p.png"
+        const val SHOP_EVENT_POS = "images/v01/button/shop/Shop_event_p.png"
+        const val SHOP_BASE_NAG = "images/v01/button/shop/Shop_base_n.png"
+        const val SHOP_EVENT_NAG = "images/v01/button/shop/Shop_event_n.png"
+
+        const val CARD_BASE_POS = "images/v01/button/card/Card_base_p.png"
+        const val CARD_EVENT_POS = "images/v01/button/card/Card_event_p.png"
+        const val CARD_BASE_NAG = "images/v01/button/card/Card_base_n.png"
+        const val CARD_EVENT_NAG = "images/v01/button/card/Card_event_n.png"
+
+        const val MAIN_BASE_POS = "images/v01/button/main/Main_base_p.png"
+        const val MAIN_EVENT_POS = "images/v01/button/main/Main_event_p.png"
+        const val MAIN_BASE_NAG = "images/v01/button/main/Main_base_n.png"
+        const val MAIN_EVENT_NAG = "images/v01/button/main/Main_event_n.png"
+
+        const val UPGRADE_BASE_POS = "images/v01/button/upgrade/Upgrade_base_p.png"
+        const val UPGRADE_EVENT_POS = "images/v01/button/upgrade/Upgrade_event_p.png"
+        const val UPGRADE_BASE_NAG = "images/v01/button/upgrade/Upgrade_base_n.png"
+        const val UPGRADE_EVENT_NAG = "images/v01/button/upgrade/Upgrade_event_n.png"
+
+        const val SKILL_BASE_POS = "images/v01/button/skill/Skill_base_p.png"
+        const val SKILL_EVENT_POS = "images/v01/button/skill/Skill_event_p.png"
+        const val SKILL_BASE_NAG = "images/v01/button/skill/Skill_base_n.png"
+        const val SKILL_EVENT_NAG = "images/v01/button/skill/Skill_event_n.png"
+
+        const val START_BASE_POS = "images/v01/button/start/Start_base_p.png"
+        const val START_EVENT_POS = "images/v01/button/start/Start_event_p.png"
+        const val START_BASE_NAG = "images/v01/button/start/Start_base_n.png"
+        const val START_EVENT_NAG = "images/v01/button/start/Start_event_n.png"
+
+        const val CLOSE_BASE_POS = "images/v01/button/close/Close_base_p.png"
+        const val CLOSE_EVENT_POS = "images/v01/button/close/Close_event_p.png"
+        const val CLOSE_BASE_NAG = "images/v01/button/close/Close_base_n.png"
+
+
+
         // Retro Ui 배경없는 버튼
         const val RETRO_GEAR = "images/buttons/retro/Gear.png"
+        const val RETRO_CHECK = "images/buttons/retro/Check.png"
 
         // Retro UI 버튼들
         const val RETRO_PAUSE_DEFAULT = "images/buttons/retro/Pause_d.png"
@@ -33,13 +92,13 @@ object ResourceManager {
 
         // 모달 패널들
         const val RECTANGLE_PANEL_180_340 = "images/panels/Rectangle_panel_180_340.png"
-        const val RECTANGLE_PANEL_340_448 = "images/panels/Rectangle_panel_340_448.png"
         const val RECTANGLE_PANEL_340_180 = "images/panels/Rectangle_panel_340_180.png"
         const val RECTANGLE_PANEL_340_120 = "images/panels/Rectangle_panel_340_120.png"
         const val RECTANGLE_PANEL_252_84 = "images/panels/Rectangle_panel_252_84.png"
         const val SQUARE_PANEL_360 = "images/panels/Square_panel_360.png"
         // 스킬 아이콘 이미지들
         const val SKILL_ICON_PANEL_48_48 = "images/panels/Skill_icon_panel_48.png"
+        const val SKILL_SELECTED_PANEL_48_50 = "images/panels/Skill_selected_panel_48_50.png"
 
         // 배경 이미지들 - clouds01
         const val BACKGROUND_CLOUDS01_1 = "images/background/clouds01/1.png"
@@ -79,9 +138,69 @@ object ResourceManager {
         return TextureRegionDrawable(getTexture(path))
     }
 
+    // v01 작업분 panel
+    // home screen
+    fun getCommonTopPanel(): TextureRegionDrawable = getDrawable(Images.COMMON_TOP_PANEL)
+    fun getHomeMainPanel(): TextureRegionDrawable = getDrawable(Images.HOME_MAIN_PANEL)
+    fun getHomeOrbSelectionPanel(): TextureRegionDrawable = getDrawable(Images.HOME_ORB_SELECTION)
+
+    fun getHomeOrbSelectPanel(): TextureRegionDrawable = getDrawable(Images.HOME_ORB_SELECT)
+    fun getSquareBasePanel(): TextureRegionDrawable = getDrawable(Images.SQUARE_BASE)
+    fun getSquareEventPanel(): TextureRegionDrawable = getDrawable(Images.SQUARE_EVENT)
+
+
+    // v01 작업분 button
+    // home screen
+    fun getGearBasePos(): TextureRegionDrawable = getDrawable(Images.GEAR_BASE_POS)
+    fun getGearEventPos(): TextureRegionDrawable = getDrawable(Images.GEAR_EVENT_POS)
+    fun getLeftBasePos(): TextureRegionDrawable = getDrawable(Images.LEFT_BASE_POS)
+    fun getLeftEventPos(): TextureRegionDrawable = getDrawable(Images.LEFT_EVENT_POS)
+    fun getLeftBaseNag(): TextureRegionDrawable = getDrawable(Images.LEFT_BASE_NAG)
+    fun getRightBasePos(): TextureRegionDrawable = getDrawable(Images.RIGHT_BASE_POS)
+    fun getRightEventPos(): TextureRegionDrawable = getDrawable(Images.RIGHT_EVENT_POS)
+    fun getRightBaseNag(): TextureRegionDrawable = getDrawable(Images.RIGHT_BASE_NAG)
+
+    fun getNavBasePos(tab: BottomNavigation.Tab): TextureRegionDrawable = when (tab) {
+        BottomNavigation.Tab.SHOP -> getDrawable(Images.SHOP_BASE_POS)
+        BottomNavigation.Tab.CARD -> getDrawable(Images.CARD_BASE_POS)
+        BottomNavigation.Tab.MAIN -> getDrawable(Images.MAIN_BASE_POS)
+        BottomNavigation.Tab.UPGRADE -> getDrawable(Images.UPGRADE_BASE_POS)
+        BottomNavigation.Tab.SKILL -> getDrawable(Images.SKILL_BASE_POS)
+    }
+    fun getNavEventPos(tab: BottomNavigation.Tab): TextureRegionDrawable = when (tab) {
+        BottomNavigation.Tab.SHOP -> getDrawable(Images.SHOP_EVENT_POS)
+        BottomNavigation.Tab.CARD -> getDrawable(Images.CARD_EVENT_POS)
+        BottomNavigation.Tab.MAIN -> getDrawable(Images.MAIN_EVENT_POS)
+        BottomNavigation.Tab.UPGRADE -> getDrawable(Images.UPGRADE_EVENT_POS)
+        BottomNavigation.Tab.SKILL -> getDrawable(Images.SKILL_EVENT_POS)
+    }
+    fun getNavBaseNag(tab: BottomNavigation.Tab): TextureRegionDrawable = when (tab) {
+        BottomNavigation.Tab.SHOP -> getDrawable(Images.SHOP_BASE_NAG)
+        BottomNavigation.Tab.CARD -> getDrawable(Images.CARD_BASE_NAG)
+        BottomNavigation.Tab.MAIN -> getDrawable(Images.MAIN_BASE_NAG)
+        BottomNavigation.Tab.UPGRADE -> getDrawable(Images.UPGRADE_BASE_NAG)
+        BottomNavigation.Tab.SKILL -> getDrawable(Images.SKILL_BASE_NAG)
+    }
+    fun getNavEventNag(tab: BottomNavigation.Tab): TextureRegionDrawable = when (tab) {
+        BottomNavigation.Tab.SHOP -> getDrawable(Images.SHOP_EVENT_NAG)
+        BottomNavigation.Tab.CARD -> getDrawable(Images.CARD_EVENT_NAG)
+        BottomNavigation.Tab.MAIN -> getDrawable(Images.MAIN_EVENT_NAG)
+        BottomNavigation.Tab.UPGRADE -> getDrawable(Images.UPGRADE_EVENT_NAG)
+        BottomNavigation.Tab.SKILL -> getDrawable(Images.SKILL_EVENT_NAG)
+    }
+
+    fun getStartBasePos(): TextureRegionDrawable = getDrawable(Images.START_BASE_POS)
+    fun getStartEventPos(): TextureRegionDrawable = getDrawable(Images.START_EVENT_POS)
+    fun getStartBaseNag(): TextureRegionDrawable = getDrawable(Images.START_BASE_NAG)
+    fun getStartEventNag(): TextureRegionDrawable = getDrawable(Images.START_EVENT_NAG)
+
+    fun getCloseBasePos(): TextureRegionDrawable = getDrawable(Images.CLOSE_BASE_POS)
+    fun getCloseEventPos(): TextureRegionDrawable = getDrawable(Images.CLOSE_EVENT_POS)
+    fun getCloseBaseNag(): TextureRegionDrawable = getDrawable(Images.CLOSE_BASE_NAG)
 
     // Retro 버튼들을 위한 편의 메소드
     fun getRetroGear(): TextureRegionDrawable = getDrawable(Images.RETRO_GEAR)
+    fun getRetroCheck(): TextureRegionDrawable = getDrawable(Images.RETRO_CHECK)
     fun getRetroPauseDefault(): TextureRegionDrawable = getDrawable(Images.RETRO_PAUSE_DEFAULT)
     fun getRetroPauseEvent(): TextureRegionDrawable = getDrawable(Images.RETRO_PAUSE_EVENT)
     fun getRetroHomeDefault(): TextureRegionDrawable = getDrawable(Images.RETRO_HOME_DEFAULT)
@@ -105,12 +224,12 @@ object ResourceManager {
     // 모달 패널들을 위한 편의 메소드
     fun getSquarePanel360(): TextureRegionDrawable = getDrawable(Images.SQUARE_PANEL_360)
     fun getRectanglePanel180340(): TextureRegionDrawable = getDrawable(Images.RECTANGLE_PANEL_180_340)
-    fun getRectanglePanel340448(): TextureRegionDrawable = getDrawable(Images.RECTANGLE_PANEL_340_448)
     fun getRectanglePanel340180(): TextureRegionDrawable = getDrawable(Images.RECTANGLE_PANEL_340_180)
     fun getRectanglePanel340120(): TextureRegionDrawable = getDrawable(Images.RECTANGLE_PANEL_340_120)
     fun getRectanglePanel25284(): TextureRegionDrawable = getDrawable(Images.RECTANGLE_PANEL_252_84)
     // 스킬 아이콘 편의 메소드
     fun getSkillIconPanel4848(): TextureRegionDrawable = getDrawable(Images.SKILL_ICON_PANEL_48_48)
+    fun getSkillSelectedPanel4850(): TextureRegionDrawable = getDrawable(Images.SKILL_SELECTED_PANEL_48_50)
     // 배경 이미지들을 위한 편의 메소드 - clouds01
     fun getBackgroundClouds01Layer1(): TextureRegionDrawable = getDrawable(Images.BACKGROUND_CLOUDS01_1)
     fun getBackgroundClouds01Layer2(): TextureRegionDrawable = getDrawable(Images.BACKGROUND_CLOUDS01_2)

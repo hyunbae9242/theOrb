@@ -22,8 +22,8 @@ object Balance {
     const val MATCH_RESIST = 0.25f     // 해당 속성 매칭 저항력
 
     // === 베이스 스탯 === (원래 쓰던 숫자와 매칭되도록 설정)
-    const val BASE_HP = 20
-    const val BASE_SPEED = 40f
+    const val BASE_HP = 15
+    const val BASE_SPEED = 35f
     const val BASE_CONTACT_DAMAGE = 5
     const val BASE_REWARD_GOLD = 1
 

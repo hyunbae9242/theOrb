@@ -21,6 +21,8 @@ class DivineNova : Skill(
     isAOE = true // AOE 스킬
 ) {
 
+    override val tags: List<SkillTag> = listOf(SkillTag.DIVINE, SkillTag.AOE, SkillTag.INSTANT)
+
     // DivineNova 전용 등급 배율 (AOE 스킬 특성)
     override fun getRankMultipliers(): Map<SkillRank, Float> = mapOf(
         SkillRank.C to 1.0f,

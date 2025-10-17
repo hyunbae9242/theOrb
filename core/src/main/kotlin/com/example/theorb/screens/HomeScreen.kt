@@ -4,36 +4,32 @@ import com.badlogic.gdx.Game
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
-import com.badlogic.gdx.graphics.Pixmap
-import com.badlogic.gdx.graphics.Texture
-import com.badlogic.gdx.scenes.scene2d.Actor
+import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.Stage
+import com.badlogic.gdx.scenes.scene2d.Touchable
 import com.badlogic.gdx.scenes.scene2d.ui.Image
-import com.badlogic.gdx.scenes.scene2d.ui.ImageButton
 import com.badlogic.gdx.scenes.scene2d.ui.Label
-import com.badlogic.gdx.scenes.scene2d.ui.Stack
 import com.badlogic.gdx.scenes.scene2d.ui.Table
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton
-import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
-import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent
-import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
-import com.badlogic.gdx.utils.Align
-import com.example.theorb.TheOrb
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.example.theorb.data.OrbRegistry
 import com.example.theorb.data.SaveManager
-import com.example.theorb.ui.BackgroundRenderer
 import com.example.theorb.ui.BottomNavigation
 import com.example.theorb.ui.OrbSelectionModal
-import com.example.theorb.ui.SettingsModal
+import com.example.theorb.ui.RetroButtonV01
 import com.example.theorb.ui.TopBar
 import com.example.theorb.util.ResourceManager
 import com.example.theorb.util.formatNumber
 
 class HomeScreen(private val game: Game) : BaseScreen() {
     private val stage = Stage(viewport)
-    private var stageIndex = 1
     private lateinit var orbSelectionModal: OrbSelectionModal
     private lateinit var topBar: TopBar
+
+
+    // stage 관련 임시데이터
+    private var stageIdx = 1
+    private val minStageIdx = 1
+    private val maxStageIdx = 5
 
     override fun show() {
         initSharedResources()
@@ -69,15 +65,27 @@ class HomeScreen(private val game: Game) : BaseScreen() {
     private fun createMainContent(): Table {
         val mainContent = Table()
 
-        // 오브 + 스테이지 정보
+        // 오브 이미지 테이블 (300f)
+        val orbTable = createOrbTable()
+        // 버튼 테이블
+        val buttonTable = createMainTable()
+
+        mainContent.add(orbTable).row()
+        mainContent.add(buttonTable).padTop(80f)
+
+        return mainContent
+    }
+
+    private fun createOrbTable(): Table {
+        val orbTable = Table()
+
         val selectedOrbData = OrbRegistry.getOrbById(gameObject.saveData.selectedOrb)
             ?: OrbRegistry.getOrbById("base")!!
 
         val orb = Image(selectedOrbData.getDrawable()).apply {
-            setSize(45f, 45f)
-            touchable = com.badlogic.gdx.scenes.scene2d.Touchable.enabled
-            addListener(object : com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
-                override fun clicked(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float) {
+            touchable = Touchable.enabled
+            addListener(object : ClickListener() {
+                override fun clicked(event: InputEvent?, x: Float, y: Float) {
                     orbSelectionModal.show(
                         onClose = {
                             orbSelectionModal.hide()
@@ -92,23 +100,56 @@ class HomeScreen(private val game: Game) : BaseScreen() {
             })
         }
 
-        val stageLabel = Label("스테이지 $stageIndex", skin.get("label-large", Label.LabelStyle::class.java)).apply {
-            color = TEXT_PRIMARY
+        orbTable.add(orb).size(300f)
+        return orbTable
+    }
+
+    private fun createMainTable(): Table {
+        val mainTable = Table().apply {
+            top()
+            left()
+            background = ResourceManager.getHomeMainPanel()
         }
 
-        val startBtn = TextButton("게임 시작", skin.get("btn", TextButton.TextButtonStyle::class.java).apply { font = fontLg })
-        startBtn.addListener(object : ChangeListener() {
-            override fun changed(event: ChangeEvent?, actor: Actor?) {
-                game.setScreen(GameScreen())
-            }
-        })
 
-        // 레이아웃 구성
-        mainContent.add(orb).pad(60f).row()
-        mainContent.add(stageLabel).padBottom(40f).row()
-        mainContent.add(startBtn).pad(COMPONENT_PADDING).width(280f).height(80f)
+        val stageTable = Table()
+        val leftBtn = RetroButtonV01.createIconButton(
+            defaultImage = ResourceManager.getLeftBasePos(),
+            eventImage = ResourceManager.getLeftEventPos(),
+            disabledImage = ResourceManager.getLeftBaseNag(),
+            stageIdx != minStageIdx
+        ) {
+            stageIdx -= 1;
+        }
 
-        return mainContent
+        val rightBtn = RetroButtonV01.createIconButton(
+            defaultImage = ResourceManager.getRightBasePos(),
+            eventImage = ResourceManager.getRightEventPos(),
+            disabledImage = ResourceManager.getRightBaseNag(),
+            stageIdx != maxStageIdx
+        ) {
+            stageIdx += 1;
+        }
+
+        val stageLabel = Label("STAGE ${formatNumber(stageIdx)}", skin.get("label-large-bold", Label.LabelStyle::class.java))
+
+        val startBtn = RetroButtonV01.createIconButton(
+            defaultImage = ResourceManager.getStartBasePos(),
+            eventImage = ResourceManager.getStartEventPos(),
+            disabledImage = ResourceManager.getStartBaseNag(),
+            gameObject.saveData.equippedSkills.isNotEmpty(),
+        ) {
+            game.setScreen(GameScreen())
+        }
+
+        stageTable.add(leftBtn).padLeft(16f).left()
+        stageTable.add(stageLabel).center().expandX()
+        stageTable.add(rightBtn).padRight(16f).right()
+
+        mainTable.add(stageTable).padTop(8f).padBottom(8f).expandX().fillX().row()
+        mainTable.add(startBtn).padTop(8f).center()
+
+        return mainTable
     }
 
 

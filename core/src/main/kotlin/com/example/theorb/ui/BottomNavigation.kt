@@ -35,33 +35,17 @@ class BottomNavigation(
      * 하단 네비게이션 Table을 생성합니다
      */
     fun createBottomNavigation(): Table {
-        val bottom = Table().apply { pad(BaseScreen.COMPONENT_PADDING) }
-
-        // 버튼 개수에 따른 최대 폭 계산
-        val buttonCount = Tab.values().size
-        val screenWidth = Gdx.graphics.width.toFloat()
-        val availableWidth = screenWidth - (BaseScreen.COMPONENT_PADDING * 2)
-        val maxButtonWidth = availableWidth / buttonCount
-        val padding = 2f
-        val buttonWidth = (maxButtonWidth - padding * 2).coerceAtMost(165f)
+        val bottom = Table()
 
         Tab.values().forEach { tab ->
             val isSelected = tab == currentTab
 
             // Retro 스타일 버튼 생성
-            val button = RetroButton.createTextButton(
-                text = tab.displayName,
-                skin = skin,
-                labelStyle = "label-small-bold",
-                textColor = if (isSelected) BaseScreen.TEXT_PRIMARY else BaseScreen.TEXT_SECONDARY,
-                defaultImage = if (isSelected) ResourceManager.getRetroRectanglePosDefault() else ResourceManager.getRetroRectangleNagDefault(),
-                eventImage = if (isSelected) ResourceManager.getRetroRectanglePosEvent() else ResourceManager.getRetroRectangleNagEvent(),
-                buttonSize = 42f
-            ) {
+            val button = RetroButtonV01.getNavButton(tab, isSelected, !isSelected) {
                 handleTabClick(tab)
             }
 
-            bottom.add(button).width(buttonWidth).height(42f).pad(padding)
+            bottom.add(button).size(80f, 48f).expandX()
         }
 
         return bottom

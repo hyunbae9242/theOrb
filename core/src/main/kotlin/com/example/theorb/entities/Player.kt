@@ -45,21 +45,49 @@ class Player(
                         break
                     }
                 } else {
-                    // 단일 타겟 스킬: 기존 로직
+                    // 단일 타겟 스킬: 투사체 개수 증가 보조스킬 효과 적용
                     if (target != null) {
                         val d2 = dist2(target.x, target.y, x, y)
                         if (d2 <= effectiveRange * effectiveRange) {
-                            val finDamage = calcDamage(target, this, skill)
+                            // 투사체 개수 확인
+                            val projectileCount = skill.getProjectileCount()
 
-                            // 오버킬 방지: 이미 죽을 예정이면 스킵
-                            if (target.vhp <= 0) {
-                                continue
+                            if (projectileCount > 1) {
+                                // 여러 개의 투사체를 발사하는 경우 (가까운 적들 대상)
+                                val nearbyTargets = enemies
+                                    .filter { !it.isDead() && dist2(it.x, it.y, x, y) <= effectiveRange * effectiveRange }
+                                    .sortedBy { dist2(it.x, it.y, x, y) }
+                                    .take(projectileCount)
+
+                                if (nearbyTargets.isNotEmpty()) {
+                                    for (enemy in nearbyTargets) {
+                                        val finDamage = calcDamage(enemy, this, skill)
+
+                                        // 오버킬 방지
+                                        if (enemy.vhp <= 0) {
+                                            continue
+                                        }
+
+                                        enemy.vhp -= finDamage
+                                        projectiles.add(skill.createProjectile(x, y, enemy, this, finDamage, effects, onDamage))
+                                    }
+                                    skill.resetCooldown()
+                                    break
+                                }
+                            } else {
+                                // 기본 1개 투사체
+                                val finDamage = calcDamage(target, this, skill)
+
+                                // 오버킬 방지: 이미 죽을 예정이면 스킵
+                                if (target.vhp <= 0) {
+                                    continue
+                                }
+
+                                target.vhp -= finDamage // 가상 hp 즉시 감소
+                                projectiles.add(skill.createProjectile(x, y, target, this, finDamage, effects, onDamage))
+                                skill.resetCooldown() // 스킬 개별 쿨다운 초기화
+                                break // 한 번에 하나만 발사
                             }
-
-                            target.vhp -= finDamage // 가상 hp 즉시 감소
-                            projectiles.add(skill.createProjectile(x, y, target, this, finDamage, effects, onDamage))
-                            skill.resetCooldown() // 스킬 개별 쿨다운 초기화
-                            break // 한 번에 하나만 발사
                         }
                     }
                 }

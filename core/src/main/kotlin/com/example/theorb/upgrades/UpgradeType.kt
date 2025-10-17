@@ -18,9 +18,9 @@ enum class UpgradeType(
     val category: UpgradeCategory
 ) {
     // 공격 업그레이드
-    DAMAGE("데미지", "기본 공격력 증가", 10, 1.15f, 2f, 50, UpgradeCategory.ATTACK),
-    CRITICAL_CHANCE("치명타 확률", "치명타 발생 확률 증가", 25, 1.8f, 1f, 30, UpgradeCategory.ATTACK),
-    CRITICAL_DAMAGE("치명타 데미지", "치명타 데미지 배율 증가", 30, 1.6f, 3f, 25, UpgradeCategory.ATTACK),
+    DAMAGE("데미지", "기본 공격력 증가", 10, 1.3f, 5f, 50, UpgradeCategory.ATTACK),
+    CRITICAL_CHANCE("치명타 확률", "치명타 발생 확률 증가", 50, 1.8f, 1f, 30, UpgradeCategory.ATTACK),
+    CRITICAL_DAMAGE("치명타 데미지", "치명타 데미지 배율 증가", 50, 1.6f, 3f, 25, UpgradeCategory.ATTACK),
 
     // 방어 업그레이드
     HEALTH("체력", "최대 체력 증가", 15, 1.4f, 20f, 40, UpgradeCategory.DEFENSE),

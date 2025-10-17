@@ -18,6 +18,8 @@ class IceLance : Skill(
     flyEffectType = EffectType.ICE_LANCE_FLY
 ) {
 
+    override val tags: List<SkillTag> = listOf(SkillTag.ICE, SkillTag.PROJECTILE, SkillTag.INSTANT)
+
     // IceLance 전용 등급 배율 (균형잡힌 성장)
     override fun getRankMultipliers(): Map<SkillRank, Float> = mapOf(
         SkillRank.C to 1.0f,

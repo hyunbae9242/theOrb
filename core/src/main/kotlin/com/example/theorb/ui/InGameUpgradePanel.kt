@@ -1,6 +1,7 @@
 package com.example.theorb.ui
 
 import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Touchable
 import com.badlogic.gdx.scenes.scene2d.ui.*
@@ -16,14 +17,22 @@ class InGameUpgradePanel(
     private val saveData: SaveData
 ) {
     private lateinit var mainContainer: Table
-    private lateinit var contentScrollPane: ScrollPane
+    private lateinit var contentContainer: Table
     private lateinit var contentTable: Table
     private var currentTab = InGameUpgrades.UpgradeTab.ATTACK
+    private var currentPage = 0
+    private var maxPage = 0
+    private val itemsPerPage = 4 // 한 페이지에 4개씩 표시
 
     // 탭 버튼들 참조
     private lateinit var attackTabBtn: Stack
     private lateinit var defenseTabBtn: Stack
     private lateinit var utilityTabBtn: Stack
+
+    // 페이지 버튼 참조
+    private lateinit var leftButton: Stack
+    private lateinit var rightButton: Stack
+    private lateinit var pageLabel: Label
 
     fun createUI(availableHeight: Float? = null): Table {
         // 메인 컨테이너 (할당된 영역 내에서 전체 폭 사용)
@@ -35,35 +44,65 @@ class InGameUpgradePanel(
         // 상단: 탭 버튼들 (직사각형 배경 적용)
         val topRow = createTabButtons()
 
-        // 초기 컨텐츠를 먼저 생성
-        contentTable = createContentForTab(currentTab)
-
-        // ScrollPane 생성 (완성된 컨텐츠로)
-        val maxScrollHeight = if (availableHeight != null) {
-            // GameScreen에서 넘겨받은 높이에서 탭 버튼과 패딩 공간 제외
-            availableHeight - 100f // 탭 버튼(42f) + 패딩들(58f) 대략 100f
+        // 컨텐츠 영역 높이 계산
+        val maxContentHeight = if (availableHeight != null) {
+            availableHeight - 100f
         } else {
-            // 기본값: 전체 높이의 35%에서 여백 제외 (fallback)
             BaseScreen.VIRTUAL_HEIGHT * 0.35f - 100f
         }
 
-        contentScrollPane = ScrollPane(contentTable, BaseScreen.skin).apply {
-            setScrollingDisabled(true, false) // 세로 스크롤만 허용
-            setFlickScroll(true) // 플릭 스크롤 활성화
-            setSmoothScrolling(true) // 부드러운 스크롤 활성화
-            setOverscroll(false, false) // 오버스크롤 비활성화
+        // 컨텐츠 컨테이너 (좌우 버튼 + 컨텐츠)
+        contentContainer = Table()
 
-            // 터치 이벤트 관련 설정 - 버튼 클릭과 스크롤 충돌 방지
-            setCancelTouchFocus(true) // 터치 포커스 취소 활성화
-            setClamp(true) // 스크롤 영역 제한
-
-            // ScrollPane의 높이를 명시적으로 설정
-            setHeight(maxScrollHeight)
+        // 좌측 버튼
+        leftButton = RetroButton.createTextButton(
+            text = "<",
+            skin = BaseScreen.skin,
+            labelStyle = "label-default-bold",
+            textColor = BaseScreen.TEXT_PRIMARY,
+            defaultImage = ResourceManager.getRetroSquarePosDefault(),
+            eventImage = ResourceManager.getRetroSquarePosEvent(),
+            disabledImage = ResourceManager.getRetroSquareNagDefault(),
+            buttonSize = 42f,
+            isEnabled = false
+        ) {
+            previousPage()
         }
 
-        // 레이아웃 구성 (전체 폭 사용)
+        // 우측 버튼
+        rightButton = RetroButton.createTextButton(
+            text = ">",
+            skin = BaseScreen.skin,
+            labelStyle = "label-default-bold",
+            textColor = BaseScreen.TEXT_PRIMARY,
+            defaultImage = ResourceManager.getRetroSquarePosDefault(),
+            eventImage = ResourceManager.getRetroSquarePosEvent(),
+            disabledImage = ResourceManager.getRetroSquareNagDefault(),
+            buttonSize = 42f,
+            isEnabled = false
+        ) {
+            nextPage()
+        }
+
+        // 페이지 표시 라벨
+        pageLabel = Label("", BaseScreen.skin.get("label-small", Label.LabelStyle::class.java)).apply {
+            color = BaseScreen.TEXT_SECONDARY
+        }
+
+        // 초기 컨텐츠 생성
+        contentTable = createContentForTab(currentTab)
+
+        // 레이아웃 구성
         mainContainer.add(topRow).fillX().expandX().pad(4f).row()
-        mainContainer.add(contentScrollPane).expandX().fillX().height(maxScrollHeight).pad(8f, 4f, 4f, 4f)
+
+        // 컨텐츠 영역 (좌 버튼 + 컨텐츠 + 우 버튼)
+        val contentRow = Table()
+        contentRow.add(leftButton).size(42f).padRight(8f)
+        contentRow.add(contentTable).expandX().fillX().height(maxContentHeight)
+        contentRow.add(rightButton).size(42f).padLeft(8f)
+
+        mainContainer.add(contentRow).expandX().fillX().height(maxContentHeight).pad(8f, 4f, 4f, 4f).row()
+        mainContainer.add(pageLabel).center().padTop(4f)
 
         // 기본 탭 상태 설정
         updateTabStates()
@@ -198,61 +237,130 @@ class InGameUpgradePanel(
 
 
     private fun createContentForTab(tab: InGameUpgrades.UpgradeTab): Table {
-        val newContentTable = Table()
+        val newContentTable = Table().apply {
+            touchable = Touchable.childrenOnly
+        }
 
         if (tab == InGameUpgrades.UpgradeTab.DEFENSE) {
             newContentTable.add(Label("방어 업그레이드는 준비 중입니다.", BaseScreen.skin.get("label-small", Label.LabelStyle::class.java)).apply {
                 color = BaseScreen.TEXT_SECONDARY
             }).center().expand()
+            currentPage = 0
+            maxPage = 0
+            updatePageButtons()
             return newContentTable
         }
 
-        // 해당 탭의 업그레이드들을 세로로 배치
+        // 해당 탭의 업그레이드들
         val upgrades = InGameUpgrades.UPGRADE_DATA.filter { it.value.tab == tab }.toList()
 
-        val rowWidth = BaseScreen.VIRTUAL_WIDTH * 0.8f
-        val rowHeight = BaseScreen.VIRTUAL_HEIGHT * 0.08f
+        // 페이지 계산
+        maxPage = kotlin.math.max(0, (upgrades.size - 1) / itemsPerPage)
+        if (currentPage > maxPage) currentPage = maxPage
 
-        upgrades.forEachIndexed { index, (upgradeType, info) ->
+        // 현재 페이지에 표시할 아이템들
+        val startIndex = currentPage * itemsPerPage
+        val endIndex = kotlin.math.min(startIndex + itemsPerPage, upgrades.size)
+        val pageUpgrades = upgrades.subList(startIndex, endIndex)
+
+        // 카드 크기 설정
+        val cardWidth = BaseScreen.VIRTUAL_WIDTH * 0.18f
+        val cardHeight = BaseScreen.VIRTUAL_HEIGHT * 0.28f
+
+        pageUpgrades.forEach { (upgradeType, info) ->
             val currentLevel = saveData.inGameUpgrades[upgradeType.name] ?: 0
             val cost = InGameUpgrades.getUpgradeCost(upgradeType, currentLevel)
             val currentBonus = InGameUpgrades.getCurrentBonus(upgradeType, currentLevel)
-            val upgradeRow = createUpgradeRow(upgradeType, info, currentLevel, cost, currentBonus)
-            newContentTable.add(upgradeRow).size(rowWidth, rowHeight).pad(2f).padBottom(4f).row()
+            val upgradeCard = createUpgradeCard(upgradeType, info, currentLevel, cost, currentBonus)
+            newContentTable.add(upgradeCard).size(cardWidth, cardHeight).pad(4f)
         }
 
+        updatePageButtons()
         return newContentTable
+    }
+
+    private fun previousPage() {
+        if (currentPage > 0) {
+            currentPage--
+            switchToTab(currentTab)
+        }
+    }
+
+    private fun nextPage() {
+        if (currentPage < maxPage) {
+            currentPage++
+            switchToTab(currentTab)
+        }
+    }
+
+    private fun updatePageButtons() {
+        // 좌측 버튼 활성화/비활성화
+        RetroButton.updateTextButtonEnabled(
+            leftButton,
+            currentPage > 0,
+            ResourceManager.getRetroSquarePosDefault(),
+            ResourceManager.getRetroSquarePosEvent(),
+            ResourceManager.getRetroSquareNagDefault()
+        )
+
+        // 우측 버튼 활성화/비활성화
+        RetroButton.updateTextButtonEnabled(
+            rightButton,
+            currentPage < maxPage,
+            ResourceManager.getRetroSquarePosDefault(),
+            ResourceManager.getRetroSquarePosEvent(),
+            ResourceManager.getRetroSquareNagDefault()
+        )
+
+        // 페이지 라벨 업데이트
+        pageLabel.setText("${currentPage + 1} / ${maxPage + 1}")
     }
 
     private fun switchToTab(tab: InGameUpgrades.UpgradeTab) {
         currentTab = tab
+        currentPage = 0 // 탭 변경 시 첫 페이지로
 
-        // 새로운 컨텐츠 테이블 생성
-        val newContentTable = createContentForTab(tab)
-
-        // ScrollPane의 actor를 새로운 테이블로 교체
-        contentScrollPane.actor = newContentTable
-        contentTable = newContentTable
-
-        // 스크롤 위치를 맨 위로 리셋
-        contentScrollPane.scrollY = 0f
+        refreshContent()
     }
 
-    private fun createUpgradeRow(
+    private fun refreshContent() {
+        // 새로운 컨텐츠 테이블 생성
+        val newContentTable = createContentForTab(currentTab)
+
+        // 기존 컨텐츠 제거하고 새 컨텐츠 추가
+        contentTable.remove()
+        contentTable = newContentTable
+
+        // contentRow 찾아서 업데이트
+        val contentRow = mainContainer.children[1] as Table
+        val cell = contentRow.cells.get(1) as com.badlogic.gdx.scenes.scene2d.ui.Cell<*>
+        cell.setActor<Actor>(contentTable)
+    }
+
+    private fun createUpgradeCard(
         upgradeType: InGameUpgrades.UpgradeType,
         info: InGameUpgrades.UpgradeInfo,
         currentLevel: Int,
         cost: Int,
         currentBonus: Float
     ): Table {
-        val upgradeRow = Table().apply {
-            background = ResourceManager.getRectanglePanel25284()
+        val upgradeCard = Table().apply {
+            background = ResourceManager.getRectanglePanel180340()
             pad(8f)
+            touchable = Touchable.childrenOnly
         }
 
-        // 업그레이드 정보 (가로 배치)
+        // 고정 높이 설정
+        val nameLabelHeight = 32f
+        val labelHeight = 20f
+        val bonusLabelHeight = 24f
+        val buttonHeight = BaseScreen.VIRTUAL_HEIGHT * BaseScreen.BUTTON_HEIGHT_RATIO
+
+        // 업그레이드 정보 (세로 배치)
         val nameLabel = Label(info.name, BaseScreen.skin.get("label-small", Label.LabelStyle::class.java)).apply {
             color = BaseScreen.TEXT_PRIMARY
+            setAlignment(com.badlogic.gdx.utils.Align.center)
+            wrap = true
         }
 
         val levelLabel = Label("Lv.$currentLevel/${info.maxLevel}", BaseScreen.skin.get("label-small", Label.LabelStyle::class.java)).apply {
@@ -265,13 +373,13 @@ class InGameUpgradePanel(
             "+${currentBonus.toInt()}%"
         }
 
-        val bonusLabel = Label(bonusText, BaseScreen.skin.get("label-small", Label.LabelStyle::class.java)).apply {
+        val bonusLabel = Label(bonusText, BaseScreen.skin.get("label-default", Label.LabelStyle::class.java)).apply {
             color = BaseScreen.WARNING
         }
 
         // 업그레이드 버튼 - Retro 스타일 사용
         val canUpgrade = currentLevel < info.maxLevel && saveData.silver >= cost
-        val buttonText = if (currentLevel >= info.maxLevel) "MAX" else "Level Up\n(${formatNumber(cost)} silver)"
+        val buttonText = if (currentLevel >= info.maxLevel) "MAX" else "Level Up"
 
         val upgradeButton = RetroButton.createTextButton(
             text = buttonText,
@@ -287,15 +395,27 @@ class InGameUpgradePanel(
             purchaseUpgrade(upgradeType)
         }
 
-        // 레이아웃 (가로 배치) - 업그레이드 버튼을 오른쪽으로 배치
-        upgradeRow.add(nameLabel).left().padLeft(8f).padRight(8f)
-        upgradeRow.add(levelLabel).left().padRight(8f)
-        upgradeRow.add(bonusLabel).left().padRight(8f)
-        upgradeRow.add(upgradeButton).size(
-            BaseScreen.VIRTUAL_WIDTH * BaseScreen.RECTANGLE_BUTTON_WIDTH_RATIO,
-            BaseScreen.VIRTUAL_HEIGHT * BaseScreen.BUTTON_HEIGHT_RATIO
-        ).right().expandX().padRight(8f)
-        return upgradeRow
+        val costLabel = Label("(${formatNumber(cost)})", BaseScreen.skin.get("label-small", Label.LabelStyle::class.java)).apply {
+            color = BaseScreen.TEXT_SECONDARY
+        }
+
+        // 레이아웃 (세로 배치) - 고정 높이로 정렬
+        upgradeCard.add(nameLabel).width(BaseScreen.VIRTUAL_WIDTH * 0.16f).height(nameLabelHeight).center().padBottom(4f).row()
+        upgradeCard.add(levelLabel).height(labelHeight).center().padBottom(2f).row()
+        upgradeCard.add(bonusLabel).height(bonusLabelHeight).center().padBottom(8f).row()
+        upgradeCard.add(upgradeButton).size(
+            BaseScreen.VIRTUAL_WIDTH * 0.15f,
+            buttonHeight
+        ).center().padBottom(2f).row()
+
+        // 비용 라벨은 항상 추가 (MAX일 때는 빈 라벨)
+        if (currentLevel < info.maxLevel) {
+            upgradeCard.add(costLabel).height(labelHeight).center()
+        } else {
+            upgradeCard.add(Label("", BaseScreen.skin)).height(labelHeight).center() // 빈 공간 유지
+        }
+
+        return upgradeCard
     }
 
     private fun purchaseUpgrade(upgradeType: InGameUpgrades.UpgradeType) {
@@ -326,15 +446,7 @@ class InGameUpgradePanel(
     }
 
     fun refreshUI() {
-        // 현재 스크롤 위치 저장
-        val currentScrollY = contentScrollPane.scrollY
-
-        // 같은 탭 내용 새로고침 (탭 전환이 아님)
-        val newContentTable = createContentForTab(currentTab)
-        contentScrollPane.actor = newContentTable
-        contentTable = newContentTable
-
-        // 스크롤 위치 복원
-        contentScrollPane.scrollY = currentScrollY
+        // 현재 페이지 유지하면서 내용 새로고침
+        refreshContent()
     }
 }

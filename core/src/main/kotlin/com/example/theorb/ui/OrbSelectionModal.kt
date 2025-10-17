@@ -1,7 +1,6 @@
 package com.example.theorb.ui
 
 import com.badlogic.gdx.graphics.Color
-import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.Touchable
 import com.badlogic.gdx.scenes.scene2d.ui.Image
@@ -9,8 +8,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Table
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton
-import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.example.theorb.data.OrbData
 import com.example.theorb.data.OrbRegistry
 import com.example.theorb.data.SaveData
@@ -22,6 +19,9 @@ class OrbSelectionModal(
     private val skin: Skin,
     private val saveData: SaveData
 ) {
+
+    private val modalWidth = 350f
+    private val modalHeight = 500f
 
     private var backgroundOverlay: Image? = null
     private var dialogContainer: Table? = null
@@ -46,34 +46,23 @@ class OrbSelectionModal(
         stage.addActor(dialogContainer)
 
         // 중앙 정렬 (동적 크기 기준)
-        val panelWidth = stage.viewport.worldWidth * 0.95f
-        val panelHeight = stage.viewport.worldHeight * 0.8f
         dialogContainer!!.setPosition(
-            (stageWidth - panelWidth) / 2f,
-            (stageHeight - panelHeight) / 2f
+            (stageWidth - modalWidth) / 2f,
+            (stageHeight - modalHeight) / 2f
         )
     }
 
     private fun createDialogContainer(onClose: () -> Unit, onOrbSelected: (OrbData) -> Unit) {
-        val panelWidth = stage.viewport.worldWidth * 0.95f
-        val panelHeight = stage.viewport.worldHeight * 0.8f
-
         dialogContainer = Table().apply {
-            background = ResourceManager.getRectanglePanel340448()
-            pad(20f)
-            setSize(panelWidth, panelHeight)
+            background = ResourceManager.getHomeOrbSelectionPanel()
+            setSize(modalWidth, modalHeight)
         }
 
         // 제목 섹션 (배경 포함)
-        val titleSection = Table().apply {
-            background = ResourceManager.getRetroRectanglePosEvent()
-            pad(15f)
-        }
-
-        val titleLabel = Label("오브 선택", skin.get("label-large", Label.LabelStyle::class.java)).apply {
+        val titleSection = Table()
+        val titleLabel = Label("SELECT ORB", skin.get("label-large-bold", Label.LabelStyle::class.java)).apply {
             color = BaseScreen.TEXT_PRIMARY
         }
-
         titleSection.add(titleLabel).center()
 
         // 상단: 선택된 오브 정보
@@ -81,39 +70,25 @@ class OrbSelectionModal(
 
         // 중하단: 오브 그리드 리스트
         val orbGridSection = createOrbGridSection(onOrbSelected)
+        // 하단: 닫기 버튼
+        val buttonSection = createBottomButtonSection(onClose)
 
-        // 닫기 버튼 - Retro 스타일
-        val closeButton = com.example.theorb.ui.RetroButton.createTextButton(
-            text = "닫기",
-            skin = skin,
-            labelStyle = "label-default-bold",
-            textColor = BaseScreen.TEXT_SECONDARY,
-            defaultImage = ResourceManager.getRetroRectangleNagDefault(),
-            eventImage = ResourceManager.getRetroRectangleNagEvent(),
-            buttonSize = (panelHeight * 0.1f)
-        ) {
-            onClose()
-        }
-
-        // 레이아웃 구성 - 퍼센트 기반 높이
-        // 타이틀: 10%, 선택된 오브: 20%, 오브 리스트: 60%, 닫기: 10%
         dialogContainer!!.apply {
-            add(titleSection).width(panelWidth * 0.4f).height(panelHeight * 0.1f).padBottom(10f).row()
-            add(selectedOrbSection).growX().height(panelHeight * 0.2f).padBottom(10f).row()
-            add(orbGridSection).grow().height(panelHeight * 0.6f).padBottom(10f).row()
-            add(closeButton).width(panelWidth * 0.25f).height(panelHeight * 0.1f).center()
+            add(titleSection).padTop(32f).height(26f).row() // 32 + 26 = 58
+            add(selectedOrbSection).pad(16f).height(96f).row() // 58 + 16 + 96 + 16 = 186
+            add(orbGridSection).center().height(218f).row() // 500 - 186 - 96 = 218
+            add(buttonSection).center().height(48f).padTop(16f).padBottom(32f) // 버튼 32 + 48 + 16 = 96
         }
     }
 
     private fun createSelectedOrbSection(): Table {
         val section = Table().apply {
-            background = ResourceManager.getRetroRectangleNagEvent()
-            pad(15f)
+            background = ResourceManager.getHomeOrbSelectPanel()
         }
 
         // 선택된 오브 이미지 (높이 118f에 맞게 조정)
         val selectedOrbImage = Image(selectedOrbData.getDrawable()).apply {
-            setSize(60f, 60f)
+            setSize(64f, 64f)
         }
 
         // 선택된 오브 정보
@@ -129,22 +104,19 @@ class OrbSelectionModal(
         }
 
         infoTable.apply {
-            add(nameLabel).left().row()
-            add(descLabel).left().width(300f).row()
+            add(nameLabel).left().padBottom(8f).row()
+            add(descLabel).left().expandX().fillX().row()
         }
 
         section.apply {
-            add(selectedOrbImage).size(60f, 60f).left().padRight(20f)
-            add(infoTable).expandX().fillX().left()
+            add(selectedOrbImage).size(64f).left().padRight(16f)
+            add(infoTable).left().expandX().fillX()
         }
-
         return section
     }
 
     private fun createOrbGridSection(onOrbSelected: (OrbData) -> Unit): Table {
         val gridTable = Table()
-        val scrollPane = ScrollPane(gridTable, skin)
-        scrollPane.setScrollingDisabled(true, false) // 가로 스크롤 비활성화
 
         val unlockedOrbs = OrbRegistry.getUnlockedOrbs()
         val columns = 3
@@ -154,7 +126,7 @@ class OrbSelectionModal(
         for (orb in unlockedOrbs) {
             val orbButton = createOrbButton(orb, onOrbSelected)
 
-            gridTable.add(orbButton).size(90f, 90f).pad(8f)
+            gridTable.add(orbButton).size(48f, 48f).pad(8f)
 
             col++
             if (col >= columns) {
@@ -163,23 +135,38 @@ class OrbSelectionModal(
                 row++
             }
         }
-
         val container = Table()
+        val scrollPane = ScrollPane(gridTable, skin)
+        scrollPane.setScrollingDisabled(true, false) // 가로 스크롤 비활성화
         container.add(scrollPane).grow()
         return container
     }
 
+    private fun createBottomButtonSection(onClose: () -> Unit): Table {
+        val table = Table()
+
+        val closeButton = RetroButtonV01.createIconButton(
+            defaultImage = ResourceManager.getCloseBasePos(),
+            eventImage = ResourceManager.getCloseEventPos(),
+        ) {
+            onClose()
+        }
+
+        table.add(closeButton).center()
+
+        return table
+    }
+
     private fun createOrbButton(orb: OrbData, onOrbSelected: (OrbData) -> Unit): com.badlogic.gdx.scenes.scene2d.ui.Stack {
-        // 선택된 오브인지 확인
         val isSelected = orb.id == selectedOrbData.id
 
-        // RetroButton을 사용하여 오브 버튼 생성
-        val orbButton = com.example.theorb.ui.RetroButton.createImageButton(
+        // RetroButton으로 오브 버튼 생성
+        val button = RetroButtonV01.createImageButton(
             image = orb.getDrawable(),
-            imageSize = 45f,
-            defaultImage = if (isSelected) ResourceManager.getRetroSquarePosDefault() else ResourceManager.getRetroSquareNagDefault(),
-            eventImage = if (isSelected) ResourceManager.getRetroSquarePosEvent() else ResourceManager.getRetroSquareNagEvent(),
-            buttonSize = 90f
+            imageSize = 48f,
+            defaultImage = if(isSelected) ResourceManager.getSquareEventPanel() else ResourceManager.getSquareBasePanel(),
+            eventImage = if(isSelected) ResourceManager.getSquareEventPanel() else ResourceManager.getSquareBasePanel(),
+            buttonSize = 48f
         ) {
             selectedOrbData = orb
             saveData.selectedOrb = orb.id
@@ -188,7 +175,7 @@ class OrbSelectionModal(
             refreshModal(onOrbSelected) { hide() }
         }
 
-        return orbButton
+        return button
     }
 
     private fun refreshModal(onOrbSelected: (OrbData) -> Unit, onClose: () -> Unit) {

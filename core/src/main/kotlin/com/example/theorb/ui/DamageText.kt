@@ -16,7 +16,7 @@ class DamageText(
     private var alpha: Float = 1.0f
     private var lifeTime: Float = 0f
     private val maxLifeTime: Float = 1.5f
-    private val moveSpeed: Float = 50f
+    private val moveSpeed: Float = 30f
     private val fadeSpeed: Float = 1.0f / maxLifeTime
 
     fun update(delta: Float): Boolean {

@@ -18,6 +18,8 @@ class Fireball : Skill(
     flyEffectType = EffectType.FIREBALL_FLY
 ) {
 
+    override val tags: List<SkillTag> = listOf(SkillTag.FIRE, SkillTag.PROJECTILE, SkillTag.INSTANT)
+
     // Fireball 전용 등급 배율 (더 공격적인 성장)
     override fun getRankMultipliers(): Map<SkillRank, Float> = mapOf(
         SkillRank.C to 1.0f,

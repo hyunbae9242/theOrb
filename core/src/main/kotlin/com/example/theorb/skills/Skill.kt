@@ -20,6 +20,35 @@ abstract class Skill(
     var rank: SkillRank = SkillRank.C // 기본 등급은 C
 ) {
 
+    // 각 스킬이 가진 태그들 (하위 클래스에서 구현)
+    abstract val tags: List<SkillTag>
+
+    // 장착된 보조스킬 효과 리스트 (effectType -> value)
+    var equippedSubSkills: Map<SubSkillEffectType, Int> = emptyMap()
+
+    /**
+     * 보조스킬 효과가 적용된 투사체 개수 계산
+     */
+    fun getProjectileCount(): Int {
+        var count = 1 // 기본 1개
+        equippedSubSkills[SubSkillEffectType.PROJECTILE_COUNT]?.let { count += it }
+        return count
+    }
+
+    /**
+     * 보조스킬 효과 확인
+     */
+    fun hasSubSkillEffect(effectType: SubSkillEffectType): Boolean {
+        return effectType in equippedSubSkills
+    }
+
+    /**
+     * 보조스킬 효과 값 가져오기
+     */
+    fun getSubSkillValue(effectType: SubSkillEffectType): Int {
+        return equippedSubSkills[effectType] ?: 0
+    }
+
     // 스킬별 등급 배율 정의 (서브클래스에서 오버라이드)
     open fun getRankMultipliers(): Map<SkillRank, Float> = mapOf(
         SkillRank.C to 1.0f,

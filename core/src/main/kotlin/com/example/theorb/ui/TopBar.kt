@@ -1,16 +1,16 @@
 package com.example.theorb.ui
 
-import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Stage
-import com.badlogic.gdx.scenes.scene2d.ui.*
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
+import com.badlogic.gdx.scenes.scene2d.ui.Label
+import com.badlogic.gdx.scenes.scene2d.ui.Skin
+import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.example.theorb.data.SaveManager
 import com.example.theorb.screens.BaseScreen
 import com.example.theorb.util.ResourceManager
 import com.example.theorb.util.formatNumber
 
 /**
- * 재사용 가능한 상단 바 (골드/젬 + 설정 버튼)
+ * 재사용 가능한 상단 바 (골드/오브 + 설정 버튼)
  */
 class TopBar(
     private val stage: Stage,
@@ -24,10 +24,10 @@ class TopBar(
         settingsModal = SettingsModal(stage, skin)
 
         val topBar = Table().apply {
-            background = ResourceManager.getRectanglePanel340120()
+            background = ResourceManager.getCommonTopPanel()
         }
 
-        // 좌측 - 골드/젬 정보
+        // 좌측 - 골드/오브 정보
         goldLabel = Label(
             "골드: ${formatNumber(BaseScreen.gameObject.saveData.gold)}",
             skin.get("label-default", Label.LabelStyle::class.java)
@@ -36,7 +36,7 @@ class TopBar(
         }
 
         gemLabel = Label(
-            "젬: ${formatNumber(BaseScreen.gameObject.saveData.gems)}",
+            "오브: ${formatNumber(BaseScreen.gameObject.saveData.orbs)}",
             skin.get("label-default", Label.LabelStyle::class.java)
         ).apply {
             color = BaseScreen.TEXT_PRIMARY
@@ -48,18 +48,16 @@ class TopBar(
         }
 
         // 우측 - 설정 버튼
-        val settingsButton = Image(ResourceManager.getRetroGear()).apply {
-            touchable = com.badlogic.gdx.scenes.scene2d.Touchable.enabled
-            addListener(object : ClickListener() {
-                override fun clicked(event: com.badlogic.gdx.scenes.scene2d.InputEvent?, x: Float, y: Float) {
-                    openSettingsModal()
-                }
-            })
+        val settingsButton = RetroButtonV01.createIconButton(
+            defaultImage = ResourceManager.getGearBasePos(),
+            eventImage = ResourceManager.getGearEventPos()
+        ) {
+            openSettingsModal()
         }
 
         // 레이아웃 구성
         topBar.add(leftInfo).left().pad(BaseScreen.COMPONENT_PADDING).expandX()
-        topBar.add(settingsButton).size(BaseScreen.getSquareButtonSize()).right().pad(BaseScreen.COMPONENT_PADDING)
+        topBar.add(settingsButton).size(BaseScreen.BUTTON_SIZE).right().pad(BaseScreen.COMPONENT_PADDING)
 
         return topBar
     }
@@ -84,29 +82,10 @@ class TopBar(
     }
 
     /**
-     * 골드/젬 정보 업데이트
+     * 골드/오브 정보 업데이트
      */
     fun updateCurrency() {
         goldLabel.setText("골드: ${formatNumber(BaseScreen.gameObject.saveData.gold)}")
-        gemLabel.setText("젬: ${formatNumber(BaseScreen.gameObject.saveData.gems)}")
-    }
-
-    /**
-     * 특정 화면에서 골드만 표시하고 싶을 때 사용
-     */
-    fun createGoldOnlyTopBar(): Table {
-        val topBar = Table().apply {
-            background = ResourceManager.getRectanglePanel340120()
-        }
-
-        goldLabel = Label(
-            "GOLD: ${BaseScreen.gameObject.saveData.gold}",
-            skin.get("label-default", Label.LabelStyle::class.java)
-        ).apply {
-            color = BaseScreen.TEXT_PRIMARY
-        }
-
-        topBar.add(goldLabel).center().pad(BaseScreen.COMPONENT_PADDING)
-        return topBar
+        gemLabel.setText("오브: ${formatNumber(BaseScreen.gameObject.saveData.orbs)}")
     }
 }

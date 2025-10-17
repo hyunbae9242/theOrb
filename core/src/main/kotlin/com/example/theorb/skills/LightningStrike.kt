@@ -18,6 +18,8 @@ class LightningStrike : Skill(
     isInstant = true // 즉발 스킬
 ) {
 
+    override val tags: List<SkillTag> = listOf(SkillTag.LIGHTNING, SkillTag.INSTANT, SkillTag.AOE)
+
     // LightningStrike 전용 등급 배율 (즉발 스킬 특성)
     override fun getRankMultipliers(): Map<SkillRank, Float> = mapOf(
         SkillRank.C to 1.0f,
