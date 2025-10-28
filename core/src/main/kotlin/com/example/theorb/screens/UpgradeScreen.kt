@@ -1,19 +1,17 @@
 package com.example.theorb.screens
 
 import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
-import com.badlogic.gdx.graphics.Pixmap
-import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.scenes.scene2d.Stage
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane
 import com.badlogic.gdx.scenes.scene2d.ui.Table
-import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.example.theorb.TheOrb
 import com.example.theorb.data.SaveManager
 import com.example.theorb.ui.BottomNavigation
 import com.example.theorb.ui.ModalDialog
+import com.example.theorb.ui.RetroButtonV01
 import com.example.theorb.ui.TopBar
 import com.example.theorb.upgrades.UpgradeCategory
 import com.example.theorb.upgrades.UpgradeManager
@@ -22,34 +20,20 @@ import com.example.theorb.util.ResourceManager
 
 class UpgradeScreen(private val game: TheOrb) : BaseScreen() {
     private val uiStage = Stage(viewport)
-    private lateinit var goldLabel: Label
     private val upgradeLabels = mutableMapOf<UpgradeType, Label>()
-    private val upgradeButtons = mutableMapOf<UpgradeType, com.badlogic.gdx.scenes.scene2d.ui.Stack>()
+    private val upgradeCostLabels = mutableMapOf<UpgradeType, Label>()
+    private val upgradeButtons = mutableMapOf<UpgradeType, ImageButton>()
     private lateinit var modalDialog: ModalDialog
     private lateinit var topBar: TopBar
 
     private var selectedTab = UpgradeCategory.ATTACK
-    private val tabButtons = mutableMapOf<UpgradeCategory, com.badlogic.gdx.scenes.scene2d.ui.Stack>()
+    private val tabButtons = mutableMapOf<UpgradeCategory, ImageButton>()
     private lateinit var upgradeScrollPane: ScrollPane
     private var isUIInitialized = false
     private var needsUpdate = false
 
-    private fun createRoundedRectWithBorder(width: Int, height: Int,
-                                          bgColor: Color, borderColor: Color, borderWidth: Int): TextureRegionDrawable {
-        val pixmap = Pixmap(width, height, Pixmap.Format.RGBA8888)
-
-        // 전체를 테두리 색으로 채우기
-        pixmap.setColor(borderColor)
-        pixmap.fill()
-
-        // 내부를 배경색으로 채우기 (테두리를 남기기 위해 안쪽 영역만)
-        pixmap.setColor(bgColor)
-        pixmap.fillRectangle(borderWidth, borderWidth, width - 2 * borderWidth, height - 2 * borderWidth)
-
-        val texture = Texture(pixmap)
-        pixmap.dispose()
-        return TextureRegionDrawable(texture)
-    }
+    private val rowWidth = 416f
+    private val rowHeight = 80f
 
     override fun show() {
         initSharedResources()
@@ -84,49 +68,43 @@ class UpgradeScreen(private val game: TheOrb) : BaseScreen() {
 
 
     private fun createMainContent(): Table {
-        val mainContent = Table().apply {
-            background = ResourceManager.getRectanglePanel180340()
+        val background = Table().apply {
+            background = ResourceManager.getUpgradeBackPanel()
+            top()
         }
-
-        // 컨텐츠 영역 높이 계산
-        val contentHeight = getContentAreaHeight()
-        val tabHeightRatio = 0.15f      // 탭 영역 15%
-        val scrollHeightRatio = 0.7f    // 스크롤 영역 70%
-        val buttonHeightRatio = 0.15f   // 버튼 영역 15%
-
         // 탭 버튼들
         val tabRow = createTabButtons()
-        mainContent.add(tabRow).height(contentHeight * tabHeightRatio).row()
-
         // 업그레이드 목록
         upgradeScrollPane = createUpgradeList()
-        mainContent.add(upgradeScrollPane).expand().fill().height(contentHeight * scrollHeightRatio).row()
-
         // 하단 버튼들
         val bottomRow = createBottomButtons()
 
-        mainContent.add(bottomRow).width(virtualWidth * 0.3f).height(contentHeight * buttonHeightRatio).row()
+        // total 656 - 16 - 16 (top,bottom pad) = 624
+        // tab 16 , 48, 16 (padTop, btnHeight, padBottom)
+        // list 464
+        // btn 16, 48, 16
+        background.add(tabRow).padTop(16f).padBottom(16f).center().row()
+        background.add(upgradeScrollPane).height(464f).center().row()
+        background.add(bottomRow).padTop(16f).padBottom(16f).center()
+
+        val mainContent = Table().apply {
+            add(background)
+            padTop(16f)
+            padBottom(16f)
+        }
         return mainContent
     }
 
     private fun createTabButtons(): Table {
         val tabTable = Table()
-        val contentHeight = getContentAreaHeight()
 
         for (category in UpgradeCategory.values()) {
             val isSelected = category == selectedTab
-            val buttonWidth = virtualWidth * 0.25f
-            val buttonHeight = contentHeight * 0.08f
 
-            val tabButton = com.example.theorb.ui.RetroButton.createTextButton(
-                text = category.displayName,
-                skin = skin,
-                labelStyle = "label-default-bold",
-                textColor = if (isSelected) TEXT_PRIMARY else TEXT_SECONDARY,
-                defaultImage = if (isSelected) ResourceManager.getRetroRectanglePosDefault() else ResourceManager.getRetroRectangleNagDefault(),
-                eventImage = if (isSelected) ResourceManager.getRetroRectanglePosEvent() else ResourceManager.getRetroRectangleNagEvent(),
-                buttonSize = buttonHeight
-            ) {
+            val tabButton = RetroButtonV01.createIconButton(
+                defaultImage = if(isSelected) ResourceManager.getUpgradeTabBasePos(category) else ResourceManager.getUpgradeTabBaseNag(category),
+                eventImage = if(isSelected) ResourceManager.getUpgradeTabEventPos(category) else ResourceManager.getUpgradeTabEventNag(category)
+            ){
                 if (selectedTab != category) {
                     selectedTab = category
                     updateTabButtons()
@@ -137,7 +115,7 @@ class UpgradeScreen(private val game: TheOrb) : BaseScreen() {
 
             tabButtons[category] = tabButton
 
-            tabTable.add(tabButton).width(buttonWidth).height(buttonHeight).pad(4f)
+            tabTable.add(tabButton).width(100f).height(48f).padLeft(8f).padRight(8f)
         }
 
         return tabTable
@@ -148,42 +126,29 @@ class UpgradeScreen(private val game: TheOrb) : BaseScreen() {
             val isSelected = category == selectedTab
 
             // RetroButton의 스타일 업데이트
-            com.example.theorb.ui.RetroButton.updateTextButtonEnabled(
+            RetroButtonV01.updateIconButtonEnabled(
                 button,
                 true,
-                if (isSelected) ResourceManager.getRetroRectanglePosDefault() else ResourceManager.getRetroRectangleNagDefault(),
-                if (isSelected) ResourceManager.getRetroRectanglePosEvent() else ResourceManager.getRetroRectangleNagEvent()
-            )
-
-            // RetroButton의 텍스트 색상 업데이트
-            com.example.theorb.ui.RetroButton.updateTextButtonStyle(
-                button,
-                skin,
-                "label-default-bold",
-                if (isSelected) TEXT_PRIMARY else TEXT_SECONDARY
+                if(isSelected) ResourceManager.getUpgradeTabBasePos(category) else ResourceManager.getUpgradeTabBaseNag(category),
+                if(isSelected) ResourceManager.getUpgradeTabEventPos(category) else ResourceManager.getUpgradeTabEventNag(category)
             )
         }
     }
 
     private fun updateUpgradeList() {
-        val table = Table()
+        val table = Table().apply{
+            top()
+        }
         val filteredUpgrades = UpgradeType.values().filter { it.category == selectedTab }
 
         // 이전 탭의 버튼/라벨 참조들 클리어
         upgradeButtons.clear()
         upgradeLabels.clear()
 
-        val rowWidth = virtualWidth * 0.75f
-        val rowHeight = virtualHeight * 0.1f  // 화면 높이의 8%로 고정
-
         for (upgradeType in filteredUpgrades) {
             val upgradeTable = createUpgradeRow(upgradeType)
             table.add(upgradeTable).size(rowWidth, rowHeight).padBottom(8f).row()
         }
-
-        // 테이블 전체 높이 계산 (모든 아이템이 보이도록)
-        val totalHeight = filteredUpgrades.size * (rowHeight + 8f)
-        table.height = totalHeight
 
         upgradeScrollPane.actor = table
         // 새로운 버튼들이 생성되었으므로 업데이트 필요
@@ -191,36 +156,25 @@ class UpgradeScreen(private val game: TheOrb) : BaseScreen() {
     }
 
     private fun createUpgradeList(): ScrollPane {
-        val contentHeight = getContentAreaHeight()
-        val table = Table()
+        val table = Table().apply{
+            top()
+        }
         val filteredUpgrades = UpgradeType.values().filter { it.category == selectedTab }
-
-        val rowWidth = virtualWidth * 0.75f
-        val rowHeight = contentHeight * 0.1f  // 화면 높이의 10%로 고정
 
         for (upgradeType in filteredUpgrades) {
             val upgradeTable = createUpgradeRow(upgradeType)
             table.add(upgradeTable).size(rowWidth, rowHeight).padBottom(8f).row()
         }
 
-        // 테이블 전체 높이 계산 (모든 아이템이 보이도록)
-        val totalHeight = filteredUpgrades.size * (rowHeight + 8f)
-        table.height = totalHeight
-
         return ScrollPane(table, skin).apply {
             setScrollingDisabled(true, false)
-            // 스크롤 영역의 최대 높이를 제한해서 스크롤 생성
-            val mainPanelHeight = contentHeight * 0.8f
-            val scrollHeightRatio = 0.7f
-            val maxScrollHeight = mainPanelHeight * scrollHeightRatio - 40f  // 패딩 제외
-            setSize(virtualWidth * 0.75f, maxScrollHeight)
         }
     }
 
     private fun createUpgradeRow(upgradeType: UpgradeType): Table {
         val upgradeTable = Table()
-        upgradeTable.background = ResourceManager.getRectanglePanel25284()
-        upgradeTable.pad(12f)
+        upgradeTable.background = ResourceManager.getUpgradeListPanel()
+        upgradeTable.pad(8f)
 
         // 업그레이드 정보
         val nameLabel = Label(upgradeType.displayName, skin.get("label-default", Label.LabelStyle::class.java)).apply {
@@ -236,18 +190,18 @@ class UpgradeScreen(private val game: TheOrb) : BaseScreen() {
         val currentLevel = UpgradeManager.getUpgradeLevel(game.saveData, upgradeType)
         val initialCost = if (currentLevel < upgradeType.maxLevel) upgradeType.getCostForLevel(currentLevel) else -1
         val initialText = if (currentLevel >= upgradeType.maxLevel) "MAX" else "Lv UP\n(${initialCost}G)"
+        val costLabel = Label(initialText, skin.get("label-default", Label.LabelStyle::class.java)).apply {
+            color = TEXT_PRIMARY
+        }
+        upgradeCostLabels[upgradeType] = costLabel
+
         val canUpgrade = UpgradeManager.canUpgrade(game.saveData, upgradeType)
 
-        val upgradeButton = com.example.theorb.ui.RetroButton.createTextButton(
-            text = initialText,
-            skin = skin,
-            labelStyle = "label-small-bold",
-            textColor = BaseScreen.TEXT_PRIMARY,
-            defaultImage = ResourceManager.getRetroRectanglePosDefault(),
-            eventImage = ResourceManager.getRetroRectanglePosEvent(),
-            disabledImage = ResourceManager.getRetroRectangleNagDefault(),
-            buttonSize = 42f,
-            isEnabled = canUpgrade
+        val lvUpButton = RetroButtonV01.createIconButton(
+            defaultImage = ResourceManager.getLvUpBasePos(),
+            eventImage = ResourceManager.getLvUpEventPos(),
+            disabledImage = ResourceManager.getLvUpBaseNag(),
+            isEnabled = canUpgrade,
         ) {
             if (UpgradeManager.purchaseUpgrade(game.saveData, upgradeType)) {
                 SaveManager.save(game.saveData)
@@ -256,7 +210,7 @@ class UpgradeScreen(private val game: TheOrb) : BaseScreen() {
             }
         }
 
-        upgradeButtons[upgradeType] = upgradeButton
+        upgradeButtons[upgradeType] = lvUpButton
 
         // 레이아웃
         val leftTable = Table()
@@ -264,7 +218,8 @@ class UpgradeScreen(private val game: TheOrb) : BaseScreen() {
         leftTable.add(valueLabel).expand().left()
 
         upgradeTable.add(leftTable).expand().fill().left().padLeft(8f)
-        upgradeTable.add(upgradeButton).width(84f).height(42f).right().padRight(8f)
+        upgradeTable.add(costLabel).expand().fill().left()
+        upgradeTable.add(lvUpButton).width(80f).height(48f).right().padRight(8f)
 
         return upgradeTable
     }
@@ -290,26 +245,23 @@ class UpgradeScreen(private val game: TheOrb) : BaseScreen() {
 
             upgradeLabels[upgradeType]?.setText(valueText)
 
+            val costText = if (level >= maxLevel) {
+                "MAX"
+            } else {
+                "Lv UP\n(${cost}G)"
+            }
+            upgradeCostLabels[upgradeType]?.setText(costText)
+
             // 현재 탭에 표시된 버튼만 업데이트
             upgradeButtons[upgradeType]?.let { button ->
                 val canUpgrade = UpgradeManager.canUpgrade(game.saveData, upgradeType)
-
-                // RetroButton 텍스트 업데이트
-                val buttonText = if (level >= maxLevel) {
-                    "MAX"
-                } else {
-                    "Lv UP\n(${cost}G)"
-                }
-                com.example.theorb.ui.RetroButton.updateText(button, buttonText)
-
                 // RetroButton 활성화/비활성화 상태 업데이트
-                com.example.theorb.ui.RetroButton.updateTextButtonEnabled(
+                RetroButtonV01.updateIconButtonEnabled(
                     button,
                     canUpgrade,
-                    ResourceManager.getRetroRectanglePosDefault(),
-                    ResourceManager.getRetroRectanglePosEvent(),
-                    ResourceManager.getRetroRectangleNagDefault(),
-                    TEXT_PRIMARY
+                    ResourceManager.getLvUpBasePos(),
+                    ResourceManager.getLvUpEventPos(),
+                    ResourceManager.getLvUpBaseNag(),
                 )
             }
         }
@@ -332,23 +284,15 @@ class UpgradeScreen(private val game: TheOrb) : BaseScreen() {
 
     private fun createBottomButtons(): Table {
         val bottomTable = Table()
-        val contentHeight = getContentAreaHeight()
-        val buttonWidth = virtualWidth * 0.25f
-        val buttonHeight = contentHeight * 0.08f
 
-        val resetButton = com.example.theorb.ui.RetroButton.createTextButton(
-            text = "초기화",
-            skin = skin,
-            labelStyle = "label-default-bold",
-            textColor = DANGER,
-            defaultImage = ResourceManager.getRetroRectangleNagDefault(),
-            eventImage = ResourceManager.getRetroRectangleNagEvent(),
-            buttonSize = 42f
+        val resetButton = RetroButtonV01.createIconButton(
+            defaultImage = ResourceManager.getResetBasePos(),
+            eventImage = ResourceManager.getResetEventPos()
         ) {
             showResetConfirmDialog()
         }
 
-        bottomTable.add(resetButton).width(buttonWidth).height(buttonHeight).pad(4f)
+        bottomTable.add(resetButton).width(160f).height(48f).center()
 
         return bottomTable
     }
@@ -357,9 +301,6 @@ class UpgradeScreen(private val game: TheOrb) : BaseScreen() {
         modalDialog.show(
             title = "업그레이드 초기화",
             message = "모든 업그레이드를 초기화하고\n사용한 골드를 환불받겠습니까?",
-            confirmText = "초기화",
-            cancelText = "취소",
-            confirmColor = DANGER,
             onConfirm = { performReset() },
             onCancel = { /* 아무것도 하지 않음 */ }
         )

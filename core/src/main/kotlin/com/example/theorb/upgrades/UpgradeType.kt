@@ -3,9 +3,9 @@ package com.example.theorb.upgrades
 import kotlin.math.pow
 
 enum class UpgradeCategory(val displayName: String) {
-    ATTACK("공격"),
-    DEFENSE("방어"),
-    UTILITY("유틸")
+    ATTACK("ATTACK"),
+    DEFENSE("DEFENSE"),
+    UTILITY("UTILITY")
 }
 
 enum class UpgradeType(

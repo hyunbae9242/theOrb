@@ -568,9 +568,6 @@ class GameScreen : BaseScreen() {
         modalDialog.show(
             title = "게임 나가기",
             message = "게임을 나가시겠습니까?",
-            confirmText = "나가기",
-            cancelText = "취소",
-            confirmColor = DANGER,
             onConfirm = {
                 gameObject.setScreen(HomeScreen(gameObject))
             },

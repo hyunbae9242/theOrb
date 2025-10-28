@@ -4,6 +4,8 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.example.theorb.ui.BottomNavigation
+import com.example.theorb.upgrades.UpgradeCategory
+import com.example.theorb.upgrades.UpgradeType
 
 object ResourceManager {
 
@@ -12,11 +14,14 @@ object ResourceManager {
         // v01 작업분 panel
         // common
         const val COMMON_TOP_PANEL = "images/v01/panel/Common_top.png"
+        const val COMMON_MODAL_PANEL = "images/v01/panel/Common_modal_panel.png"
         const val HOME_MAIN_PANEL = "images/v01/panel/Home_main.png"
         const val HOME_ORB_SELECTION = "images/v01/panel/Home_orb_selection.png"
         const val HOME_ORB_SELECT = "images/v01/panel/Home_orb_select.png"
         const val SQUARE_BASE = "images/v01/panel/Square_base.png"
         const val SQUARE_EVENT = "images/v01/panel/Square_event.png"
+        const val UPGRADE_BACK_PANEL = "images/v01/panel/Upgrade_back.png"
+        const val UPGRADE_LIST_PANEL = "images/v01/panel/Upgrade_list.png"
 
         // v01 작업분 button
         // common
@@ -28,6 +33,12 @@ object ResourceManager {
         const val RIGHT_BASE_POS = "images/v01/button/right/Right_base_p.png"
         const val RIGHT_EVENT_POS = "images/v01/button/right/Right_event_p.png"
         const val RIGHT_BASE_NAG = "images/v01/button/right/Right_base_n.png"
+        const val CONFIRM_BASE_POS = "images/v01/button/confirm/Confirm_base_p.png"
+        const val CONFIRM_EVENT_POS = "images/v01/button/confirm/Confirm_event_p.png"
+        const val CONFIRM_BASE_NAG = "images/v01/button/confirm/Confirm_base_n.png"
+        const val CANCEL_BASE_POS = "images/v01/button/cancel/Cancel_base_p.png"
+        const val CANCEL_EVENT_POS = "images/v01/button/cancel/Cancel_event_p.png"
+        const val CANCEL_BASE_NAG = "images/v01/button/cancel/Cancel_base_n.png"
 
         // nav
         const val SHOP_BASE_POS = "images/v01/button/shop/Shop_base_p.png"
@@ -63,6 +74,31 @@ object ResourceManager {
         const val CLOSE_BASE_POS = "images/v01/button/close/Close_base_p.png"
         const val CLOSE_EVENT_POS = "images/v01/button/close/Close_event_p.png"
         const val CLOSE_BASE_NAG = "images/v01/button/close/Close_base_n.png"
+
+        const val ATTACK_BASE_POS = "images/v01/button/attack/Attack_base_p.png"
+        const val ATTACK_EVENT_POS = "images/v01/button/attack/Attack_event_p.png"
+        const val ATTACK_BASE_NAG = "images/v01/button/attack/Attack_base_n.png"
+        const val ATTACK_EVENT_NAG = "images/v01/button/attack/Attack_event_n.png"
+
+        const val DEFENSE_BASE_POS = "images/v01/button/defense/Defense_base_p.png"
+        const val DEFENSE_EVENT_POS = "images/v01/button/defense/Defense_event_p.png"
+        const val DEFENSE_BASE_NAG = "images/v01/button/defense/Defense_base_n.png"
+        const val DEFENSE_EVENT_NAG = "images/v01/button/defense/Defense_event_n.png"
+
+        const val UTILITY_BASE_POS = "images/v01/button/utility/Utility_base_p.png"
+        const val UTILITY_EVENT_POS = "images/v01/button/utility/Utility_event_p.png"
+        const val UTILITY_BASE_NAG = "images/v01/button/utility/Utility_base_n.png"
+        const val UTILITY_EVENT_NAG = "images/v01/button/utility/Utility_event_n.png"
+
+        const val RESET_BASE_POS = "images/v01/button/reset/Reset_base_p.png"
+        const val RESET_EVENT_POS = "images/v01/button/reset/Reset_event_p.png"
+        const val RESET_BASE_NAG = "images/v01/button/reset/Reset_base_n.png"
+        const val RESET_EVENT_NAG = "images/v01/button/reset/Reset_event_n.png"
+
+        const val LV_UP_BASE_POS = "images/v01/button/levelup/Levelup_base_p.png"
+        const val LV_UP_EVENT_POS = "images/v01/button/levelup/Levelup_event_p.png"
+        const val LV_UP_BASE_NAG = "images/v01/button/levelup/Levelup_base_n.png"
+        const val LV_UP_EVENT_NAG = "images/v01/button/levelup/Levelup_event_n.png"
 
 
 
@@ -141,12 +177,15 @@ object ResourceManager {
     // v01 작업분 panel
     // home screen
     fun getCommonTopPanel(): TextureRegionDrawable = getDrawable(Images.COMMON_TOP_PANEL)
+    fun getCommonModalPanel(): TextureRegionDrawable = getDrawable(Images.COMMON_MODAL_PANEL)
     fun getHomeMainPanel(): TextureRegionDrawable = getDrawable(Images.HOME_MAIN_PANEL)
     fun getHomeOrbSelectionPanel(): TextureRegionDrawable = getDrawable(Images.HOME_ORB_SELECTION)
 
     fun getHomeOrbSelectPanel(): TextureRegionDrawable = getDrawable(Images.HOME_ORB_SELECT)
     fun getSquareBasePanel(): TextureRegionDrawable = getDrawable(Images.SQUARE_BASE)
     fun getSquareEventPanel(): TextureRegionDrawable = getDrawable(Images.SQUARE_EVENT)
+    fun getUpgradeBackPanel(): TextureRegionDrawable = getDrawable(Images.UPGRADE_BACK_PANEL)
+    fun getUpgradeListPanel(): TextureRegionDrawable = getDrawable(Images.UPGRADE_LIST_PANEL)
 
 
     // v01 작업분 button
@@ -159,6 +198,13 @@ object ResourceManager {
     fun getRightBasePos(): TextureRegionDrawable = getDrawable(Images.RIGHT_BASE_POS)
     fun getRightEventPos(): TextureRegionDrawable = getDrawable(Images.RIGHT_EVENT_POS)
     fun getRightBaseNag(): TextureRegionDrawable = getDrawable(Images.RIGHT_BASE_NAG)
+    fun getConfirmBasePos(): TextureRegionDrawable = getDrawable(Images.CONFIRM_BASE_POS)
+    fun getConfirmEventPos(): TextureRegionDrawable = getDrawable(Images.CONFIRM_EVENT_POS)
+    fun getConfirmBaseNag(): TextureRegionDrawable = getDrawable(Images.CONFIRM_BASE_NAG)
+
+    fun getCancelBasePos(): TextureRegionDrawable = getDrawable(Images.CANCEL_BASE_POS)
+    fun getCancelEventPos(): TextureRegionDrawable = getDrawable(Images.CANCEL_EVENT_POS)
+    fun getCancelBaseNag(): TextureRegionDrawable = getDrawable(Images.CANCEL_BASE_NAG)
 
     fun getNavBasePos(tab: BottomNavigation.Tab): TextureRegionDrawable = when (tab) {
         BottomNavigation.Tab.SHOP -> getDrawable(Images.SHOP_BASE_POS)
@@ -197,6 +243,37 @@ object ResourceManager {
     fun getCloseBasePos(): TextureRegionDrawable = getDrawable(Images.CLOSE_BASE_POS)
     fun getCloseEventPos(): TextureRegionDrawable = getDrawable(Images.CLOSE_EVENT_POS)
     fun getCloseBaseNag(): TextureRegionDrawable = getDrawable(Images.CLOSE_BASE_NAG)
+
+    fun getUpgradeTabBasePos(type: UpgradeCategory): TextureRegionDrawable = when (type) {
+        UpgradeCategory.ATTACK -> getDrawable(Images.ATTACK_BASE_POS)
+        UpgradeCategory.DEFENSE -> getDrawable(Images.DEFENSE_BASE_POS)
+        UpgradeCategory.UTILITY -> getDrawable(Images.UTILITY_BASE_POS)
+    }
+    fun getUpgradeTabEventPos(type: UpgradeCategory): TextureRegionDrawable = when (type) {
+        UpgradeCategory.ATTACK -> getDrawable(Images.ATTACK_EVENT_POS)
+        UpgradeCategory.DEFENSE -> getDrawable(Images.DEFENSE_EVENT_POS)
+        UpgradeCategory.UTILITY -> getDrawable(Images.UTILITY_EVENT_POS)
+    }
+    fun getUpgradeTabBaseNag(type: UpgradeCategory): TextureRegionDrawable = when (type) {
+        UpgradeCategory.ATTACK -> getDrawable(Images.ATTACK_BASE_NAG)
+        UpgradeCategory.DEFENSE -> getDrawable(Images.DEFENSE_BASE_NAG)
+        UpgradeCategory.UTILITY -> getDrawable(Images.UTILITY_BASE_NAG)
+    }
+    fun getUpgradeTabEventNag(type: UpgradeCategory): TextureRegionDrawable = when (type) {
+        UpgradeCategory.ATTACK -> getDrawable(Images.ATTACK_EVENT_NAG)
+        UpgradeCategory.DEFENSE -> getDrawable(Images.DEFENSE_EVENT_NAG)
+        UpgradeCategory.UTILITY -> getDrawable(Images.UTILITY_EVENT_NAG)
+    }
+
+    fun getResetBasePos(): TextureRegionDrawable = getDrawable(Images.RESET_BASE_POS)
+    fun getResetEventPos(): TextureRegionDrawable = getDrawable(Images.RESET_EVENT_POS)
+    fun getResetBaseNag(): TextureRegionDrawable = getDrawable(Images.RESET_BASE_NAG)
+    fun getResetEventNag(): TextureRegionDrawable = getDrawable(Images.RESET_EVENT_NAG)
+
+    fun getLvUpBasePos(): TextureRegionDrawable = getDrawable(Images.LV_UP_BASE_POS)
+    fun getLvUpEventPos(): TextureRegionDrawable = getDrawable(Images.LV_UP_EVENT_POS)
+    fun getLvUpBaseNag(): TextureRegionDrawable = getDrawable(Images.LV_UP_BASE_NAG)
+    fun getLvUpEventNag(): TextureRegionDrawable = getDrawable(Images.LV_UP_EVENT_NAG)
 
     // Retro 버튼들을 위한 편의 메소드
     fun getRetroGear(): TextureRegionDrawable = getDrawable(Images.RETRO_GEAR)

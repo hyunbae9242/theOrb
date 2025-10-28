@@ -24,29 +24,10 @@ class ModalDialog(private val stage: Stage, private val skin: Skin) {
     private var backgroundOverlay: Image? = null
     private var dialogContainer: Table? = null
 
-    private fun createRoundedRectWithBorder(width: Int, height: Int, cornerRadius: Int,
-                                          bgColor: Color, borderColor: Color, borderWidth: Int): TextureRegionDrawable {
-        val pixmap = Pixmap(width, height, Pixmap.Format.RGBA8888)
-
-        // 전체를 테두리 색으로 채우기
-        pixmap.setColor(borderColor)
-        pixmap.fill()
-
-        // 내부를 배경색으로 채우기 (테두리를 남기기 위해 안쪽 영역만)
-        pixmap.setColor(bgColor)
-        pixmap.fillRectangle(borderWidth, borderWidth, width - 2 * borderWidth, height - 2 * borderWidth)
-
-        val texture = Texture(pixmap)
-        pixmap.dispose()
-        return TextureRegionDrawable(texture)
-    }
 
     fun show(
         title: String,
         message: String,
-        confirmText: String = "확인",
-        cancelText: String = "취소",
-        confirmColor: Color = BaseScreen.DANGER,
         onConfirm: () -> Unit,
         onCancel: (() -> Unit)? = null
     ) {
@@ -61,7 +42,7 @@ class ModalDialog(private val stage: Stage, private val skin: Skin) {
         createBackgroundOverlay(stageWidth, stageHeight)
 
         // 다이얼로그 컨테이너 생성
-        createDialogContainer(title, message, confirmText, cancelText, confirmColor, onConfirm, onCancel)
+        createDialogContainer(title, message, onConfirm, onCancel)
 
         // 스테이지에 추가
         stage.addActor(backgroundOverlay)
@@ -93,25 +74,22 @@ class ModalDialog(private val stage: Stage, private val skin: Skin) {
     private fun createDialogContainer(
         title: String,
         message: String,
-        confirmText: String,
-        cancelText: String,
-        confirmColor: Color,
         onConfirm: () -> Unit,
-        onCancel: (() -> Unit)?
+        onCancel: (() -> Unit)?,
+        isConfirmEnabled: Boolean = true
     ) {
         dialogContainer = Table().apply {
-            background = ResourceManager.getSquarePanel360()
-            pad(30f)
+            background = ResourceManager.getCommonModalPanel()
         }
 
         // 제목
         val titleLabel = Label(title, this@ModalDialog.skin.get("label-large", Label.LabelStyle::class.java)).apply {
-            color = com.example.theorb.screens.BaseScreen.TEXT_PRIMARY
+            color = BaseScreen.TEXT_PRIMARY
         }
 
         // 메시지
         val messageLabel = Label(message, this@ModalDialog.skin.get("label-default", Label.LabelStyle::class.java)).apply {
-            color = com.example.theorb.screens.BaseScreen.TEXT_PRIMARY
+            color = BaseScreen.TEXT_PRIMARY
             setWrap(true)
             setAlignment(Align.center)
         }
@@ -119,41 +97,33 @@ class ModalDialog(private val stage: Stage, private val skin: Skin) {
         // 버튼들
         val buttonTable = Table()
 
-        val confirmButton = RetroButton.createTextButton(
-            text = confirmText,
-            skin = this@ModalDialog.skin,
-            labelStyle = "label-default-bold",
-            textColor = confirmColor,
-            defaultImage = ResourceManager.getRetroRectanglePosDefault(),
-            eventImage = ResourceManager.getRetroRectanglePosEvent(),
-            buttonSize = getButtonHeight()
+        val confirmButton = RetroButtonV01.createIconButton(
+            defaultImage = ResourceManager.getConfirmBasePos(),
+            eventImage = ResourceManager.getConfirmEventPos(),
+            disabledImage = ResourceManager.getConfirmBaseNag(),
+            isEnabled = isConfirmEnabled
         ) {
             onConfirm()
             hide()
         }
 
         if (onCancel != null) {
-            val cancelButton = RetroButton.createTextButton(
-                text = cancelText,
-                skin = this@ModalDialog.skin,
-                labelStyle = "label-default-bold",
-                textColor = BaseScreen.TEXT_SECONDARY,
-                defaultImage = ResourceManager.getRetroRectangleNagDefault(),
-                eventImage = ResourceManager.getRetroRectangleNagEvent(),
-                buttonSize = getButtonHeight()
+            val cancelButton = RetroButtonV01.createIconButton(
+                defaultImage = ResourceManager.getCancelBasePos(),
+                eventImage = ResourceManager.getCancelEventPos(),
             ) {
                 onCancel()
                 hide()
             }
-            buttonTable.add(cancelButton).width(getRectangleButtonWidth()).height(getButtonHeight()).padRight(20f)
+            buttonTable.add(cancelButton).size(48f).padRight(48f)
         }
 
-        buttonTable.add(confirmButton).width(getRectangleButtonWidth()).height(getButtonHeight())
+        buttonTable.add(confirmButton).size(48f)
 
         // 레이아웃 구성
         dialogContainer!!.apply {
-            add(titleLabel).center().padBottom(20f).row()
-            add(messageLabel).center().width(300f).padBottom(30f).row()
+            add(titleLabel).center().padBottom(32f).row()
+            add(messageLabel).center().width(300f).padBottom(32f).row()
             add(buttonTable).center().row()
         }
     }

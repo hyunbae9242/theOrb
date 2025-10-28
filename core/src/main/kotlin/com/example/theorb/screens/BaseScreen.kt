@@ -235,7 +235,7 @@ abstract class BaseScreen : ScreenAdapter() {
 
 
     // 실제 컨텐츠가 사용할 수 있는 높이 계산
-    protected fun getContentAreaHeight(): Float {
+    protected fun getContentAreaHeight(): Float { // 656 - 32 (높이 - 상하 패딩) = 624
         return virtualHeight - SCREEN_PADDING * 2 - TOP_BAR_HEIGHT - BOTTOM_NAV_HEIGHT
     }
 

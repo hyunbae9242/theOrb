@@ -34,9 +34,6 @@ class HomeScreen(private val game: Game) : BaseScreen() {
     override fun show() {
         initSharedResources()
         Gdx.input.inputProcessor = stage
-
-
-        // UI 컴포넌트들 초기화
         orbSelectionModal = OrbSelectionModal(stage, skin, gameObject.saveData)
         topBar = TopBar(stage, skin)
 
@@ -146,8 +143,8 @@ class HomeScreen(private val game: Game) : BaseScreen() {
         stageTable.add(stageLabel).center().expandX()
         stageTable.add(rightBtn).padRight(16f).right()
 
-        mainTable.add(stageTable).padTop(8f).padBottom(8f).expandX().fillX().row()
-        mainTable.add(startBtn).padTop(8f).center()
+        mainTable.add(stageTable).padTop(12f).padBottom(8f).expandX().fillX().row()
+        mainTable.add(startBtn).center()
 
         return mainTable
     }
