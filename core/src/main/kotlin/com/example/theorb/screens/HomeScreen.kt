@@ -2,7 +2,6 @@ package com.example.theorb.screens
 
 import com.badlogic.gdx.Game
 import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.Stage
@@ -14,7 +13,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.example.theorb.data.OrbRegistry
 import com.example.theorb.data.SaveManager
 import com.example.theorb.ui.BottomNavigation
-import com.example.theorb.ui.OrbSelectionModal
+import com.example.theorb.modal.OrbSelectionModal
 import com.example.theorb.ui.RetroButtonV01
 import com.example.theorb.ui.TopBar
 import com.example.theorb.util.ResourceManager

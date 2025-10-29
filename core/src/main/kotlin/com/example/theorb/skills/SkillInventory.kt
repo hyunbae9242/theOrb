@@ -5,9 +5,18 @@ import com.example.theorb.data.SaveManager
 class SkillInventory {
     private val skills = mutableListOf<SkillItem>()
 
-    fun addSkill(skillType: String, rank: SkillRank = SkillRank.C): SkillItem {
-        val skillItem = SkillItem(skillType, rank)
-        skills.add(skillItem)
+    fun addSkill(skillType: String, rank: SkillRank = SkillRank.C, exp: Int = 1): SkillItem {
+        val skillItem = SkillItem(skillType, rank, exp)
+        var isInventorySkill = false
+        for (skill in skills) {
+            if (skill.isEqualSkill(skillItem)) {
+                isInventorySkill = true
+                skill.exp += skillItem.exp
+                skill.updateRank()
+                break
+            }
+        }
+        if (!isInventorySkill) skills.add(skillItem)
         return skillItem
     }
 
@@ -25,36 +34,8 @@ class SkillInventory {
         return skills.filter { it.skillType == skillType }
     }
 
-    fun getSkillsByTypeAndRank(skillType: String, rank: SkillRank): List<SkillItem> {
-        return skills.filter { it.skillType == skillType && it.rank == rank }
-    }
-
-    fun canUpgrade(skillType: String, rank: SkillRank): Boolean {
-        if (!rank.canUpgrade()) return false
-        val sameRankSkills = getSkillsByTypeAndRank(skillType, rank)
-        return sameRankSkills.size >= rank.upgradeRequirement
-    }
-
-    fun upgradeSkill(skillType: String, rank: SkillRank): SkillItem? {
-        if (!canUpgrade(skillType, rank)) return null
-
-        val nextRank = rank.getNextRank() ?: return null
-        val sameRankSkills = getSkillsByTypeAndRank(skillType, rank)
-        val requiredSkills = sameRankSkills.take(rank.upgradeRequirement)
-
-        // 필요한 스킬들을 제거
-        removeSkills(requiredSkills)
-
-        // 업그레이드된 스킬 추가
-        return addSkill(skillType, nextRank)
-    }
-
-    fun getSkillCount(skillType: String, rank: SkillRank): Int {
-        return getSkillsByTypeAndRank(skillType, rank).size
-    }
-
-    fun getUniqueSkillTypes(): Set<String> {
-        return skills.map { it.skillType }.toSet()
+    fun getRankByType(skillType: String): SkillRank {
+        return skills.find {it.skillType == skillType}?.rank ?: SkillRank.C
     }
 
     fun clear() {
@@ -67,7 +48,7 @@ class SkillInventory {
             mapOf(
                 "skillType" to skill.skillType,
                 "rank" to skill.rank.name,
-                "id" to skill.id
+                "exp" to skill.exp
             )
         }
     }
@@ -77,9 +58,9 @@ class SkillInventory {
         data.forEach { skillData ->
             val skillType = skillData["skillType"] as String
             val rankName = skillData["rank"] as String
-            val id = skillData["id"] as String
+            val exp = skillData["exp"] as Int
             val rank = SkillRank.valueOf(rankName)
-            skills.add(SkillItem(skillType, rank, id))
+            skills.add(SkillItem(skillType, rank, exp))
         }
     }
 }

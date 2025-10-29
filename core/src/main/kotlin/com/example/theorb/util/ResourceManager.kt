@@ -22,12 +22,15 @@ object ResourceManager {
         const val SQUARE_EVENT = "images/v01/panel/Square_event.png"
         const val UPGRADE_BACK_PANEL = "images/v01/panel/Upgrade_back.png"
         const val UPGRADE_LIST_PANEL = "images/v01/panel/Upgrade_list.png"
+        const val SKILL_EQUIP_PANEL = "images/v01/panel/Skill_equip.png"
+        const val SKILL_INVENTORY_PANEL = "images/v01/panel/Skill_inventory.png"
+        const val SKILL_SUB_DEC_PANEL = "images/v01/panel/Skill_sub_dec.png"
 
         // v01 작업분 button
         // common
         const val GEAR_BASE_POS = "images/v01/button/gear/Gear_base_p.png"
         const val GEAR_EVENT_POS = "images/v01/button/gear/Gear_event_p.png"
-        const val LEFT_BASE_POS = "images/v01/button/left/Left_base_n.png"
+        const val LEFT_BASE_POS = "images/v01/button/left/Left_base_p.png"
         const val LEFT_EVENT_POS = "images/v01/button/left/Left_event_p.png"
         const val LEFT_BASE_NAG = "images/v01/button/left/Left_base_n.png"
         const val RIGHT_BASE_POS = "images/v01/button/right/Right_base_p.png"
@@ -39,6 +42,9 @@ object ResourceManager {
         const val CANCEL_BASE_POS = "images/v01/button/cancel/Cancel_base_p.png"
         const val CANCEL_EVENT_POS = "images/v01/button/cancel/Cancel_event_p.png"
         const val CANCEL_BASE_NAG = "images/v01/button/cancel/Cancel_base_n.png"
+        const val PLUS_BASE_POS = "images/v01/button/plus/Plus_base_p.png"
+        const val PLUS_EVENT_POS = "images/v01/button/plus/Plus_event_p.png"
+        const val PLUS_BASE_NAG = "images/v01/button/plus/Plus_base_n.png"
 
         // nav
         const val SHOP_BASE_POS = "images/v01/button/shop/Shop_base_p.png"
@@ -100,6 +106,30 @@ object ResourceManager {
         const val LV_UP_BASE_NAG = "images/v01/button/levelup/Levelup_base_n.png"
         const val LV_UP_EVENT_NAG = "images/v01/button/levelup/Levelup_event_n.png"
 
+        const val ACTIVE_BASE_POS = "images/v01/button/active/Active_base_p.png"
+        const val ACTIVE_EVENT_POS = "images/v01/button/active/Active_event_p.png"
+        const val ACTIVE_BASE_NAG = "images/v01/button/active/Active_base_n.png"
+        const val ACTIVE_EVENT_NAG = "images/v01/button/active/Active_event_n.png"
+
+
+        const val SUB_BASE_POS = "images/v01/button/sub/Sub_base_p.png"
+        const val SUB_EVENT_POS = "images/v01/button/sub/Sub_event_p.png"
+        const val SUB_BASE_NAG = "images/v01/button/sub/Sub_base_n.png"
+        const val SUB_EVENT_NAG = "images/v01/button/sub/Sub_event_n.png"
+
+        const val EQUIP_BASE_POS = "images/v01/button/equip/Equip_base_p.png"
+        const val EQUIP_EVENT_POS = "images/v01/button/equip/Equip_event_p.png"
+        const val EQUIP_BASE_NAG = "images/v01/button/equip/Equip_base_n.png"
+        const val EQUIP_EVENT_NAG = "images/v01/button/equip/Equip_event_n.png"
+
+        const val UNEQUIP_BASE_POS = "images/v01/button/unequip/Unequip_base_p.png"
+        const val UNEQUIP_EVENT_POS = "images/v01/button/unequip/Unequip_event_p.png"
+        const val UNEQUIP_BASE_NAG = "images/v01/button/unequip/Unequip_base_n.png"
+        const val UNEQUIP_EVENT_NAG = "images/v01/button/unequip/Unequip_event_n.png"
+
+        // v01 작업분 skill icon
+        const val FIREBALL_BASE = "images/v01/skill/fireball/fireball_base.png"
+        const val FIREBALL_EVENT = "images/v01/skill/fireball/fireball_event.png"
 
 
         // Retro Ui 배경없는 버튼
@@ -186,6 +216,9 @@ object ResourceManager {
     fun getSquareEventPanel(): TextureRegionDrawable = getDrawable(Images.SQUARE_EVENT)
     fun getUpgradeBackPanel(): TextureRegionDrawable = getDrawable(Images.UPGRADE_BACK_PANEL)
     fun getUpgradeListPanel(): TextureRegionDrawable = getDrawable(Images.UPGRADE_LIST_PANEL)
+    fun getSkillEquipPanel(): TextureRegionDrawable = getDrawable(Images.SKILL_EQUIP_PANEL)
+    fun getSkillInventoryPanel(): TextureRegionDrawable = getDrawable(Images.SKILL_INVENTORY_PANEL)
+    fun getSkillSubDecPanel(): TextureRegionDrawable = getDrawable(Images.SKILL_SUB_DEC_PANEL)
 
 
     // v01 작업분 button
@@ -205,6 +238,9 @@ object ResourceManager {
     fun getCancelBasePos(): TextureRegionDrawable = getDrawable(Images.CANCEL_BASE_POS)
     fun getCancelEventPos(): TextureRegionDrawable = getDrawable(Images.CANCEL_EVENT_POS)
     fun getCancelBaseNag(): TextureRegionDrawable = getDrawable(Images.CANCEL_BASE_NAG)
+    fun getPlusBasePos(): TextureRegionDrawable = getDrawable(Images.PLUS_BASE_POS)
+    fun getPlusEventPos(): TextureRegionDrawable = getDrawable(Images.PLUS_EVENT_POS)
+    fun getPlusBaseNag(): TextureRegionDrawable = getDrawable(Images.PLUS_BASE_NAG)
 
     fun getNavBasePos(tab: BottomNavigation.Tab): TextureRegionDrawable = when (tab) {
         BottomNavigation.Tab.SHOP -> getDrawable(Images.SHOP_BASE_POS)
@@ -274,6 +310,32 @@ object ResourceManager {
     fun getLvUpEventPos(): TextureRegionDrawable = getDrawable(Images.LV_UP_EVENT_POS)
     fun getLvUpBaseNag(): TextureRegionDrawable = getDrawable(Images.LV_UP_BASE_NAG)
     fun getLvUpEventNag(): TextureRegionDrawable = getDrawable(Images.LV_UP_EVENT_NAG)
+
+    fun getActiveBasePos(): TextureRegionDrawable = getDrawable(Images.ACTIVE_BASE_POS)
+    fun getActiveEventPos(): TextureRegionDrawable = getDrawable(Images.ACTIVE_EVENT_POS)
+    fun getActiveBaseNag(): TextureRegionDrawable = getDrawable(Images.ACTIVE_BASE_NAG)
+    fun getActiveEventNag(): TextureRegionDrawable = getDrawable(Images.ACTIVE_EVENT_NAG)
+
+    fun getSubBasePos(): TextureRegionDrawable = getDrawable(Images.SUB_BASE_POS)
+    fun getSubEventPos(): TextureRegionDrawable = getDrawable(Images.SUB_EVENT_POS)
+    fun getSubBaseNag(): TextureRegionDrawable = getDrawable(Images.SUB_BASE_NAG)
+    fun getSubEventNag(): TextureRegionDrawable = getDrawable(Images.SUB_EVENT_NAG)
+
+    fun getEquipBasePos(): TextureRegionDrawable = getDrawable(Images.EQUIP_BASE_POS)
+    fun getEquipEventPos(): TextureRegionDrawable = getDrawable(Images.EQUIP_EVENT_POS)
+    fun getEquipBaseNag(): TextureRegionDrawable = getDrawable(Images.EQUIP_BASE_NAG)
+    fun getEquipEventNag(): TextureRegionDrawable = getDrawable(Images.EQUIP_EVENT_NAG)
+
+    fun getUnequipBasePos(): TextureRegionDrawable = getDrawable(Images.UNEQUIP_BASE_POS)
+    fun getUnequipEventPos(): TextureRegionDrawable = getDrawable(Images.UNEQUIP_EVENT_POS)
+    fun getUnequipBaseNag(): TextureRegionDrawable = getDrawable(Images.UNEQUIP_BASE_NAG)
+    fun getUnequipEventNag(): TextureRegionDrawable = getDrawable(Images.UNEQUIP_EVENT_NAG)
+
+    // v01 작업분 skill icon
+    fun getFireballBase(): TextureRegionDrawable = getDrawable(Images.FIREBALL_BASE)
+    fun getFireballEvent(): TextureRegionDrawable = getDrawable(Images.FIREBALL_EVENT)
+
+
 
     // Retro 버튼들을 위한 편의 메소드
     fun getRetroGear(): TextureRegionDrawable = getDrawable(Images.RETRO_GEAR)

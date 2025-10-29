@@ -1,6 +1,5 @@
-package com.example.theorb.ui
+package com.example.theorb.modal
 
-import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.Pixmap
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.scenes.scene2d.Actor
@@ -11,6 +10,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.Align
 import com.example.theorb.screens.BaseScreen
+import com.example.theorb.ui.RetroButtonV01
 import com.example.theorb.util.ResourceManager
 
 class ModalDialog(private val stage: Stage, private val skin: Skin) {
@@ -80,6 +80,7 @@ class ModalDialog(private val stage: Stage, private val skin: Skin) {
     ) {
         dialogContainer = Table().apply {
             background = ResourceManager.getCommonModalPanel()
+            setSize(360f,360f)
         }
 
         // 제목

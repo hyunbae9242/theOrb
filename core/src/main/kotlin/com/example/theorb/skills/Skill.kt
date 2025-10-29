@@ -1,11 +1,14 @@
 package com.example.theorb.skills
 
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.example.theorb.balance.Element
 import com.example.theorb.effects.Effect
 import com.example.theorb.effects.EffectType
 import com.example.theorb.entities.Enemy
 import com.example.theorb.entities.Player
 import com.example.theorb.entities.Projectile
+import com.example.theorb.util.calcDamage
+import com.example.theorb.util.dist2
 
 abstract class Skill(
     val name: String,
@@ -17,36 +20,84 @@ abstract class Skill(
     val hitEffectType: EffectType,
     val isInstant: Boolean = false, // 즉발 스킬 여부
     val isAOE: Boolean = false, // AOE 스킬 여부
-    var rank: SkillRank = SkillRank.C // 기본 등급은 C
+    var rank: SkillRank = SkillRank.C, // 기본 등급은 C
+    val baseDescription: String? = null,
+    val baseIcon: TextureRegionDrawable? = null,
+    val eventIcon: TextureRegionDrawable? = null
 ) {
 
     // 각 스킬이 가진 태그들 (하위 클래스에서 구현)
     abstract val tags: List<SkillTag>
 
-    // 장착된 보조스킬 효과 리스트 (effectType -> value)
-    var equippedSubSkills: Map<SubSkillEffectType, Int> = emptyMap()
+    // 장착된 보조스킬 리스트
+    var equippedSubSkills: List<SubSkill> = emptyList()
+
+    // 장착된 보조스킬 효과 통합 맵 (effectType -> 합산된 value)
+    private var _aggregatedEffects: Map<SubSkillEffectType, Int> = emptyMap()
+
+    /**
+     * 보조스킬 장착 시 효과 집계
+     */
+    fun updateSubSkillEffects(subSkills: List<SubSkill>) {
+        equippedSubSkills = subSkills
+
+        // 모든 보조스킬의 효과를 합산
+        val effectsMap = mutableMapOf<SubSkillEffectType, Int>()
+        subSkills.forEach { subSkill ->
+            subSkill.getAllEffects().forEach { (effectType, value) ->
+                effectsMap[effectType] = (effectsMap[effectType] ?: 0) + value
+            }
+        }
+        _aggregatedEffects = effectsMap
+    }
+
+    /**
+     * 특정 효과 값 가져오기
+     */
+    fun getEffectValue(effectType: SubSkillEffectType): Int {
+        return _aggregatedEffects[effectType] ?: 0
+    }
+
+    // 스킬설명
+    fun getDescription(): String {
+        return "쿨타임: $baseCooldown 초 속성: $baseElement\n$baseDescription"
+    }
 
     /**
      * 보조스킬 효과가 적용된 투사체 개수 계산
      */
     fun getProjectileCount(): Int {
-        var count = 1 // 기본 1개
-        equippedSubSkills[SubSkillEffectType.PROJECTILE_COUNT]?.let { count += it }
-        return count
+        return 1 + getEffectValue(SubSkillEffectType.PROJECTILE_COUNT)
     }
 
     /**
-     * 보조스킬 효과 확인
+     * 보조스킬 효과가 적용된 투사체 연쇄 횟수
      */
-    fun hasSubSkillEffect(effectType: SubSkillEffectType): Boolean {
-        return effectType in equippedSubSkills
+    fun getChainCount(): Int {
+        return getEffectValue(SubSkillEffectType.PROJECTILE_CHAIN)
     }
 
     /**
-     * 보조스킬 효과 값 가져오기
+     * 보조스킬 효과가 적용된 투사체 갈래 개수
      */
-    fun getSubSkillValue(effectType: SubSkillEffectType): Int {
-        return equippedSubSkills[effectType] ?: 0
+    fun getForkCount(): Int {
+        return getEffectValue(SubSkillEffectType.PROJECTILE_FORK)
+    }
+
+    /**
+     * 보조스킬 효과가 적용된 쿨다운 계산
+     */
+    fun getModifiedCooldown(): Float {
+        val cooldownPercent = getEffectValue(SubSkillEffectType.COOLDOWN) // -35% ~ +15%
+        return baseCooldown * (1f + cooldownPercent / 100f)
+    }
+
+    /**
+     * 보조스킬 효과가 적용된 투사체 속도 배율
+     */
+    fun getProjectileSpeedMultiplier(): Float {
+        val speedPercent = getEffectValue(SubSkillEffectType.PROJECTILE_SPEED_INCREASE)
+        return 1f + speedPercent / 100f
     }
 
     // 스킬별 등급 배율 정의 (서브클래스에서 오버라이드)
@@ -66,13 +117,32 @@ abstract class Skill(
         private set
 
     fun canUse(): Boolean = cooldownTimer <= 0f
-    fun resetCooldown() { cooldownTimer = baseCooldown }
+    fun resetCooldown() {
+        cooldownTimer = getModifiedCooldown() // 보조스킬 효과 적용된 쿨다운
+    }
     fun updateCooldown(delta: Float) { cooldownTimer -= delta }
 
-    abstract fun createProjectile(x: Float, y: Float, target: Enemy, caster: Player, preCalculatedDamage: Int, effects: MutableList<Effect>, onDamage: ((Int, Float, Float, com.example.theorb.balance.Element, String) -> Unit)? = null): Projectile
+    abstract fun createProjectile(
+        x: Float,
+        y: Float,
+        target: Enemy,
+        caster: Player,
+        preCalculatedDamage: Int,
+        effects: MutableList<Effect>,
+        chainCnt: Int = 0,
+        beforeEnemies: MutableList<Enemy> = mutableListOf(),
+        onDamage: ((Int, Float, Float, Element, String) -> Unit)? = null
+    ): Projectile
 
     // AOE 스킬용 메소드
-    open fun createAOEProjectiles(x: Float, y: Float, targets: List<Enemy>, caster: Player, effects: MutableList<Effect>, onDamage: ((Int, Float, Float, com.example.theorb.balance.Element, String) -> Unit)? = null): List<Projectile> {
+    open fun createAOEProjectiles(
+        x: Float,
+        y: Float,
+        targets: List<Enemy>,
+        caster: Player,
+        effects: MutableList<Effect>,
+        onDamage: ((Int, Float, Float, Element, String) -> Unit)? = null
+    ): List<Projectile> {
         // 시전 효과가 있으면 시전자 위치에서 한 번만 발동
         if (castEffectType != null) {
             effects.add(
@@ -91,7 +161,7 @@ abstract class Skill(
         return targets.map { target ->
             val damage = com.example.theorb.util.calcDamage(target, caster, this)
             target.vhp -= damage // 가상 hp 감소
-            createProjectile(x, y, target, caster, damage, effects, onDamage)
+            createProjectile(x, y, target, caster, damage, effects, onDamage = onDamage)
         }
     }
 }

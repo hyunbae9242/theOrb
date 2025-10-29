@@ -1,4 +1,4 @@
-package com.example.theorb.ui
+package com.example.theorb.modal
 
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.scenes.scene2d.Actor
@@ -8,6 +8,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.badlogic.gdx.utils.Align
 import com.example.theorb.screens.BaseScreen
+import com.example.theorb.ui.RetroButtonV01
 import com.example.theorb.util.ResourceManager
 
 class SettingsModal(private val stage: Stage, private val skin: Skin) {
@@ -64,38 +65,33 @@ class SettingsModal(private val stage: Stage, private val skin: Skin) {
 
     private fun createDialogContainer(onClose: () -> Unit) {
         dialogContainer = Table().apply {
-            background = ResourceManager.getSquarePanel360()
+            background = ResourceManager.getCommonModalPanel()
             setSize(360f, 360f)
-            pad(30f)
+            top()
         }
 
         // 제목
         val titleLabel = Label("설정", skin.get("label-large", Label.LabelStyle::class.java)).apply {
-            color = com.example.theorb.screens.BaseScreen.TEXT_PRIMARY
+            color = BaseScreen.TEXT_PRIMARY
         }
 
         // 배경화면 섹션
         val backgroundSection = createBackgroundSection()
 
         // 닫기 버튼
-        val closeButton = RetroButton.createTextButton(
-            text = "닫기",
-            skin = skin,
-            labelStyle = "label-default-bold",
-            textColor = BaseScreen.TEXT_PRIMARY,
-            defaultImage = ResourceManager.getRetroRectanglePosDefault(),
-            eventImage = ResourceManager.getRetroRectanglePosEvent(),
-            buttonSize = 42f
+        val closeButton = RetroButtonV01.createIconButton(
+            defaultImage = ResourceManager.getCancelBasePos(),
+            eventImage = ResourceManager.getCancelEventPos(),
         ) {
             onClose()
         }
 
         // 레이아웃 구성
-        dialogContainer!!.apply {
-            add(titleLabel).center().padBottom(30f).row()
-            add(backgroundSection).center().padBottom(30f).row()
-            add(closeButton).center().width(100f).height(42f).row()
-        }
+
+        dialogContainer!!.add(titleLabel).padTop(16f).padBottom(32f).row()
+        dialogContainer!!.add(backgroundSection).expandY().fillY().row()
+        dialogContainer!!.add(closeButton).bottom().padTop(32f).padBottom(16f)
+
     }
 
     private fun createBackgroundSection(): Table {
@@ -110,14 +106,9 @@ class SettingsModal(private val stage: Stage, private val skin: Skin) {
         val backgroundControl = Table()
 
         // 좌측 화살표
-        val leftArrow = RetroButton.createTextButton(
-            text = "<",
-            skin = skin,
-            labelStyle = "label-default-bold",
-            textColor = BaseScreen.TEXT_PRIMARY,
-            defaultImage = ResourceManager.getRetroSquareNagDefault(),
-            eventImage = ResourceManager.getRetroSquareNagEvent(),
-            buttonSize = 42f
+        val leftArrow = RetroButtonV01.createIconButton(
+            defaultImage = ResourceManager.getLeftBasePos(),
+            eventImage = ResourceManager.getLeftEventPos(),
         ) {
             changeBackground(-1)
         }
@@ -127,25 +118,20 @@ class SettingsModal(private val stage: Stage, private val skin: Skin) {
             getCurrentBackgroundDisplayName(),
             skin.get("label-default", Label.LabelStyle::class.java)
         ).apply {
-            color = com.example.theorb.screens.BaseScreen.TEXT_PRIMARY
+            color = BaseScreen.TEXT_PRIMARY
             setAlignment(Align.center)
         }
 
         // 우측 화살표
-        val rightArrow = RetroButton.createTextButton(
-            text = ">",
-            skin = skin,
-            labelStyle = "label-default-bold",
-            textColor = BaseScreen.TEXT_PRIMARY,
-            defaultImage = ResourceManager.getRetroSquarePosDefault(),
-            eventImage = ResourceManager.getRetroSquarePosEvent(),
-            buttonSize = 42f
+        val rightArrow = RetroButtonV01.createIconButton(
+            defaultImage = ResourceManager.getRightBasePos(),
+            eventImage = ResourceManager.getRightEventPos(),
         ) {
             changeBackground(1)
         }
 
         backgroundControl.add(leftArrow).size(42f)
-        backgroundControl.add(currentBackgroundLabel).width(80f).center()
+        backgroundControl.add(currentBackgroundLabel).width(100f).center()
         backgroundControl.add(rightArrow).size(42f)
 
         section.add(backgroundLabel).center().padRight(20f)

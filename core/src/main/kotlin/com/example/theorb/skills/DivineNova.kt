@@ -18,7 +18,8 @@ class DivineNova : Skill(
     hitEffectType = EffectType.FIREBALL_HIT,
     flyEffectType = null, // AOE 스킬이므로 개별 projectile fly 효과 없음
     isInstant = true, // 즉발 스킬
-    isAOE = true // AOE 스킬
+    isAOE = true, // AOE 스킬
+    baseDescription = "오브 주변의 모든 적에게 피해를 줍니다."
 ) {
 
     override val tags: List<SkillTag> = listOf(SkillTag.DIVINE, SkillTag.AOE, SkillTag.INSTANT)
@@ -32,7 +33,16 @@ class DivineNova : Skill(
         SkillRank.SS to 4.5f,
         SkillRank.SSS to 6.0f
     )
-    override fun createProjectile(x: Float, y: Float, target: Enemy, caster: Player, preCalculatedDamage: Int, effects: MutableList<Effect>, onDamage: ((Int, Float, Float, Element, String) -> Unit)?): Projectile {
+    override fun createProjectile(
+        x: Float,
+        y: Float,
+        target: Enemy,
+        caster: Player,
+        preCalculatedDamage: Int,
+        effects: MutableList<Effect>,
+        chainCnt: Int,
+        beforeEnemies: MutableList<Enemy>,
+        onDamage: ((Int, Float, Float, Element, String) -> Unit)?): Projectile {
         return Projectile(x, y, target, caster, this, preCalculatedDamage, onHit = {enemy ->
             effects.add(
                 Effect(

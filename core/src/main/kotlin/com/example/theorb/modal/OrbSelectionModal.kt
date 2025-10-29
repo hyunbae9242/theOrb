@@ -1,4 +1,4 @@
-package com.example.theorb.ui
+package com.example.theorb.modal
 
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.scenes.scene2d.Stage
@@ -7,11 +7,13 @@ import com.badlogic.gdx.scenes.scene2d.ui.Image
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
+import com.badlogic.gdx.scenes.scene2d.ui.Stack
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.example.theorb.data.OrbData
 import com.example.theorb.data.OrbRegistry
 import com.example.theorb.data.SaveData
 import com.example.theorb.screens.BaseScreen
+import com.example.theorb.ui.RetroButtonV01
 import com.example.theorb.util.ResourceManager
 
 class OrbSelectionModal(
@@ -157,7 +159,7 @@ class OrbSelectionModal(
         return table
     }
 
-    private fun createOrbButton(orb: OrbData, onOrbSelected: (OrbData) -> Unit): com.badlogic.gdx.scenes.scene2d.ui.Stack {
+    private fun createOrbButton(orb: OrbData, onOrbSelected: (OrbData) -> Unit): Stack {
         val isSelected = orb.id == selectedOrbData.id
 
         // RetroButton으로 오브 버튼 생성

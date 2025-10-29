@@ -26,4 +26,14 @@ enum class SkillRank(
     }
 
     fun canUpgrade(): Boolean = getNextRank() != null
+
+    fun getRankByExp(exp: Int): SkillRank {
+        var accumulated = 0
+        for (rank in SkillRank.values()) {
+            accumulated += rank.upgradeRequirement
+            if (exp < accumulated || rank.upgradeRequirement == 0)
+                return rank
+        }
+        return SSS
+    }
 }

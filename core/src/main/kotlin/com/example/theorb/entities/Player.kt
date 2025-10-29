@@ -5,8 +5,6 @@ import com.example.theorb.effects.Effect
 import com.example.theorb.skills.Skill
 import com.example.theorb.upgrades.InGameUpgradeManager
 import com.example.theorb.upgrades.UpgradeManager
-import com.example.theorb.util.calcDamage
-import com.example.theorb.util.dist2
 
 class Player(
     var hp: Int = 100,
@@ -23,80 +21,12 @@ class Player(
         val cooldownMultiplier = InGameUpgradeManager.getCooldownMultiplier(saveData)
         skills.forEach { it.updateCooldown(delta / cooldownMultiplier) }
 
-        val target = enemies
-            .filter { !it.isDead() }
-            .minByOrNull { dist2(it.x, it.y, x, y) }
-
         // 업그레이드 적용된 사정거리 사용
         val effectiveRange = UpgradeManager.getEffectiveRange(saveData, baseRange)
 
         // 사용 가능한 스킬 찾기
         for (skill in skills) {
-            if (skill.canUse()) {
-                if (skill.isAOE) {
-                    // AOE 스킬: 사정거리 내 모든 적을 타겟으로 함
-                    val targetsInRange = enemies
-                        .filter { !it.isDead() && dist2(it.x, it.y, x, y) <= effectiveRange * effectiveRange }
-
-                    if (targetsInRange.isNotEmpty()) {
-                        val aoeProjectiles = skill.createAOEProjectiles(x, y, targetsInRange, this, effects, onDamage)
-                        projectiles.addAll(aoeProjectiles)
-                        skill.resetCooldown()
-                        break
-                    }
-                } else {
-                    // 단일 타겟 스킬: 투사체 개수 증가 보조스킬 효과 적용
-                    if (target != null) {
-                        val d2 = dist2(target.x, target.y, x, y)
-                        if (d2 <= effectiveRange * effectiveRange) {
-                            // 투사체 개수 확인
-                            val projectileCount = skill.getProjectileCount()
-
-                            if (projectileCount > 1) {
-                                // 여러 개의 투사체를 발사하는 경우 (가까운 적들 대상)
-                                val nearbyTargets = enemies
-                                    .filter { !it.isDead() && dist2(it.x, it.y, x, y) <= effectiveRange * effectiveRange }
-                                    .sortedBy { dist2(it.x, it.y, x, y) }
-                                    .take(projectileCount)
-
-                                if (nearbyTargets.isNotEmpty()) {
-                                    for (enemy in nearbyTargets) {
-                                        val finDamage = calcDamage(enemy, this, skill)
-
-                                        // 오버킬 방지
-                                        if (enemy.vhp <= 0) {
-                                            continue
-                                        }
-
-                                        enemy.vhp -= finDamage
-                                        projectiles.add(skill.createProjectile(x, y, enemy, this, finDamage, effects, onDamage))
-                                    }
-                                    skill.resetCooldown()
-                                    break
-                                }
-                            } else {
-                                // 기본 1개 투사체
-                                val finDamage = calcDamage(target, this, skill)
-
-                                // 오버킬 방지: 이미 죽을 예정이면 스킵
-                                if (target.vhp <= 0) {
-                                    continue
-                                }
-
-                                target.vhp -= finDamage // 가상 hp 즉시 감소
-                                projectiles.add(skill.createProjectile(x, y, target, this, finDamage, effects, onDamage))
-                                skill.resetCooldown() // 스킬 개별 쿨다운 초기화
-                                break // 한 번에 하나만 발사
-                            }
-                        }
-                    }
-                }
-            }
+            if (ActionFactory.playerCastSkill(skill, enemies, x, y, effectiveRange, projectiles, this, effects, onDamage)) break
         }
-    }
-
-    // 업그레이드가 적용된 데미지를 반환하는 함수
-    fun getEffectiveDamage(): Int {
-        return UpgradeManager.getEffectiveDamage(saveData, baseDamage)
     }
 }

@@ -15,7 +15,8 @@ class IceLance : Skill(
     baseElement = Element.COLD,
     baseDamageMul = 1.6f,
     hitEffectType = EffectType.ICE_LANCE_HIT,
-    flyEffectType = EffectType.ICE_LANCE_FLY
+    flyEffectType = EffectType.ICE_LANCE_FLY,
+    baseDescription = "얼음창을 적에게 발사합니다."
 ) {
 
     override val tags: List<SkillTag> = listOf(SkillTag.ICE, SkillTag.PROJECTILE, SkillTag.INSTANT)
@@ -30,19 +31,40 @@ class IceLance : Skill(
         SkillRank.SSS to 4.0f
     )
 
-    override fun createProjectile(x: Float, y: Float, target: Enemy, caster: Player, preCalculatedDamage: Int, effects: MutableList<Effect>, onDamage: ((Int, Float, Float, Element, String) -> Unit)?): Projectile {
-        return Projectile(x, y, target, caster, this, preCalculatedDamage, onHit = {enemy ->
-            effects.add(
-                Effect(
-                    EffectManager.load(hitEffectType),
-                    enemy.x,
-                    enemy.y,
-                    hitEffectType.scale,
-                    0f,
-                    Anchor.CENTER
+    override fun createProjectile(
+        x: Float,
+        y: Float,
+        target: Enemy,
+        caster: Player,
+        preCalculatedDamage: Int,
+        effects: MutableList<Effect>,
+        chainCnt: Int,
+        beforeEnemies: MutableList<Enemy>,
+        onDamage: ((Int, Float, Float, Element, String) -> Unit)?
+    ): Projectile {
+        return Projectile(
+            x = x,
+            y = y,
+            target = target,
+            caster = caster,
+            skill = this,
+            preCalculatedDamage = preCalculatedDamage,
+            chainCnt = chainCnt,
+            beforeEnemies = beforeEnemies,
+            onHit = { enemy ->
+                effects.add(
+                    Effect(
+                        EffectManager.load(hitEffectType),
+                        enemy.x,
+                        enemy.y,
+                        hitEffectType.scale,
+                        0f,
+                        Anchor.CENTER
+                    )
                 )
-            )
-        }, onDamage = onDamage)
+            },
+            onDamage = onDamage
+        )
     }
 
 

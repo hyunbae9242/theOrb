@@ -21,20 +21,20 @@ import com.example.theorb.entities.EnemyFactory
 import com.example.theorb.entities.Player
 import com.example.theorb.entities.Projectile
 import com.example.theorb.skills.SkillRegistry
-import com.example.theorb.ui.BackgroundRenderer
 import com.example.theorb.ui.DamageText
 import com.example.theorb.ui.RewardText
 import com.example.theorb.ui.RewardType
 import com.example.theorb.ui.InGameUpgradePanel
-import com.example.theorb.ui.ModalDialog
-import com.example.theorb.ui.PauseModal
+import com.example.theorb.modal.ModalDialog
+import com.example.theorb.modal.PauseModal
 import com.example.theorb.ui.ToastMessage
-import com.example.theorb.ui.VictoryModal
+import com.example.theorb.modal.VictoryModal
 import com.example.theorb.upgrades.InGameUpgradeManager
 import com.example.theorb.upgrades.UpgradeManager
 import com.example.theorb.util.ResourceManager
 import com.example.theorb.util.formatNumber
 import com.example.theorb.data.OrbRegistry
+import com.example.theorb.skills.SkillInventory
 import com.example.theorb.util.OrbManager
 import com.example.theorb.skills.SubSkillInventoryItem
 import com.example.theorb.skills.SubSkillType
@@ -76,6 +76,8 @@ class GameScreen : BaseScreen() {
     private var isGameOver = false
     private var isVictory = false
     private var animationTime = 0f
+
+    private lateinit var skillInventory: SkillInventory
     private lateinit var pauseModal: PauseModal
     private lateinit var modalDialog: ModalDialog
     private lateinit var upgradePanel: InGameUpgradePanel
@@ -96,6 +98,10 @@ class GameScreen : BaseScreen() {
         initialGold = gameObject.saveData.gold
         initialGems = gameObject.saveData.orbs
         skillDamageStats.clear()
+
+
+        skillInventory = SkillInventory()
+        skillInventory.fromSaveData(gameObject.saveData.skillInventory)
 
         // 배경 설정 (공통 배경 렌더러 사용)
         val backgroundRenderer = getSharedBackgroundRenderer()
@@ -261,47 +267,41 @@ class GameScreen : BaseScreen() {
 
     private fun loadSaveData() {
         val saveData = gameObject.saveData
-        val skills = saveData.equippedSkills.mapNotNull { skillId ->
+        val skills = saveData.equippedSkills.mapNotNull { skillType ->
             try {
-                if (skillId.contains(":")) {
-                    // 새로운 형식: "SkillType:Rank"
-                    val parts = skillId.split(":")
-                    if (parts.size == 2) {
-                        val skillType = parts[0]
-                        val rank = com.example.theorb.skills.SkillRank.valueOf(parts[1])
-                        val skill = SkillRegistry.createSkill(skillType)
-                        skill.rank = rank
+                val rank = skillInventory.getRankByType(skillType)
+                val skill = SkillRegistry.createSkill(skillType)
+                skill.rank = rank
 
-                        // 보조스킬 로드
-                        val equippedSubSkillsData = saveData.equippedSubSkills[skillId] ?: emptyList()
-                        skill.equippedSubSkills = equippedSubSkillsData.mapNotNull { subSkillData ->
-                            try {
-                                val typeName = subSkillData["type"] as? String
-                                val level = (subSkillData["level"] as? Number)?.toInt() ?: 1
+                // 보조스킬 로드
+                val equippedSubSkillsData = saveData.equippedSubSkills[skillType] ?: emptyList()
+                val subSkills = equippedSubSkillsData.mapNotNull { subSkillData ->
+                    try {
+                        val typeName = subSkillData["type"] as? String
+                        val level = (subSkillData["level"] as? Number)?.toInt() ?: 1
 
-                                val subSkillType = com.example.theorb.skills.SubSkillType.values()
-                                    .find { it.effectType.name == typeName }
+                        val subSkillType = com.example.theorb.skills.SubSkillType.values()
+                            .find { it.name == typeName }
 
-                                if (subSkillType != null) {
-                                    val value = subSkillType.getValueForLevel(level)
-                                    subSkillType.effectType to value
-                                } else {
-                                    null
-                                }
-                            } catch (e: Exception) {
-                                Gdx.app.log("GameScreen", "보조스킬 로드 실패: $subSkillData - ${e.message}")
-                                null
-                            }
-                        }.toMap()
-
-                        skill
-                    } else null
-                } else {
-                    // 이전 형식: "SkillType"만 (호환성 유지)
-                    SkillRegistry.createSkill(skillId)
+                        if (subSkillType != null) {
+                            com.example.theorb.skills.SubSkill(
+                                id = "${skillType}_${typeName}_$level",
+                                type = subSkillType,
+                                level = level
+                            )
+                        } else {
+                            null
+                        }
+                    } catch (e: Exception) {
+                        Gdx.app.log("GameScreen", "보조스킬 로드 실패: $subSkillData - ${e.message}")
+                        null
+                    }
                 }
+                skill.updateSubSkillEffects(subSkills)
+
+                skill
             } catch (e: Exception) {
-                Gdx.app.log("GameScreen", "스킬 로드 실패: $skillId - ${e.message}")
+                Gdx.app.log("GameScreen", "스킬 로드 실패: $skillType - ${e.message}")
                 null
             }
         }.toMutableList()
@@ -389,7 +389,13 @@ class GameScreen : BaseScreen() {
             }
 
             enemies.forEach { it.update(adjustedDelta, player) }
-            projectiles.forEach { it.update(adjustedDelta) }
+
+            // 투사체 업데이트 시 ConcurrentModificationException 방지
+            // 새로 생성될 투사체를 임시 리스트에 모아두고 순회 후 추가
+            val newProjectiles = mutableListOf<Projectile>()
+            projectiles.forEach { it.update(adjustedDelta, enemies, newProjectiles, effects) }
+            projectiles.addAll(newProjectiles)
+
             effects.forEach { it.update(adjustedDelta) }
 
             // 데미지 텍스트 업데이트
@@ -742,12 +748,12 @@ class GameScreen : BaseScreen() {
     private fun dropRandomSubSkill() {
         // 랜덤 보조스킬 타입 선택
         val randomSubSkillType = SubSkillType.values().random()
-        val effectTypeName = randomSubSkillType.effectType.name
+        val subSkillTypeName = randomSubSkillType.name
 
         val saveData = gameObject.saveData
 
         // 이미 보유한 보조스킬인지 확인
-        val existingData = saveData.subSkillInventory[effectTypeName]
+        val existingData = saveData.subSkillInventory[subSkillTypeName]
 
         if (existingData != null) {
             // 중복: 경험치 추가
@@ -758,7 +764,7 @@ class GameScreen : BaseScreen() {
             val leveledUp = item.addExp(1) // 스테이지 1은 경험치 1 획득
 
             // 업데이트된 정보 저장
-            saveData.subSkillInventory[effectTypeName] = mapOf(
+            saveData.subSkillInventory[subSkillTypeName] = mapOf(
                 "level" to item.level,
                 "exp" to item.exp
             )
@@ -782,7 +788,7 @@ class GameScreen : BaseScreen() {
             }
         } else {
             // 신규 획득
-            saveData.subSkillInventory[effectTypeName] = mapOf(
+            saveData.subSkillInventory[subSkillTypeName] = mapOf(
                 "level" to 1,
                 "exp" to 0
             )

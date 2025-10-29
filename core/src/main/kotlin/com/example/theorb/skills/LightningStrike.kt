@@ -15,7 +15,8 @@ class LightningStrike : Skill(
     baseElement = Element.LIGHTNING,
     baseDamageMul = 1.3f,
     hitEffectType = EffectType.LIGHTNING_STRIKE,
-    isInstant = true // 즉발 스킬
+    isInstant = true, // 즉발 스킬
+    baseDescription = "즉시 적에게 번개를 내리칩니다."
 ) {
 
     override val tags: List<SkillTag> = listOf(SkillTag.LIGHTNING, SkillTag.INSTANT, SkillTag.AOE)
@@ -29,19 +30,38 @@ class LightningStrike : Skill(
         SkillRank.SS to 3.6f,
         SkillRank.SSS to 4.8f
     )
-    override fun createProjectile(x: Float, y: Float, target: Enemy, caster: Player, preCalculatedDamage: Int, effects: MutableList<Effect>, onDamage: ((Int, Float, Float, com.example.theorb.balance.Element, String) -> Unit)?): Projectile {
-        return Projectile(target.x, target.y, target, caster, this, preCalculatedDamage, onHit = {enemy ->
-            effects.add(
-                Effect(
-                    EffectManager.load(hitEffectType),
-                    enemy.x + 8,
-                    enemy.y - enemy.type.radius - 10,
-                    hitEffectType.scale,
-                    0f,
-                    Anchor.BOTTOM
+    override fun createProjectile(
+        x: Float,
+        y: Float,
+        target: Enemy,
+        caster: Player,
+        preCalculatedDamage: Int,
+        effects: MutableList<Effect>,
+        chainCnt: Int,
+        beforeEnemies: MutableList<Enemy>,
+        onDamage: ((Int, Float, Float, Element, String) -> Unit)?
+    ): Projectile {
+        return Projectile(
+            x = target.x,
+            y = target.y,
+            target = target,
+            caster = caster,
+            skill = this,
+            preCalculatedDamage = preCalculatedDamage,
+            onHit = { enemy ->
+                effects.add(
+                    Effect(
+                        EffectManager.load(hitEffectType),
+                        enemy.x + 8,
+                        enemy.y - enemy.type.radius - 10,
+                        hitEffectType.scale,
+                        0f,
+                        Anchor.BOTTOM
+                    )
                 )
-            )
-        }, onDamage = onDamage)
+            },
+            onDamage = onDamage,
+        )
     }
 
 

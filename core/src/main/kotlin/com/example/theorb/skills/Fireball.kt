@@ -8,6 +8,7 @@ import com.example.theorb.effects.EffectType
 import com.example.theorb.entities.Enemy
 import com.example.theorb.entities.Player
 import com.example.theorb.entities.Projectile
+import com.example.theorb.util.ResourceManager
 
 class Fireball : Skill(
     name = "화염구",
@@ -15,7 +16,10 @@ class Fireball : Skill(
     baseElement = Element.FIRE,
     baseDamageMul = 1.8f,
     hitEffectType = EffectType.FIREBALL_HIT,
-    flyEffectType = EffectType.FIREBALL_FLY
+    flyEffectType = EffectType.FIREBALL_FLY,
+    baseIcon = ResourceManager.getFireballBase(),
+    eventIcon = ResourceManager.getFireballEvent(),
+    baseDescription = "화염구를 적에게 발사합니다."
 ) {
 
     override val tags: List<SkillTag> = listOf(SkillTag.FIRE, SkillTag.PROJECTILE, SkillTag.INSTANT)
@@ -29,19 +33,40 @@ class Fireball : Skill(
         SkillRank.SS to 3.4f,
         SkillRank.SSS to 4.5f
     )
-    override fun createProjectile(x: Float, y: Float, target: Enemy, caster: Player, preCalculatedDamage: Int, effects: MutableList<Effect>, onDamage: ((Int, Float, Float, com.example.theorb.balance.Element, String) -> Unit)?): Projectile {
-        return Projectile(x, y, target, caster, this, preCalculatedDamage, onHit = {enemy ->
-            effects.add(
-                Effect(
-                    EffectManager.load(hitEffectType),
-                    enemy.x,
-                    enemy.y,
-                    hitEffectType.scale,
-                    0f,
-                    Anchor.CENTER
+    override fun createProjectile(
+        x: Float,
+        y: Float,
+        target: Enemy,
+        caster: Player,
+        preCalculatedDamage: Int,
+        effects: MutableList<Effect>,
+        chainCnt: Int,
+        beforeEnemies: MutableList<Enemy>,
+        onDamage: ((Int, Float, Float, Element, String) -> Unit)?
+    ): Projectile {
+        return Projectile(
+            x = x,
+            y = y,
+            target = target,
+            caster = caster,
+            skill = this,
+            preCalculatedDamage = preCalculatedDamage,
+            chainCnt = chainCnt,
+            beforeEnemies = beforeEnemies,
+            onHit = { enemy ->
+                effects.add(
+                    Effect(
+                        EffectManager.load(hitEffectType),
+                        enemy.x,
+                        enemy.y,
+                        hitEffectType.scale,
+                        0f,
+                        Anchor.CENTER
+                    )
                 )
-            )
-        }, onDamage = onDamage)
+            },
+            onDamage = onDamage
+        )
     }
 
 

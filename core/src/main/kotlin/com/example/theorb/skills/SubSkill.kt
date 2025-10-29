@@ -16,119 +16,88 @@ enum class SkillTag(val displayName: String) {
 }
 
 /**
- * 보조스킬 타입
+ * 보조스킬 효과 카테고리 (데미지 계산 단계 구분)
  */
-enum class SubSkillType(
+enum class EffectCategory {
+    ADDITION,           // 추가 (기본 데미지에 더해짐)
+    INCREASE,           // 증가 (백분율, 합산 후 곱연산)
+    AMPLIFY,            // 증폭 (백분율, 곱연산)
+    AILMENT_CHANCE,     // 상태이상 확률
+    AILMENT_EFFECT,     // 상태이상 효과
+    MECHANIC            // 게임 메카닉 (투사체 개수, 연쇄, 갈래 등)
+}
+
+/**
+ * 보조스킬 효과 타입 (실제 효과)
+ */
+enum class SubSkillEffectType(
     val displayName: String,
-    val descriptionTemplate: String, // {value}를 포함한 템플릿
-    val requiredTags: List<SkillTag>,
-    val effectType: SubSkillEffectType,
-    val levelBreakpoints: Map<Int, Int> // 레벨 -> 값 (예: 1->1, 3->2, 5->3 등)
+    val category: EffectCategory,
+    val unit: String = "", // 단위 (%, 개, 회 등)
+    val targetStat: String = "" // 대상 스탯 (설명용)
 ) {
-    // 투사체 관련
-    PROJECTILE_COUNT(
-        "투사체 증가",
-        "투사체 개수를 {value}개 증가시킵니다.",
-        listOf(SkillTag.PROJECTILE),
-        SubSkillEffectType.PROJECTILE_COUNT,
-        mapOf(
-            1 to 1,   // 1레벨: +1개
-            3 to 2,   // 3레벨: +2개
-            5 to 3,   // 5레벨: +3개
-            7 to 4,   // 7레벨: +4개
-            10 to 5   // 10레벨: +5개
-        )
-    ),
+    // === 메카닉 ===
+    PROJECTILE_COUNT("투사체 개수", EffectCategory.MECHANIC, "개"),
+    PROJECTILE_CHAIN("투사체 연쇄", EffectCategory.MECHANIC, "회"),
+    PROJECTILE_FORK("투사체 갈래", EffectCategory.MECHANIC, "개"),
+    COOLDOWN("재사용 대기시간", EffectCategory.MECHANIC, "%"),
 
-    PROJECTILE_CHAIN(
-        "투사체 연쇄",
-        "투사체가 적 처치 시 {value}회 연쇄하여 근처 적을 공격합니다.",
-        listOf(SkillTag.PROJECTILE),
-        SubSkillEffectType.PROJECTILE_CHAIN,
-        mapOf(1 to 1, 3 to 2, 5 to 3, 7 to 4, 10 to 5)
-    ),
+    // === 추가 ===
+    DAMAGE_ADDITION("기본 피해 추가", EffectCategory.ADDITION, ""),
+    FIRE_DAMAGE_ADDITION("화염 피해 추가", EffectCategory.ADDITION, ""),
+    ICE_DAMAGE_ADDITION("냉기 피해 추가", EffectCategory.ADDITION, ""),
+    LIGHTNING_DAMAGE_ADDITION("번개 피해 추가", EffectCategory.ADDITION, ""),
 
-    PROJECTILE_FORK(
-        "투사체 갈래",
-        "투사체가 적 적중 시 {value}개로 갈라져 다른 적을 공격합니다.",
-        listOf(SkillTag.PROJECTILE),
-        SubSkillEffectType.PROJECTILE_FORK,
-        mapOf(1 to 2, 4 to 3, 7 to 4, 10 to 5)
-    ),
+    // === 증가 ===
+    DAMAGE_INCREASE("피해 증가", EffectCategory.INCREASE, "%"),
+    FIRE_DAMAGE_INCREASE("화염 피해 증가", EffectCategory.INCREASE, "%"),
+    ICE_DAMAGE_INCREASE("냉기 피해 증가", EffectCategory.INCREASE, "%"),
+    LIGHTNING_DAMAGE_INCREASE("번개 피해 증가", EffectCategory.INCREASE, "%"),
+    PROJECTILE_SPEED_INCREASE("투사체 속도 증가", EffectCategory.INCREASE, "%"),
+    AOE_INCREASE("범위 증가", EffectCategory.INCREASE, "%"),
 
-    // 화염 관련
-    FIRE_DAMAGE(
-        "화염 피해 증가",
-        "화염 피해를 {value}% 증가시킵니다.",
-        listOf(SkillTag.FIRE),
-        SubSkillEffectType.FIRE_DAMAGE,
-        mapOf(1 to 10, 3 to 15, 5 to 20, 7 to 30, 10 to 50)
-    ),
+    // === 증폭 ===
+    DAMAGE_AMPLIFY("피해 증폭", EffectCategory.AMPLIFY, "%"),
+    CRITICAL_DAMAGE_AMPLIFY("치명타 피해 증폭", EffectCategory.AMPLIFY, "%"),
 
-    IGNITE_CHANCE(
-        "점화 확률",
-        "적을 점화시킬 확률 {value}%를 부여합니다.",
-        listOf(SkillTag.FIRE),
-        SubSkillEffectType.IGNITE_CHANCE,
-        mapOf(1 to 5, 3 to 10, 5 to 15, 7 to 20, 10 to 30)
-    ),
+    // === 상태이상 확률 ===
+    IGNITE_CHANCE("점화 확률", EffectCategory.AILMENT_CHANCE, "%"),
+    FREEZE_CHANCE("빙결 확률", EffectCategory.AILMENT_CHANCE, "%"),
+    SHOCK_CHANCE("감전 확률", EffectCategory.AILMENT_CHANCE, "%"),
+    CRITICAL_CHANCE("치명타 확률", EffectCategory.AILMENT_CHANCE, "%"),
 
-    // 얼음 관련
-    ICE_DAMAGE(
-        "냉기 피해 증가",
-        "냉기 피해를 {value}% 증가시킵니다.",
-        listOf(SkillTag.ICE),
-        SubSkillEffectType.ICE_DAMAGE,
-        mapOf(1 to 10, 3 to 15, 5 to 20, 7 to 30, 10 to 50)
-    ),
+    // === 상태이상 효과 ===
+    IGNITE_DAMAGE("점화 피해", EffectCategory.AILMENT_EFFECT, "%"),
+    FREEZE_DURATION("빙결 지속시간", EffectCategory.AILMENT_EFFECT, "%"),
+    SHOCK_EFFECT("감전 효과", EffectCategory.AILMENT_EFFECT, "%");
 
-    FREEZE_CHANCE(
-        "빙결 확률",
-        "적을 빙결시킬 확률 {value}%를 부여합니다.",
-        listOf(SkillTag.ICE),
-        SubSkillEffectType.FREEZE_CHANCE,
-        mapOf(1 to 5, 3 to 10, 5 to 15, 7 to 20, 10 to 30)
-    ),
+    /**
+     * 값을 포맷팅 (부호 + 값 + 단위)
+     */
+    fun formatValue(value: Int): String {
+        val sign = if (value > 0) "+" else ""
+        return "$sign$value$unit"
+    }
 
-    // 번개 관련
-    LIGHTNING_DAMAGE(
-        "번개 피해 증가",
-        "번개 피해를 {value}% 증가시킵니다.",
-        listOf(SkillTag.LIGHTNING),
-        SubSkillEffectType.LIGHTNING_DAMAGE,
-        mapOf(1 to 10, 3 to 15, 5 to 20, 7 to 30, 10 to 50)
-    ),
+    /**
+     * 설명 생성
+     */
+    fun getDescription(value: Int): String {
+        return "$displayName ${formatValue(value)}"
+    }
+}
 
-    SHOCK_CHANCE(
-        "감전 확률",
-        "적을 감전시킬 확률 {value}%를 부여합니다.",
-        listOf(SkillTag.LIGHTNING),
-        SubSkillEffectType.SHOCK_CHANCE,
-        mapOf(1 to 5, 3 to 10, 5 to 15, 7 to 20, 10 to 30)
-    ),
-
-    // 범용
-    DAMAGE_INCREASE(
-        "피해 증가",
-        "모든 피해를 {value}% 증가시킵니다.",
-        emptyList(), // 모든 스킬에 적용 가능
-        SubSkillEffectType.DAMAGE_INCREASE,
-        mapOf(1 to 10, 3 to 15, 5 to 20, 7 to 30, 10 to 50)
-    ),
-
-    COOLDOWN_REDUCTION(
-        "재사용 대기시간 단축",
-        "스킬 재사용 대기시간을 {value}% 단축시킵니다.",
-        emptyList(), // 모든 스킬에 적용 가능
-        SubSkillEffectType.COOLDOWN_REDUCTION,
-        mapOf(1 to 5, 3 to 10, 5 to 15, 7 to 20, 10 to 30)
-    );
-
+/**
+ * 보조스킬 효과 (하나의 보조스킬이 여러 효과를 가질 수 있음)
+ */
+data class SubSkillEffect(
+    val type: SubSkillEffectType,
+    val levelBreakpoints: Map<Int, Int> // 레벨 -> 값 (양수/음수 모두 가능)
+) {
     /**
      * 레벨에 따른 효과 값 계산
      */
     fun getValueForLevel(level: Int): Int {
-        // 레벨이 1~10 범위를 벗어나면 보정
         val clampedLevel = level.coerceIn(1, 10)
 
         // 해당 레벨 이하의 가장 큰 breakpoint 찾기
@@ -136,39 +105,257 @@ enum class SubSkillType(
             .filter { it <= clampedLevel }
             .maxOrNull() ?: 1
 
-        return levelBreakpoints[applicableLevel] ?: levelBreakpoints[1] ?: 1
-    }
-
-    /**
-     * 값에 따라 설명 생성
-     */
-    fun getDescription(value: Int): String {
-        return descriptionTemplate.replace("{value}", value.toString())
+        return levelBreakpoints[applicableLevel] ?: 0
     }
 
     /**
      * 레벨에 따른 설명 생성
      */
     fun getDescriptionForLevel(level: Int): String {
-        return getDescription(getValueForLevel(level))
+        return type.getDescription(getValueForLevel(level))
     }
 }
 
 /**
- * 보조스킬 효과 타입 (실제 게임플레이 효과)
+ * 보조스킬 타입 (각 보조스킬은 여러 효과를 가질 수 있음)
  */
-enum class SubSkillEffectType {
-    PROJECTILE_COUNT,
-    PROJECTILE_CHAIN,
-    PROJECTILE_FORK,
-    FIRE_DAMAGE,
-    IGNITE_CHANCE,
-    ICE_DAMAGE,
-    FREEZE_CHANCE,
-    LIGHTNING_DAMAGE,
-    SHOCK_CHANCE,
-    DAMAGE_INCREASE,
-    COOLDOWN_REDUCTION
+enum class SubSkillType(
+    val displayName: String,
+    val requiredTags: List<SkillTag>,
+    val effects: List<SubSkillEffect>
+) {
+    // === 투사체 메카닉 보조스킬 ===
+    PROJECTILE_COUNT(
+        "다중 투사체",
+        listOf(SkillTag.PROJECTILE),
+        listOf(
+            SubSkillEffect(
+                SubSkillEffectType.PROJECTILE_COUNT,
+                mapOf(1 to 1, 3 to 2, 5 to 3, 7 to 4, 10 to 5)
+            ),
+            SubSkillEffect(
+                SubSkillEffectType.DAMAGE_INCREASE,
+                mapOf(1 to -20, 3 to -18, 5 to -15, 7 to -12, 10 to -10)
+            )
+        )
+    ),
+
+    PROJECTILE_CHAIN(
+        "투사체 연쇄",
+        listOf(SkillTag.PROJECTILE),
+        listOf(
+            SubSkillEffect(
+                SubSkillEffectType.PROJECTILE_CHAIN,
+                mapOf(1 to 1, 3 to 2, 5 to 3, 7 to 4, 10 to 5)
+            ),
+            SubSkillEffect(
+                SubSkillEffectType.DAMAGE_INCREASE,
+                mapOf(1 to -30, 3 to -25, 5 to -20, 7 to -15, 10 to -10)
+            )
+        )
+    ),
+
+    PROJECTILE_FORK(
+        "투사체 갈래",
+        listOf(SkillTag.PROJECTILE),
+        listOf(
+            SubSkillEffect(
+                SubSkillEffectType.PROJECTILE_FORK,
+                mapOf(1 to 2, 4 to 3, 7 to 4, 10 to 5)
+            ),
+            SubSkillEffect(
+                SubSkillEffectType.DAMAGE_INCREASE,
+                mapOf(1 to -25, 4 to -20, 7 to -15, 10 to -10)
+            )
+        )
+    ),
+
+    // === 화염 보조스킬 ===
+    FIRE_DAMAGE(
+        "화염 피해",
+        listOf(SkillTag.FIRE),
+        listOf(
+            SubSkillEffect(
+                SubSkillEffectType.FIRE_DAMAGE_INCREASE,
+                mapOf(1 to 15, 3 to 25, 5 to 35, 7 to 50, 10 to 70)
+            ),
+            SubSkillEffect(
+                SubSkillEffectType.COOLDOWN,
+                mapOf(1 to 10, 3 to 8, 5 to 6, 7 to 4, 10 to 0)
+            )
+        )
+    ),
+
+    IGNITE(
+        "점화",
+        listOf(SkillTag.FIRE),
+        listOf(
+            SubSkillEffect(
+                SubSkillEffectType.IGNITE_CHANCE,
+                mapOf(1 to 10, 3 to 15, 5 to 20, 7 to 30, 10 to 40)
+            ),
+            SubSkillEffect(
+                SubSkillEffectType.IGNITE_DAMAGE,
+                mapOf(1 to 50, 3 to 70, 5 to 100, 7 to 130, 10 to 150)
+            ),
+            SubSkillEffect(
+                SubSkillEffectType.DAMAGE_INCREASE,
+                mapOf(1 to -15, 3 to -12, 5 to -10, 7 to -5, 10 to 0)
+            )
+        )
+    ),
+
+    // === 냉기 보조스킬 ===
+    ICE_DAMAGE(
+        "냉기 피해",
+        listOf(SkillTag.ICE),
+        listOf(
+            SubSkillEffect(
+                SubSkillEffectType.ICE_DAMAGE_INCREASE,
+                mapOf(1 to 15, 3 to 25, 5 to 35, 7 to 50, 10 to 70)
+            ),
+            SubSkillEffect(
+                SubSkillEffectType.COOLDOWN,
+                mapOf(1 to 10, 3 to 8, 5 to 6, 7 to 4, 10 to 0)
+            )
+        )
+    ),
+
+    FREEZE(
+        "빙결",
+        listOf(SkillTag.ICE),
+        listOf(
+            SubSkillEffect(
+                SubSkillEffectType.FREEZE_CHANCE,
+                mapOf(1 to 10, 3 to 15, 5 to 20, 7 to 30, 10 to 40)
+            ),
+            SubSkillEffect(
+                SubSkillEffectType.FREEZE_DURATION,
+                mapOf(1 to 50, 3 to 70, 5 to 100, 7 to 130, 10 to 150)
+            ),
+            SubSkillEffect(
+                SubSkillEffectType.DAMAGE_INCREASE,
+                mapOf(1 to -15, 3 to -12, 5 to -10, 7 to -5, 10 to 0)
+            )
+        )
+    ),
+
+    // === 번개 보조스킬 ===
+    LIGHTNING_DAMAGE(
+        "번개 피해",
+        listOf(SkillTag.LIGHTNING),
+        listOf(
+            SubSkillEffect(
+                SubSkillEffectType.LIGHTNING_DAMAGE_INCREASE,
+                mapOf(1 to 15, 3 to 25, 5 to 35, 7 to 50, 10 to 70)
+            ),
+            SubSkillEffect(
+                SubSkillEffectType.COOLDOWN,
+                mapOf(1 to 10, 3 to 8, 5 to 6, 7 to 4, 10 to 0)
+            )
+        )
+    ),
+
+    SHOCK(
+        "감전",
+        listOf(SkillTag.LIGHTNING),
+        listOf(
+            SubSkillEffect(
+                SubSkillEffectType.SHOCK_CHANCE,
+                mapOf(1 to 10, 3 to 15, 5 to 20, 7 to 30, 10 to 40)
+            ),
+            SubSkillEffect(
+                SubSkillEffectType.SHOCK_EFFECT,
+                mapOf(1 to 20, 3 to 30, 5 to 40, 7 to 50, 10 to 60)
+            )
+        )
+    ),
+
+    // === 범용 보조스킬 ===
+    RAPID_CASTING(
+        "신속 시전",
+        emptyList(), // 모든 스킬에 적용 가능
+        listOf(
+            SubSkillEffect(
+                SubSkillEffectType.COOLDOWN,
+                mapOf(1 to -15, 3 to -20, 5 to -25, 7 to -30, 10 to -35)
+            ),
+            SubSkillEffect(
+                SubSkillEffectType.DAMAGE_INCREASE,
+                mapOf(1 to -20, 3 to -18, 5 to -15, 7 to -12, 10 to -10)
+            )
+        )
+    ),
+
+    DAMAGE_FOCUS(
+        "피해 집중",
+        emptyList(),
+        listOf(
+            SubSkillEffect(
+                SubSkillEffectType.DAMAGE_INCREASE,
+                mapOf(1 to 20, 3 to 30, 5 to 40, 7 to 55, 10 to 70)
+            ),
+            SubSkillEffect(
+                SubSkillEffectType.COOLDOWN,
+                mapOf(1 to 15, 3 to 12, 5 to 10, 7 to 7, 10 to 5)
+            )
+        )
+    ),
+
+    CRITICAL_SUPPORT(
+        "치명타",
+        emptyList(),
+        listOf(
+            SubSkillEffect(
+                SubSkillEffectType.CRITICAL_CHANCE,
+                mapOf(1 to 10, 3 to 15, 5 to 20, 7 to 25, 10 to 30)
+            ),
+            SubSkillEffect(
+                SubSkillEffectType.CRITICAL_DAMAGE_AMPLIFY,
+                mapOf(1 to 20, 3 to 30, 5 to 50, 7 to 70, 10 to 100)
+            ),
+            SubSkillEffect(
+                SubSkillEffectType.DAMAGE_INCREASE,
+                mapOf(1 to -10, 3 to -8, 5 to -5, 7 to -3, 10 to 0)
+            )
+        )
+    ),
+
+    SWIFT_PROJECTILE(
+        "신속한 투사체",
+        listOf(SkillTag.PROJECTILE),
+        listOf(
+            SubSkillEffect(
+                SubSkillEffectType.PROJECTILE_SPEED_INCREASE,
+                mapOf(1 to 30, 3 to 40, 5 to 50, 7 to 65, 10 to 80)
+            ),
+            SubSkillEffect(
+                SubSkillEffectType.DAMAGE_INCREASE,
+                mapOf(1 to -10, 3 to -8, 5 to -5, 7 to -3, 10 to 0)
+            )
+        )
+    );
+
+    /**
+     * 레벨에 따른 모든 효과 설명 생성
+     */
+    fun getFullDescription(level: Int): String {
+        return effects.joinToString("\n") { it.getDescriptionForLevel(level) }
+    }
+
+    /**
+     * 특정 효과 타입의 값 가져오기
+     */
+    fun getEffectValue(effectType: SubSkillEffectType, level: Int): Int {
+        return effects.find { it.type == effectType }?.getValueForLevel(level) ?: 0
+    }
+
+    /**
+     * 모든 효과를 Map으로 가져오기 (effectType -> value)
+     */
+    fun getAllEffects(level: Int): Map<SubSkillEffectType, Int> {
+        return effects.associate { it.type to it.getValueForLevel(level) }
+    }
 }
 
 /**
@@ -181,10 +368,22 @@ data class SubSkill(
     val quality: SkillRank = SkillRank.C
 ) {
     val name: String get() = type.displayName
-    val value: Int get() = type.getValueForLevel(level)
-    val description: String get() = type.getDescriptionForLevel(level)
+    val description: String get() = type.getFullDescription(level)
     val requiredTags: List<SkillTag> get() = type.requiredTags
-    val effectType: SubSkillEffectType get() = type.effectType
+
+    /**
+     * 모든 효과 가져오기
+     */
+    fun getAllEffects(): Map<SubSkillEffectType, Int> {
+        return type.getAllEffects(level)
+    }
+
+    /**
+     * 특정 효과 값 가져오기
+     */
+    fun getEffectValue(effectType: SubSkillEffectType): Int {
+        return type.getEffectValue(effectType, level)
+    }
 
     /**
      * 메인 스킬과 호환되는지 확인

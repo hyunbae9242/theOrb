@@ -1,4 +1,4 @@
-package com.example.theorb.ui
+package com.example.theorb.modal
 
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.Pixmap
@@ -7,7 +7,9 @@ import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.Touchable
 import com.badlogic.gdx.scenes.scene2d.ui.*
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
+import com.example.theorb.screens.BaseScreen
 import com.example.theorb.util.ResourceManager
 
 class PauseModal(private val stage: Stage, private val skin: Skin) {
@@ -59,7 +61,7 @@ class PauseModal(private val stage: Stage, private val skin: Skin) {
 
     private fun createBackgroundOverlay(stageWidth: Float, stageHeight: Float) {
         val pixmap = Pixmap(1, 1, Pixmap.Format.RGBA8888)
-        pixmap.setColor(com.example.theorb.screens.BaseScreen.BACKGROUND.r, com.example.theorb.screens.BaseScreen.BACKGROUND.g, com.example.theorb.screens.BaseScreen.BACKGROUND.b, 0.5f) // 50% 투명도
+        pixmap.setColor(BaseScreen.BACKGROUND.r, BaseScreen.BACKGROUND.g, BaseScreen.BACKGROUND.b, 0.5f) // 50% 투명도
         pixmap.fill()
         val texture = Texture(pixmap)
         pixmap.dispose()
@@ -82,7 +84,7 @@ class PauseModal(private val stage: Stage, private val skin: Skin) {
 
         // 제목
         val titleLabel = Label("게임 일시정지", this@PauseModal.skin.get("label-large", Label.LabelStyle::class.java)).apply {
-            color = com.example.theorb.screens.BaseScreen.TEXT_PRIMARY
+            color = BaseScreen.TEXT_PRIMARY
         }
 
         // 버튼들을 가로로 배치
@@ -94,7 +96,7 @@ class PauseModal(private val stage: Stage, private val skin: Skin) {
             down = ResourceManager.getRetroHomeEvent()
             over = ResourceManager.getRetroHomeEvent()
         }).apply {
-            addListener(object : com.badlogic.gdx.scenes.scene2d.utils.ChangeListener() {
+            addListener(object : ChangeListener() {
                 override fun changed(event: ChangeEvent?, actor: Actor?) {
                     onHome()
                 }
@@ -107,7 +109,7 @@ class PauseModal(private val stage: Stage, private val skin: Skin) {
             down = ResourceManager.getRetroPlayEvent()
             over = ResourceManager.getRetroPlayEvent()
         }).apply {
-            addListener(object : com.badlogic.gdx.scenes.scene2d.utils.ChangeListener() {
+            addListener(object : ChangeListener() {
                 override fun changed(event: ChangeEvent?, actor: Actor?) {
                     onPlay()
                     hide()

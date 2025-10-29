@@ -12,7 +12,6 @@ data class SaveData(
     var permanentUpgrades: MutableMap<String, Int> = mutableMapOf(), // 영구 업그레이드 레벨
     var equippedSkills: MutableList<String> = mutableListOf(),
     var skillInventory: MutableList<Map<String, Any>> = mutableListOf(), // 스킬 인벤토리
-    var unlockedSkills: MutableSet<String> = mutableSetOf(), // 한번이라도 보유했던 스킬 (skillType:rank 형태)
     var maxSkillSlots: Int = 1, // 최대 스킬 슬롯 개수
     var equippedSubSkills: MutableMap<String, MutableList<Map<String, Any>>> = mutableMapOf(), // 메인스킬ID -> 보조스킬 데이터 리스트 (type, level)
     var subSkillInventory: MutableMap<String, Map<String, Any>> = mutableMapOf(), // 보조스킬 인벤토리 (effectType -> {level, exp})
@@ -31,7 +30,7 @@ data class SaveData(
 ) {
     init {
         // 처음 게임 시작 시 기본 스킬 제공
-        if (skillInventory.isEmpty() && equippedSkills.isEmpty() && unlockedSkills.isEmpty()) {
+        if (skillInventory.isEmpty() && equippedSkills.isEmpty()) {
             initializeDefaultSkills()
         }
     }
@@ -41,11 +40,11 @@ data class SaveData(
         val fireballC = mapOf(
             "skillType" to "Fireball",
             "rank" to "C",
-            "id" to java.util.UUID.randomUUID().toString()
+            "exp" to 1
         )
 
         skillInventory.add(fireballC)
-        equippedSkills.add("Fireball:C")
-        unlockedSkills.add("Fireball:C")
+        equippedSkills.add("Fireball")
+//        SaveManager.save(this)
     }
 }

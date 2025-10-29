@@ -12,10 +12,10 @@ skillInventory: [
 			class: java.lang.String
 			value: C
 		}
-		id: {
-			class: java.lang.String
-			value: 52e8810d-e9a6-4164-bc46-0851a741bcee
-		}
+        exp: {
+            class: java.lang.Integer
+            value: 2
+        }
 	}
 ]
 subSkillInventory: {

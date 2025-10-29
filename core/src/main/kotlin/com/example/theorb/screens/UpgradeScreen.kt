@@ -10,7 +10,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.example.theorb.TheOrb
 import com.example.theorb.data.SaveManager
 import com.example.theorb.ui.BottomNavigation
-import com.example.theorb.ui.ModalDialog
+import com.example.theorb.modal.ModalDialog
 import com.example.theorb.ui.RetroButtonV01
 import com.example.theorb.ui.TopBar
 import com.example.theorb.upgrades.UpgradeCategory

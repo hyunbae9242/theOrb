@@ -31,10 +31,9 @@ abstract class BaseScreen : ScreenAdapter() {
         // 다크 테마 색상 팔레트
         val BACKGROUND = Color(0x0F0F0FFF.toInt())           // 거의 검정 배경
         val PANEL_BG = Color(0x1A1A1AFF.toInt())            // 어두운 회색 패널
-//        val TEXT_PRIMARY = Color(75/255f, 48f/255f, 40f/255f, 1f)  // 기본 텍스트 (짙은 브라운)
-//        val TEXT_SECONDARY = Color(216f/255f, 188f/255f, 180f/255f, 1f)    // 보조 텍스트 (따뜻한 베이지)
+
         val TEXT_PRIMARY: Color = Color.WHITE  // 기본 텍스트
-        val TEXT_SECONDARY: Color = Color.GRAY   // 보조 텍스트
+        val TEXT_SECONDARY: Color = Color.LIGHT_GRAY   // 보조 텍스트
         val TEXT_DISABLED: Color = Color.DARK_GRAY      // 비활성화 텍스트
         val ACCENT = Color(0xD4AF37FF.toInt())              // 액센트 골든
         val SUCCESS = Color(0x8FBC8FFF.toInt())             // 성공 다크시그린

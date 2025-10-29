@@ -5,6 +5,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.example.theorb.data.SaveManager
+import com.example.theorb.modal.SettingsModal
 import com.example.theorb.screens.BaseScreen
 import com.example.theorb.util.ResourceManager
 import com.example.theorb.util.formatNumber

@@ -1,10 +1,11 @@
-package com.example.theorb.ui
+package com.example.theorb.modal
 
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.Touchable
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.example.theorb.screens.BaseScreen
+import com.example.theorb.ui.RetroButton
 import com.example.theorb.util.ResourceManager
 import com.example.theorb.util.formatNumber
 
