@@ -1,6 +1,6 @@
 {
-gold: 1518
-orbs: 139
+gold: 1581
+orbs: 148
 permanentUpgrades: {
 	class: java.util.LinkedHashMap
 	RANGE: 10
@@ -181,7 +181,7 @@ subSkillInventory: {
 		}
 		exp: {
 			class: java.lang.Integer
-			value: 1
+			value: 3
 		}
 	}
 	SHOCK: {
@@ -192,7 +192,7 @@ subSkillInventory: {
 		}
 		exp: {
 			class: java.lang.Integer
-			value: 0
+			value: 1
 		}
 	}
 	FREEZE: {
@@ -241,5 +241,9 @@ subSkillInventory: {
 	}
 }
 selectedOrb: lightning
-silver: 77
+silver: 454
+inGameUpgrades: {
+	class: java.util.LinkedHashMap
+	ENEMY_SPAWN_SPEED: 2
+}
 }

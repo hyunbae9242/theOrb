@@ -53,7 +53,6 @@ enum class SubSkillEffectType(
     FIRE_DAMAGE_INCREASE("화염 피해 증가", EffectCategory.INCREASE, "%"),
     ICE_DAMAGE_INCREASE("냉기 피해 증가", EffectCategory.INCREASE, "%"),
     LIGHTNING_DAMAGE_INCREASE("번개 피해 증가", EffectCategory.INCREASE, "%"),
-    PROJECTILE_SPEED_INCREASE("투사체 속도 증가", EffectCategory.INCREASE, "%"),
     AOE_INCREASE("범위 증가", EffectCategory.INCREASE, "%"),
 
     // === 증폭 ===
@@ -125,6 +124,8 @@ enum class SubSkillType(
     val effects: List<SubSkillEffect>
 ) {
     // === 투사체 메카닉 보조스킬 ===
+    // 1랩 100%, 3랩 180%, 5랩 280%, 7랩 400%, 10랩 540%
+    // 80%, 100%, 120%, 140%
     PROJECTILE_COUNT(
         "다중 투사체",
         listOf(SkillTag.PROJECTILE),
@@ -135,11 +136,13 @@ enum class SubSkillType(
             ),
             SubSkillEffect(
                 SubSkillEffectType.DAMAGE_INCREASE,
-                mapOf(1 to -20, 3 to -18, 5 to -15, 7 to -12, 10 to -10)
+                mapOf(1 to -50, 3 to -40, 5 to -30, 7 to -20, 10 to -10)
             )
         )
     ),
 
+    // 1랩 100%, 3랩 180%, 5랩 280%, 7랩 400%, 10랩 540%
+    // 80%, 100%, 120%, 140%
     PROJECTILE_CHAIN(
         "투사체 연쇄",
         listOf(SkillTag.PROJECTILE),
@@ -150,11 +153,13 @@ enum class SubSkillType(
             ),
             SubSkillEffect(
                 SubSkillEffectType.DAMAGE_INCREASE,
-                mapOf(1 to -30, 3 to -25, 5 to -20, 7 to -15, 10 to -10)
+                mapOf(1 to -50, 3 to -40, 5 to -30, 7 to -20, 10 to -10)
             )
         )
     ),
 
+    //1랩 90% , 4랩 160%, 7랩 275%, 10랩 480
+    // 70%, 115%, 205%
     PROJECTILE_FORK(
         "투사체 갈래",
         listOf(SkillTag.PROJECTILE),
@@ -165,7 +170,7 @@ enum class SubSkillType(
             ),
             SubSkillEffect(
                 SubSkillEffectType.DAMAGE_INCREASE,
-                mapOf(1 to -25, 4 to -20, 7 to -15, 10 to -10)
+                mapOf(1 to -70, 4 to -60, 7 to -45, 10 to -20)
             )
         )
     ),
@@ -177,7 +182,17 @@ enum class SubSkillType(
         listOf(
             SubSkillEffect(
                 SubSkillEffectType.FIRE_DAMAGE_INCREASE,
-                mapOf(1 to 15, 3 to 25, 5 to 35, 7 to 50, 10 to 70)
+                mapOf(
+                    1 to 15,
+                    2 to 20,
+                    3 to 25,
+                    4 to 30,
+                    5 to 40,
+                    6 to 50,
+                    7 to 60,
+                    8 to 70,
+                    9 to 80,
+                    10 to 100)
             ),
             SubSkillEffect(
                 SubSkillEffectType.COOLDOWN,
@@ -192,7 +207,7 @@ enum class SubSkillType(
         listOf(
             SubSkillEffect(
                 SubSkillEffectType.IGNITE_CHANCE,
-                mapOf(1 to 10, 3 to 15, 5 to 20, 7 to 30, 10 to 40)
+                mapOf(1 to 20, 3 to 30, 5 to 45, 7 to 60, 10 to 80)
             ),
             SubSkillEffect(
                 SubSkillEffectType.IGNITE_DAMAGE,
@@ -212,7 +227,17 @@ enum class SubSkillType(
         listOf(
             SubSkillEffect(
                 SubSkillEffectType.ICE_DAMAGE_INCREASE,
-                mapOf(1 to 15, 3 to 25, 5 to 35, 7 to 50, 10 to 70)
+                mapOf(
+                    1 to 15,
+                    2 to 20,
+                    3 to 25,
+                    4 to 30,
+                    5 to 40,
+                    6 to 50,
+                    7 to 60,
+                    8 to 70,
+                    9 to 80,
+                    10 to 100)
             ),
             SubSkillEffect(
                 SubSkillEffectType.COOLDOWN,
@@ -227,7 +252,7 @@ enum class SubSkillType(
         listOf(
             SubSkillEffect(
                 SubSkillEffectType.FREEZE_CHANCE,
-                mapOf(1 to 10, 3 to 15, 5 to 20, 7 to 30, 10 to 40)
+                mapOf(1 to 20, 3 to 30, 5 to 45, 7 to 60, 10 to 80)
             ),
             SubSkillEffect(
                 SubSkillEffectType.FREEZE_DURATION,
@@ -247,7 +272,17 @@ enum class SubSkillType(
         listOf(
             SubSkillEffect(
                 SubSkillEffectType.LIGHTNING_DAMAGE_INCREASE,
-                mapOf(1 to 15, 3 to 25, 5 to 35, 7 to 50, 10 to 70)
+                mapOf(
+                    1 to 15,
+                    2 to 20,
+                    3 to 25,
+                    4 to 30,
+                    5 to 40,
+                    6 to 50,
+                    7 to 60,
+                    8 to 70,
+                    9 to 80,
+                    10 to 100)
             ),
             SubSkillEffect(
                 SubSkillEffectType.COOLDOWN,
@@ -262,7 +297,7 @@ enum class SubSkillType(
         listOf(
             SubSkillEffect(
                 SubSkillEffectType.SHOCK_CHANCE,
-                mapOf(1 to 10, 3 to 15, 5 to 20, 7 to 30, 10 to 40)
+                mapOf(1 to 20, 3 to 30, 5 to 45, 7 to 60, 10 to 80)
             ),
             SubSkillEffect(
                 SubSkillEffectType.SHOCK_EFFECT,
@@ -278,7 +313,7 @@ enum class SubSkillType(
         listOf(
             SubSkillEffect(
                 SubSkillEffectType.COOLDOWN,
-                mapOf(1 to -15, 3 to -20, 5 to -25, 7 to -30, 10 to -35)
+                mapOf(1 to -10, 3 to -15, 5 to -20, 7 to -25, 10 to -30)
             ),
             SubSkillEffect(
                 SubSkillEffectType.DAMAGE_INCREASE,
@@ -319,23 +354,7 @@ enum class SubSkillType(
                 mapOf(1 to -10, 3 to -8, 5 to -5, 7 to -3, 10 to 0)
             )
         )
-    ),
-
-    SWIFT_PROJECTILE(
-        "신속한 투사체",
-        listOf(SkillTag.PROJECTILE),
-        listOf(
-            SubSkillEffect(
-                SubSkillEffectType.PROJECTILE_SPEED_INCREASE,
-                mapOf(1 to 30, 3 to 40, 5 to 50, 7 to 65, 10 to 80)
-            ),
-            SubSkillEffect(
-                SubSkillEffectType.DAMAGE_INCREASE,
-                mapOf(1 to -10, 3 to -8, 5 to -5, 7 to -3, 10 to 0)
-            )
-        )
     );
-
     /**
      * 레벨에 따른 모든 효과 설명 생성
      */

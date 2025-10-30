@@ -92,14 +92,6 @@ abstract class Skill(
         return baseCooldown * (1f + cooldownPercent / 100f)
     }
 
-    /**
-     * 보조스킬 효과가 적용된 투사체 속도 배율
-     */
-    fun getProjectileSpeedMultiplier(): Float {
-        val speedPercent = getEffectValue(SubSkillEffectType.PROJECTILE_SPEED_INCREASE)
-        return 1f + speedPercent / 100f
-    }
-
     // 스킬별 등급 배율 정의 (서브클래스에서 오버라이드)
     open fun getRankMultipliers(): Map<SkillRank, Float> = mapOf(
         SkillRank.C to 1.0f,
