@@ -3,7 +3,7 @@ package com.example.theorb.entities
 import com.example.theorb.data.SaveData
 import com.example.theorb.effects.Effect
 import com.example.theorb.skills.Skill
-import com.example.theorb.upgrades.InGameUpgradeManager
+import com.example.theorb.calculation.CooldownCalculator
 import com.example.theorb.upgrades.UpgradeManager
 
 class Player(
@@ -16,9 +16,16 @@ class Player(
     val saveData: SaveData
 ) {
 
-    fun update(delta: Float, enemies: MutableList<Enemy>, projectiles: MutableList<Projectile>, effects: MutableList<Effect>, onDamage: ((Int, Float, Float, com.example.theorb.balance.Element, String) -> Unit)? = null) {
-        // 업그레이드 적용된 쿨다운으로 스킬 업데이트 (영구 + 인게임 업그레이드)
-        val cooldownMultiplier = InGameUpgradeManager.getCooldownMultiplier(saveData)
+    fun update(
+        delta: Float,
+        enemies: MutableList<Enemy>,
+        projectiles: MutableList<Projectile>,
+        effects: MutableList<Effect>,
+        onDamage: ((Int, Float, Float, String) -> Unit)? = null,
+        onSkillCast: (() -> Unit)? = null
+    ) {
+        // 업그레이드 적용된 쿨다운으로 스킬 업데이트 (레벨업 + 영구 업그레이드)
+        val cooldownMultiplier = CooldownCalculator.getCooldownMultiplier(saveData)
         skills.forEach { it.updateCooldown(delta / cooldownMultiplier) }
 
         // 업그레이드 적용된 사정거리 사용
@@ -26,7 +33,11 @@ class Player(
 
         // 사용 가능한 스킬 찾기
         for (skill in skills) {
-            if (ActionFactory.playerCastSkill(skill, enemies, x, y, effectiveRange, projectiles, this, effects, onDamage)) break
+            if (ActionFactory.playerCastSkill(skill, enemies, x, y, effectiveRange, projectiles, this, effects, onDamage)) {
+                // 스킬 시전 성공 시 콜백 호출
+                onSkillCast?.invoke()
+                break
+            }
         }
     }
 }

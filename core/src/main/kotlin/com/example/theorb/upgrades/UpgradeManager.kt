@@ -60,6 +60,21 @@ object UpgradeManager {
         return upgradeMultiplier * orbMultiplier // 업그레이드 * 오브 효과
     }
 
+    /**
+     * 리롤 횟수를 SaveData에 적용
+     */
+    fun getMaxRerollCount(saveData: SaveData): Int {
+        val level = getUpgradeLevel(saveData, UpgradeType.REROLL_COUNT)
+        return level.coerceAtMost(5) // 최대 5회
+    }
+
+    /**
+     * SaveData의 maxRerollCount를 업그레이드 레벨에 맞게 동기화
+     */
+    fun applyRerollUpgrade(saveData: SaveData) {
+        saveData.maxRerollCount = getMaxRerollCount(saveData)
+    }
+
     // 업그레이드 초기화 - 사용한 골드를 모두 환불
     fun resetAllUpgrades(saveData: SaveData): Int {
         var totalRefund = 0
@@ -78,6 +93,10 @@ object UpgradeManager {
 
         // 골드 환불
         saveData.gold += totalRefund
+
+        // 리롤 횟수도 초기화
+        saveData.maxRerollCount = 0
+        saveData.currentRerollCount = 0
 
         return totalRefund
     }

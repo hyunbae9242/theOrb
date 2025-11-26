@@ -6,17 +6,20 @@ import com.badlogic.gdx.scenes.scene2d.Touchable
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.example.theorb.screens.BaseScreen
 import com.example.theorb.ui.RetroButton
+import com.example.theorb.ui.RetroButtonV01
 import com.example.theorb.util.ResourceManager
 import com.example.theorb.util.formatNumber
+import javax.naming.spi.ResolveResult
 
-class VictoryModal(private val stage: Stage, private val skin: Skin) {
+class GameResultModal(private val stage: Stage, private val skin: Skin) {
 
     private var backgroundOverlay: Image? = null
     private var dialogContainer: Table? = null
 
     fun show(
+        title: String, // "Victory!" 또는 "Game Over!"
         goldEarned: Int,
-        gemsEarned: Int,
+        orbsEarned: Int,
         skillStats: Map<String, Long>,
         onHome: () -> Unit,
         onRestart: () -> Unit
@@ -32,35 +35,31 @@ class VictoryModal(private val stage: Stage, private val skin: Skin) {
             touchable = Touchable.enabled
         }
 
-        createDialogContainer(goldEarned, gemsEarned, skillStats, onHome, onRestart)
+        createDialogContainer(title, goldEarned, orbsEarned, skillStats, onHome, onRestart)
 
         stage.addActor(backgroundOverlay)
         stage.addActor(dialogContainer)
 
-        // 중앙에 위치 (340x366 크기 기준)
-        dialogContainer!!.setPosition(
-            (stageWidth - 340f) / 2f,
-            (stageHeight - 366f) / 2f
-        )
+        // 중앙에 위치
+        centerDialog(stageWidth, stageHeight)
     }
 
     private fun createDialogContainer(
+        title: String,
         goldEarned: Int,
-        gemsEarned: Int,
+        orbsEarned: Int,
         skillStats: Map<String, Long>,
         onHome: () -> Unit,
         onRestart: () -> Unit
     ) {
         dialogContainer = Table().apply {
-            background = ResourceManager.getSquarePanel360()
+            background = ResourceManager.getCommonModalPanel()
             pad(20f)
-            // Victory Panel 크기에 맞게 고정 크기 설정 (340x366)
-            setSize(340f, 366f)
         }
 
-        // 승리 제목
-        val titleLabel = Label("Victory!", skin.get("label-large", Label.LabelStyle::class.java)).apply {
-            color = BaseScreen.ACCENT
+        // 제목 (Victory! 또는 Game Over!)
+        val titleLabel = Label(title, skin.get("label-large-bold", Label.LabelStyle::class.java)).apply {
+            color = BaseScreen.DANGER
         }
 
         // 골드/오브 획득 정보
@@ -68,11 +67,11 @@ class VictoryModal(private val stage: Stage, private val skin: Skin) {
             val goldLabel = Label("골드: +${formatNumber(goldEarned)}", BaseScreen.skin.get("label-small", Label.LabelStyle::class.java)).apply {
                 color = Color(1f, 0.84f, 0f, 1f) // 골드 색상
             }
-            val gemsLabel = Label("오브: +$gemsEarned", BaseScreen.skin.get("label-small", Label.LabelStyle::class.java)).apply {
+            val gemsLabel = Label("오브: +$orbsEarned", BaseScreen.skin.get("label-small", Label.LabelStyle::class.java)).apply {
                 color = Color(0.5f, 1f, 1f, 1f) // 시안 색상
             }
 
-            add(goldLabel).padRight(15f)
+            add(goldLabel).padRight(16f)
             add(gemsLabel)
         }
 
@@ -81,7 +80,7 @@ class VictoryModal(private val stage: Stage, private val skin: Skin) {
         val statsTitle = Label("스킬 데미지 통계:", BaseScreen.skin.get("label-small", Label.LabelStyle::class.java)).apply {
             color = BaseScreen.TEXT_PRIMARY
         }
-        statsTable.add(statsTitle).colspan(2).padBottom(10f).row()
+        statsTable.add(statsTitle).colspan(2).padBottom(8f).row()
 
         skillStats.forEach { (skillName, damage) ->
             val skillLabel = Label(skillName, skin.get("label-small", Label.LabelStyle::class.java)).apply {
@@ -91,46 +90,46 @@ class VictoryModal(private val stage: Stage, private val skin: Skin) {
                 color = BaseScreen.TEXT_PRIMARY
             }
 
-            statsTable.add(skillLabel).left().padRight(15f)
+            statsTable.add(skillLabel).left().padRight(16f)
             statsTable.add(damageLabel).right().row()
         }
 
         // 버튼들
         val buttonTable = Table()
 
-        val homeButton = RetroButton.createTextButton(
-            text = "홈으로",
-            skin = skin,
-            labelStyle = "label-default-bold",
-            textColor = BaseScreen.TEXT_PRIMARY,
-            defaultImage = ResourceManager.getRetroRectangleNagDefault(),
-            eventImage = ResourceManager.getRetroRectangleNagEvent(),
-            buttonSize = 40f
+        val homeButton = RetroButtonV01.createIconButton(
+            defaultImage = ResourceManager.getQuitBasePos(),
+            eventImage = ResourceManager.getQuitEventPos()
         ) {
             onHome()
         }
 
-        val restartButton = RetroButton.createTextButton(
-            text = "다시하기",
-            skin = skin,
-            labelStyle = "label-default-bold",
-            textColor = BaseScreen.TEXT_PRIMARY,
-            defaultImage = ResourceManager.getRetroRectanglePosDefault(),
-            eventImage = ResourceManager.getRetroRectanglePosEvent(),
-            buttonSize = 40f
+        val restartButton = RetroButtonV01.createIconButton(
+            defaultImage = ResourceManager.getAgainBasePos(),
+            eventImage = ResourceManager.getAgainEventPos()
         ) {
             onRestart()
         }
 
-        buttonTable.add(homeButton).size(100f, 40f).padRight(15f)
-        buttonTable.add(restartButton).size(100f, 40f)
+        buttonTable.add(homeButton).padRight(16f)
+        buttonTable.add(restartButton)
 
         // 레이아웃 구성
         dialogContainer!!.apply {
-            add(titleLabel).center().padBottom(15f).row()
-            add(rewardsTable).center().padBottom(15f).row()
-            add(statsTable).center().padBottom(20f).row()
+            add(titleLabel).center().padBottom(16f).row()
+            add(rewardsTable).center().padBottom(16f).row()
+            add(statsTable).center().expandY().fillY().padBottom(16f).row()
             add(buttonTable).center()
+        }
+    }
+
+    private fun centerDialog(stageWidth: Float, stageHeight: Float) {
+        dialogContainer?.let { dialog ->
+            dialog.pack()
+            dialog.setPosition(
+                (stageWidth - dialog.width) / 2,
+                (stageHeight - dialog.height) / 2
+            )
         }
     }
 

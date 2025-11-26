@@ -1,6 +1,5 @@
 package com.example.theorb.util
 
-import com.example.theorb.balance.Element
 import com.example.theorb.data.DamageCalculationType
 import com.example.theorb.data.OrbAbilityType
 import com.example.theorb.data.OrbRegistry
@@ -11,7 +10,7 @@ object OrbManager {
     /**
      * 오브 능력에 따른 데미지 배율 계산
      */
-    fun getDamageMultiplier(saveData: SaveData, element: Element? = null): Float {
+    fun getDamageMultiplier(saveData: SaveData, element: Any? = null): Float {
         // 이 함수는 기존 시스템과의 호환성을 위해 유지하지만
         // 새로운 시스템에서는 DamageCalculator를 사용하는 것을 권장
         val damageModifiers = DamageCalculator.getOrbDamageModifiers(saveData)

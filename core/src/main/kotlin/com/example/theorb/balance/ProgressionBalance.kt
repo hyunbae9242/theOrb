@@ -7,10 +7,10 @@ import kotlin.math.pow
  */
 object ProgressionBalance {
 
-    // === 시간 기반 스케일링 설정 ===
+    // === 시간 기반 스케일링 설정 === (핵앤슬래시 스타일로 완화)
     const val SCALING_INTERVAL_SECONDS = 30f  // 30초마다 스케일링
-    const val BASE_SCALING_RATE = 1.25f       // 25% 증가 (기본)
-    const val SCALING_CURVE_FACTOR = 0.02f    // 시간이 지날수록 스케일링 완화
+    const val BASE_SCALING_RATE = 1.10f       // 10% 증가 (기본, 25% → 10%)
+    const val SCALING_CURVE_FACTOR = 0.01f    // 시간이 지날수록 스케일링 완화 (0.02 → 0.01)
 
     /**
      * 게임 진행 시간(초)에 따른 적 체력 배수 계산
@@ -33,12 +33,12 @@ object ProgressionBalance {
         if (flooredIntervals <= 0) return 1.0f
 
         // 시간이 지날수록 스케일링이 완만해지는 공식
-        // 초기: 25% → 후기: 15% 정도로 수렴
+        // 초기: 10% → 후기: 5% 정도로 수렴
         var multiplier = 1.0f
 
         for (i in 1..flooredIntervals) {
             val currentRate = BASE_SCALING_RATE - (i * SCALING_CURVE_FACTOR)
-            val finalRate = kotlin.math.max(currentRate, 1.15f) // 최소 15% 증가 보장
+            val finalRate = kotlin.math.max(currentRate, 1.05f) // 최소 5% 증가 보장
             multiplier *= finalRate
         }
 

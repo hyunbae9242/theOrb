@@ -30,8 +30,8 @@ enum class UpgradeType(
     // 유틸 업그레이드
     RANGE("사정거리", "공격 사정거리 증가", 15, 1.5f, 0.05f, 14, UpgradeCategory.UTILITY), // 5%씩 증가, 최대 70% (14레벨)
     COOLDOWN_REDUCTION("쿨다운 감소", "스킬 쿨다운 시간 감소", 20, 1.7f, 0.03f, 25, UpgradeCategory.UTILITY), // 3%씩 감소, 최대 75%
-    MOVEMENT_SPEED("이동속도", "플레이어 이동속도 증가", 18, 1.3f, 0.02f, 30, UpgradeCategory.UTILITY),
-    GOLD_BONUS("골드 보너스", "획득 골드량 증가", 22, 1.4f, 0.05f, 20, UpgradeCategory.UTILITY);
+    GOLD_BONUS("골드 보너스", "획득 골드량 증가", 22, 1.4f, 0.05f, 20, UpgradeCategory.UTILITY),
+    REROLL_COUNT("리롤 기회", "레벨업 선택지 리롤 횟수 증가 (최대 5회)", 100, 2.0f, 1f, 5, UpgradeCategory.UTILITY); // 매우 비싸게, 최대 5레벨
 
     fun getCostForLevel(level: Int): Int {
         if (level >= maxLevel) return Int.MAX_VALUE

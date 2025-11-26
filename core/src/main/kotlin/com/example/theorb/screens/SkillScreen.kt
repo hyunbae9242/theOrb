@@ -20,7 +20,6 @@ import com.example.theorb.ui.BottomNavigation
 import com.example.theorb.modal.ModalDialog
 import com.example.theorb.skills.SkillItem
 import com.example.theorb.skills.SkillRegistry
-import com.example.theorb.ui.RetroButton
 import com.example.theorb.ui.RetroButtonV01
 import com.example.theorb.ui.ToastMessage
 import com.example.theorb.ui.TopBar
@@ -335,7 +334,7 @@ class SkillScreen(private val game: Game, private val saveData: SaveData) : Base
     private fun updateTabButtons() {
         // 메인스킬 버튼 업데이트
         val isMainSelected = currentSkillType == SkillType.MAIN
-        RetroButtonV01.updateIconButtonEnabled(
+        RetroButtonV01.updateIconButton(
             mainSkillButton,
             true,
             if (isMainSelected) ResourceManager.getActiveBasePos() else ResourceManager.getActiveBaseNag(),
@@ -343,7 +342,7 @@ class SkillScreen(private val game: Game, private val saveData: SaveData) : Base
         )
         // 보조스킬 버튼 업데이트
         val isSubSelected = currentSkillType == SkillType.SUB
-        RetroButtonV01.updateIconButtonEnabled(
+        RetroButtonV01.updateIconButton(
             subSkillButton,
             true,
             if (isSubSelected) ResourceManager.getSubBasePos() else ResourceManager.getSubBaseNag(),

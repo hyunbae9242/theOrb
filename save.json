@@ -1,55 +1,6 @@
 {
-gold: 1581
-orbs: 148
-permanentUpgrades: {
-	class: java.util.LinkedHashMap
-	RANGE: 10
-}
-skillInventory: [
-	{
-		class: java.util.LinkedHashMap
-		skillType: {
-			class: java.lang.String
-			value: Fireball
-		}
-		rank: {
-			class: java.lang.String
-			value: A
-		}
-		exp: {
-			class: java.lang.Integer
-			value: 30
-		}
-	}
-]
-maxSkillSlots: 6
-equippedSubSkills: {
-	class: java.util.LinkedHashMap
-	Fireball: [
-		{
-			class: java.util.LinkedHashMap
-			type: {
-				class: java.lang.String
-				value: FIRE_DAMAGE
-			}
-			level: {
-				class: java.lang.Integer
-				value: 1
-			}
-		}
-		{
-			class: java.util.LinkedHashMap
-			type: {
-				class: java.lang.String
-				value: PROJECTILE_FORK
-			}
-			level: {
-				class: java.lang.Integer
-				value: 1
-			}
-		}
-	]
-}
+gold: 2480
+orbs: 30
 subSkillInventory: {
 	class: java.util.LinkedHashMap
 	PROJECTILE_COUNT: {
@@ -60,29 +11,7 @@ subSkillInventory: {
 		}
 		exp: {
 			class: java.lang.Integer
-			value: 11
-		}
-	}
-	COOLDOWN_REDUCTION: {
-		class: java.util.LinkedHashMap
-		level: {
-			class: java.lang.Integer
-			value: 1
-		}
-		exp: {
-			class: java.lang.Integer
 			value: 2
-		}
-	}
-	FREEZE_CHANCE: {
-		class: java.util.LinkedHashMap
-		level: {
-			class: java.lang.Integer
-			value: 1
-		}
-		exp: {
-			class: java.lang.Integer
-			value: 9
 		}
 	}
 	FIRE_DAMAGE: {
@@ -93,84 +22,7 @@ subSkillInventory: {
 		}
 		exp: {
 			class: java.lang.Integer
-			value: 3
-		}
-	}
-	DAMAGE_INCREASE: {
-		class: java.util.LinkedHashMap
-		level: {
-			class: java.lang.Integer
-			value: 1
-		}
-		exp: {
-			class: java.lang.Integer
-			value: 3
-		}
-	}
-	SHOCK_CHANCE: {
-		class: java.util.LinkedHashMap
-		level: {
-			class: java.lang.Integer
-			value: 1
-		}
-		exp: {
-			class: java.lang.Integer
-			value: 3
-		}
-	}
-	PROJECTILE_FORK: {
-		class: java.util.LinkedHashMap
-		level: {
-			class: java.lang.Integer
-			value: 1
-		}
-		exp: {
-			class: java.lang.Integer
-			value: 4
-		}
-	}
-	PROJECTILE_CHAIN: {
-		class: java.util.LinkedHashMap
-		level: {
-			class: java.lang.Integer
-			value: 1
-		}
-		exp: {
-			class: java.lang.Integer
-			value: 4
-		}
-	}
-	ICE_DAMAGE: {
-		class: java.util.LinkedHashMap
-		level: {
-			class: java.lang.Integer
-			value: 1
-		}
-		exp: {
-			class: java.lang.Integer
-			value: 1
-		}
-	}
-	IGNITE_CHANCE: {
-		class: java.util.LinkedHashMap
-		level: {
-			class: java.lang.Integer
-			value: 1
-		}
-		exp: {
-			class: java.lang.Integer
-			value: 1
-		}
-	}
-	LIGHTNING_DAMAGE: {
-		class: java.util.LinkedHashMap
-		level: {
-			class: java.lang.Integer
-			value: 1
-		}
-		exp: {
-			class: java.lang.Integer
-			value: 4
+			value: 0
 		}
 	}
 	CRITICAL_SUPPORT: {
@@ -181,43 +33,10 @@ subSkillInventory: {
 		}
 		exp: {
 			class: java.lang.Integer
-			value: 3
-		}
-	}
-	SHOCK: {
-		class: java.util.LinkedHashMap
-		level: {
-			class: java.lang.Integer
-			value: 1
-		}
-		exp: {
-			class: java.lang.Integer
-			value: 1
-		}
-	}
-	FREEZE: {
-		class: java.util.LinkedHashMap
-		level: {
-			class: java.lang.Integer
-			value: 1
-		}
-		exp: {
-			class: java.lang.Integer
 			value: 0
 		}
 	}
-	RAPID_CASTING: {
-		class: java.util.LinkedHashMap
-		level: {
-			class: java.lang.Integer
-			value: 1
-		}
-		exp: {
-			class: java.lang.Integer
-			value: 0
-		}
-	}
-	IGNITE: {
+	PROJECTILE_FORK: {
 		class: java.util.LinkedHashMap
 		level: {
 			class: java.lang.Integer
@@ -239,11 +58,41 @@ subSkillInventory: {
 			value: 0
 		}
 	}
+	ICE_DAMAGE: {
+		class: java.util.LinkedHashMap
+		level: {
+			class: java.lang.Integer
+			value: 1
+		}
+		exp: {
+			class: java.lang.Integer
+			value: 1
+		}
+	}
+	LIGHTNING_DAMAGE: {
+		class: java.util.LinkedHashMap
+		level: {
+			class: java.lang.Integer
+			value: 1
+		}
+		exp: {
+			class: java.lang.Integer
+			value: 0
+		}
+	}
+	PROJECTILE_CHAIN: {
+		class: java.util.LinkedHashMap
+		level: {
+			class: java.lang.Integer
+			value: 1
+		}
+		exp: {
+			class: java.lang.Integer
+			value: 0
+		}
+	}
 }
-selectedOrb: lightning
-silver: 454
-inGameUpgrades: {
-	class: java.util.LinkedHashMap
-	ENEMY_SPAWN_SPEED: 2
-}
+selectedOrb: angel
+currentSpeedMultiplier: 2
+currentEnergyShield: 50
 }

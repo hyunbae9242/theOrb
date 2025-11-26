@@ -128,14 +128,14 @@ object RetroButtonV01 {
     }
 
     /**
-     * 아이콘 버튼의 활성화 상태를 업데이트합니다.
+     * 아이콘 버튼의 상태를 업데이트합니다.
      * @param button 업데이트할 ImageButton
      * @param isEnabled 활성화 여부
      * @param defaultImage 기본 상태 이미지
      * @param eventImage 이벤트 상태 이미지
      * @param disabledImage 비활성화 상태 이미지
      */
-    fun updateIconButtonEnabled(
+    fun updateIconButton(
         button: ImageButton,
         isEnabled: Boolean,
         defaultImage: TextureRegionDrawable,

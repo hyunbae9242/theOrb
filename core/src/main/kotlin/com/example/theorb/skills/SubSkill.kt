@@ -11,7 +11,6 @@ enum class SkillTag(val displayName: String) {
     DEMON("악마"),
     PROJECTILE("투사체"),
     AOE("범위"),
-    DOT("지속 피해"),
     INSTANT("즉시 피해")
 }
 
@@ -22,8 +21,6 @@ enum class EffectCategory {
     ADDITION,           // 추가 (기본 데미지에 더해짐)
     INCREASE,           // 증가 (백분율, 합산 후 곱연산)
     AMPLIFY,            // 증폭 (백분율, 곱연산)
-    AILMENT_CHANCE,     // 상태이상 확률
-    AILMENT_EFFECT,     // 상태이상 효과
     MECHANIC            // 게임 메카닉 (투사체 개수, 연쇄, 갈래 등)
 }
 
@@ -44,31 +41,15 @@ enum class SubSkillEffectType(
 
     // === 추가 ===
     DAMAGE_ADDITION("기본 피해 추가", EffectCategory.ADDITION, ""),
-    FIRE_DAMAGE_ADDITION("화염 피해 추가", EffectCategory.ADDITION, ""),
-    ICE_DAMAGE_ADDITION("냉기 피해 추가", EffectCategory.ADDITION, ""),
-    LIGHTNING_DAMAGE_ADDITION("번개 피해 추가", EffectCategory.ADDITION, ""),
 
     // === 증가 ===
     DAMAGE_INCREASE("피해 증가", EffectCategory.INCREASE, "%"),
-    FIRE_DAMAGE_INCREASE("화염 피해 증가", EffectCategory.INCREASE, "%"),
-    ICE_DAMAGE_INCREASE("냉기 피해 증가", EffectCategory.INCREASE, "%"),
-    LIGHTNING_DAMAGE_INCREASE("번개 피해 증가", EffectCategory.INCREASE, "%"),
     AOE_INCREASE("범위 증가", EffectCategory.INCREASE, "%"),
 
     // === 증폭 ===
     DAMAGE_AMPLIFY("피해 증폭", EffectCategory.AMPLIFY, "%"),
     CRITICAL_DAMAGE_AMPLIFY("치명타 피해 증폭", EffectCategory.AMPLIFY, "%"),
-
-    // === 상태이상 확률 ===
-    IGNITE_CHANCE("점화 확률", EffectCategory.AILMENT_CHANCE, "%"),
-    FREEZE_CHANCE("빙결 확률", EffectCategory.AILMENT_CHANCE, "%"),
-    SHOCK_CHANCE("감전 확률", EffectCategory.AILMENT_CHANCE, "%"),
-    CRITICAL_CHANCE("치명타 확률", EffectCategory.AILMENT_CHANCE, "%"),
-
-    // === 상태이상 효과 ===
-    IGNITE_DAMAGE("점화 피해", EffectCategory.AILMENT_EFFECT, "%"),
-    FREEZE_DURATION("빙결 지속시간", EffectCategory.AILMENT_EFFECT, "%"),
-    SHOCK_EFFECT("감전 효과", EffectCategory.AILMENT_EFFECT, "%");
+    CRITICAL_CHANCE("치명타 확률", EffectCategory.INCREASE, "%");
 
     /**
      * 값을 포맷팅 (부호 + 값 + 단위)
@@ -175,133 +156,18 @@ enum class SubSkillType(
         )
     ),
 
-    // === 화염 보조스킬 ===
-    FIRE_DAMAGE(
-        "화염 피해",
-        listOf(SkillTag.FIRE),
+    // === AOE 보조스킬 ===
+    AOE_EXPANSION(
+        "범위 확장",
+        listOf(SkillTag.AOE),
         listOf(
             SubSkillEffect(
-                SubSkillEffectType.FIRE_DAMAGE_INCREASE,
-                mapOf(
-                    1 to 15,
-                    2 to 20,
-                    3 to 25,
-                    4 to 30,
-                    5 to 40,
-                    6 to 50,
-                    7 to 60,
-                    8 to 70,
-                    9 to 80,
-                    10 to 100)
-            ),
-            SubSkillEffect(
-                SubSkillEffectType.COOLDOWN,
-                mapOf(1 to 10, 3 to 8, 5 to 6, 7 to 4, 10 to 0)
-            )
-        )
-    ),
-
-    IGNITE(
-        "점화",
-        listOf(SkillTag.FIRE),
-        listOf(
-            SubSkillEffect(
-                SubSkillEffectType.IGNITE_CHANCE,
+                SubSkillEffectType.AOE_INCREASE,
                 mapOf(1 to 20, 3 to 30, 5 to 45, 7 to 60, 10 to 80)
-            ),
-            SubSkillEffect(
-                SubSkillEffectType.IGNITE_DAMAGE,
-                mapOf(1 to 50, 3 to 70, 5 to 100, 7 to 130, 10 to 150)
             ),
             SubSkillEffect(
                 SubSkillEffectType.DAMAGE_INCREASE,
-                mapOf(1 to -15, 3 to -12, 5 to -10, 7 to -5, 10 to 0)
-            )
-        )
-    ),
-
-    // === 냉기 보조스킬 ===
-    ICE_DAMAGE(
-        "냉기 피해",
-        listOf(SkillTag.ICE),
-        listOf(
-            SubSkillEffect(
-                SubSkillEffectType.ICE_DAMAGE_INCREASE,
-                mapOf(
-                    1 to 15,
-                    2 to 20,
-                    3 to 25,
-                    4 to 30,
-                    5 to 40,
-                    6 to 50,
-                    7 to 60,
-                    8 to 70,
-                    9 to 80,
-                    10 to 100)
-            ),
-            SubSkillEffect(
-                SubSkillEffectType.COOLDOWN,
-                mapOf(1 to 10, 3 to 8, 5 to 6, 7 to 4, 10 to 0)
-            )
-        )
-    ),
-
-    FREEZE(
-        "빙결",
-        listOf(SkillTag.ICE),
-        listOf(
-            SubSkillEffect(
-                SubSkillEffectType.FREEZE_CHANCE,
-                mapOf(1 to 20, 3 to 30, 5 to 45, 7 to 60, 10 to 80)
-            ),
-            SubSkillEffect(
-                SubSkillEffectType.FREEZE_DURATION,
-                mapOf(1 to 50, 3 to 70, 5 to 100, 7 to 130, 10 to 150)
-            ),
-            SubSkillEffect(
-                SubSkillEffectType.DAMAGE_INCREASE,
-                mapOf(1 to -15, 3 to -12, 5 to -10, 7 to -5, 10 to 0)
-            )
-        )
-    ),
-
-    // === 번개 보조스킬 ===
-    LIGHTNING_DAMAGE(
-        "번개 피해",
-        listOf(SkillTag.LIGHTNING),
-        listOf(
-            SubSkillEffect(
-                SubSkillEffectType.LIGHTNING_DAMAGE_INCREASE,
-                mapOf(
-                    1 to 15,
-                    2 to 20,
-                    3 to 25,
-                    4 to 30,
-                    5 to 40,
-                    6 to 50,
-                    7 to 60,
-                    8 to 70,
-                    9 to 80,
-                    10 to 100)
-            ),
-            SubSkillEffect(
-                SubSkillEffectType.COOLDOWN,
-                mapOf(1 to 10, 3 to 8, 5 to 6, 7 to 4, 10 to 0)
-            )
-        )
-    ),
-
-    SHOCK(
-        "감전",
-        listOf(SkillTag.LIGHTNING),
-        listOf(
-            SubSkillEffect(
-                SubSkillEffectType.SHOCK_CHANCE,
-                mapOf(1 to 20, 3 to 30, 5 to 45, 7 to 60, 10 to 80)
-            ),
-            SubSkillEffect(
-                SubSkillEffectType.SHOCK_EFFECT,
-                mapOf(1 to 20, 3 to 30, 5 to 40, 7 to 50, 10 to 60)
+                mapOf(1 to -10, 3 to -8, 5 to -5, 7 to -3, 10 to 0)
             )
         )
     ),

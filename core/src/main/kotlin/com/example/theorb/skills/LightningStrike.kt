@@ -1,6 +1,5 @@
 package com.example.theorb.skills
 
-import com.example.theorb.balance.Element
 import com.example.theorb.effects.Anchor
 import com.example.theorb.effects.Effect
 import com.example.theorb.effects.EffectManager
@@ -11,8 +10,7 @@ import com.example.theorb.entities.Projectile
 
 class LightningStrike : Skill(
     name = "낙뢰",
-    baseCooldown = 0.5f,
-    baseElement = Element.LIGHTNING,
+    baseCooldown = 0.25f, // 0.5f → 0.25f (50% 감소)
     baseDamageMul = 1.3f,
     hitEffectType = EffectType.LIGHTNING_STRIKE,
     isInstant = true, // 즉발 스킬
@@ -39,7 +37,7 @@ class LightningStrike : Skill(
         effects: MutableList<Effect>,
         chainCnt: Int,
         beforeEnemies: MutableList<Enemy>,
-        onDamage: ((Int, Float, Float, Element, String) -> Unit)?
+        onDamage: ((Int, Float, Float, String) -> Unit)?
     ): Projectile {
         return Projectile(
             x = target.x,

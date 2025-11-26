@@ -1,25 +1,22 @@
 package com.example.theorb.entities
 
 import com.example.theorb.balance.Balance
-import com.example.theorb.balance.Element
 import com.example.theorb.balance.EnemyType
 import com.example.theorb.balance.ProgressionBalance
 import com.example.theorb.util.weightedRandom
-import kotlin.math.min
 import kotlin.random.Random
 
 object EnemyFactory {
 
     fun spawnRandom(width: Float = 480f, gameAreaHeight: Float = 550f, gameAreaStartY: Float = 150f, gameTimeSeconds: Float = 0f, rnd: Random = Random): Enemy {
-        // 시간에 따른 적 타입 가중치 결정
+        // 시간에 따른 적 타입 가중치 결정 (5분 기준으로 재조정)
         val weights = when {
-            gameTimeSeconds < 180f -> mapOf(EnemyType.NORMAL to 100) // 0~3분: 노말만
-            gameTimeSeconds < 300f -> mapOf(EnemyType.NORMAL to 90, EnemyType.TANK to 10) // 3~5분: 노말 90 탱크 10
-            else -> mapOf(EnemyType.NORMAL to 75, EnemyType.SPEED to 15, EnemyType.TANK to 10) // 5분~: 노말 75 스피드 15 탱크 10
+            gameTimeSeconds < 90f -> mapOf(EnemyType.NORMAL to 100) // 0~1.5분: 노말만
+            gameTimeSeconds < 180f -> mapOf(EnemyType.NORMAL to 85, EnemyType.TANK to 15) // 1.5~3분: 노말 85 탱크 15
+            else -> mapOf(EnemyType.NORMAL to 70, EnemyType.SPEED to 20, EnemyType.TANK to 10) // 3~5분: 노말 70 스피드 20 탱크 10
         }
 
         val type = weightedRandom(weights, rnd)
-        val element = weightedRandom(Balance.ELEMENT_WEIGHTS, rnd)
 
         // 스폰 위치(게임 영역의 4변 랜덤)
         val side = rnd.nextInt(4)
@@ -38,30 +35,20 @@ object EnemyFactory {
         val contactDmg = (Balance.BASE_CONTACT_DAMAGE * mul.dmgMul).toInt()
         val rewardGold = (Balance.BASE_REWARD_GOLD * mul.goldMul).toInt()
 
-        // 저항 맵 (기본 10%, 해당 속성 40%, 상한 75%)
-        val resist = Element.values().associateWith { e ->
-            val r = if (e == element) Balance.MATCH_RESIST else Balance.BASE_RESIST
-            min(r, Balance.MAX_RESIST)
-        }
-
         return Enemy(
             type = type,
-            element = element,
             hp = hp,
             contactDamage = contactDmg,
             x = sx,
             y = sy,
             speed = speed,
-            rewardGold,
-            resist = resist
+            rewardGold = rewardGold
         ).apply {
             vhp = hp // vhp 초기화
         }
     }
 
     fun spawnBoss(width: Float = 480f, gameAreaHeight: Float = 550f, gameAreaStartY: Float = 150f, gameTimeSeconds: Float = 0f, rnd: Random = Random): Enemy {
-        val element = weightedRandom(Balance.ELEMENT_WEIGHTS, rnd)
-
         // 스폰 위치(게임 영역의 4변 랜덤)
         val side = rnd.nextInt(4)
         val (sx, sy) = when (side) {
@@ -79,22 +66,14 @@ object EnemyFactory {
         val contactDmg = (Balance.BASE_CONTACT_DAMAGE * mul.dmgMul).toInt()
         val rewardGold = (Balance.BASE_REWARD_GOLD * mul.goldMul).toInt()
 
-        // 저항 맵 (기본 10%, 해당 속성 40%, 상한 75%)
-        val resist = Element.values().associateWith { e ->
-            val r = if (e == element) Balance.MATCH_RESIST else Balance.BASE_RESIST
-            min(r, Balance.MAX_RESIST)
-        }
-
         return Enemy(
             type = EnemyType.BOSS,
-            element = element,
             hp = hp,
             contactDamage = contactDmg,
             x = sx,
             y = sy,
             speed = speed,
-            rewardGold,
-            resist = resist
+            rewardGold = rewardGold
         ).apply {
             vhp = hp // vhp 초기화
         }

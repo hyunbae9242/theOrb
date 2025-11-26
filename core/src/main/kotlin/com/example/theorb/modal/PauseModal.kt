@@ -10,29 +10,13 @@ import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.example.theorb.screens.BaseScreen
+import com.example.theorb.ui.RetroButtonV01
 import com.example.theorb.util.ResourceManager
 
 class PauseModal(private val stage: Stage, private val skin: Skin) {
 
     private var backgroundOverlay: Image? = null
     private var dialogContainer: Table? = null
-
-    private fun createRoundedRectWithBorder(width: Int, height: Int, cornerRadius: Int,
-                                          bgColor: Color, borderColor: Color, borderWidth: Int): TextureRegionDrawable {
-        val pixmap = Pixmap(width, height, Pixmap.Format.RGBA8888)
-
-        // 전체를 테두리 색으로 채우기
-        pixmap.setColor(borderColor)
-        pixmap.fill()
-
-        // 내부를 배경색으로 채우기 (테두리를 남기기 위해 안쪽 영역만)
-        pixmap.setColor(bgColor)
-        pixmap.fillRectangle(borderWidth, borderWidth, width - 2 * borderWidth, height - 2 * borderWidth)
-
-        val texture = Texture(pixmap)
-        pixmap.dispose()
-        return TextureRegionDrawable(texture)
-    }
 
     fun show(
         onHome: () -> Unit,
@@ -78,7 +62,7 @@ class PauseModal(private val stage: Stage, private val skin: Skin) {
         onPlay: () -> Unit
     ) {
         dialogContainer = Table().apply {
-            background = ResourceManager.getSquarePanel360()
+            background = ResourceManager.getCommonSmallModalPanel()
             pad(40f)
         }
 
@@ -91,36 +75,26 @@ class PauseModal(private val stage: Stage, private val skin: Skin) {
         val buttonTable = Table()
 
         // 홈 버튼 - Retro 스타일 (이미지 교체 방식)
-        val homeButton = ImageButton(ImageButton.ImageButtonStyle().apply {
-            up = ResourceManager.getRetroHomeDefault()
-            down = ResourceManager.getRetroHomeEvent()
-            over = ResourceManager.getRetroHomeEvent()
-        }).apply {
-            addListener(object : ChangeListener() {
-                override fun changed(event: ChangeEvent?, actor: Actor?) {
-                    onHome()
-                }
-            })
+        val homeButton = RetroButtonV01.createIconButton(
+            defaultImage = ResourceManager.getHomeBasePos(),
+            eventImage = ResourceManager.getHomeEventPos()
+        ) {
+            onHome()
         }
 
         // 플레이 버튼 - Retro 스타일 (이미지 교체 방식)
-        val playButton = ImageButton(ImageButton.ImageButtonStyle().apply {
-            up = ResourceManager.getRetroPlayDefault()
-            down = ResourceManager.getRetroPlayEvent()
-            over = ResourceManager.getRetroPlayEvent()
-        }).apply {
-            addListener(object : ChangeListener() {
-                override fun changed(event: ChangeEvent?, actor: Actor?) {
-                    onPlay()
-                    hide()
-                }
-            })
+        val playButton = RetroButtonV01.createIconButton(
+            defaultImage = ResourceManager.getPlayBasePos(),
+            eventImage = ResourceManager.getPlayEventPos()
+        ) {
+            onPlay()
+            hide()
         }
 
 
         // 버튼들 배치 (가로) - 아이콘 이미지 크기
-        buttonTable.add(homeButton).size(42f, 42f).pad(10f).padRight(10f)
-        buttonTable.add(playButton).size(42f, 42f).pad(10f)
+        buttonTable.add(homeButton).pad(10f)
+        buttonTable.add(playButton).pad(10f)
 
         // 레이아웃 구성
         dialogContainer!!.apply {

@@ -1,6 +1,5 @@
 package com.example.theorb.skills
 
-import com.example.theorb.balance.Element
 import com.example.theorb.effects.Anchor
 import com.example.theorb.effects.Effect
 import com.example.theorb.effects.EffectManager
@@ -11,8 +10,7 @@ import com.example.theorb.entities.Projectile
 
 class IceLance : Skill(
     name = "얼음창",
-    baseCooldown = 0.75f,
-    baseElement = Element.COLD,
+    baseCooldown = 0.4f, // 0.75f → 0.4f (약 47% 감소)
     baseDamageMul = 1.6f,
     hitEffectType = EffectType.ICE_LANCE_HIT,
     flyEffectType = EffectType.ICE_LANCE_FLY,
@@ -40,7 +38,7 @@ class IceLance : Skill(
         effects: MutableList<Effect>,
         chainCnt: Int,
         beforeEnemies: MutableList<Enemy>,
-        onDamage: ((Int, Float, Float, Element, String) -> Unit)?
+        onDamage: ((Int, Float, Float, String) -> Unit)?
     ): Projectile {
         return Projectile(
             x = x,

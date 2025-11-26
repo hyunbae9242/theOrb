@@ -20,13 +20,29 @@ data class SaveData(
     var currentSpeedMultiplier: Float = 1.0f, // 현재 선택된 배속 (1.0, 2.0, 3.0)
     var maxSpeedMultiplier: Float = 2.0f, // 최대 사용 가능한 배속 (과금으로 3.0까지 확장)
 
-    // 인게임 화폐 및 업그레이드 (스테이지마다 초기화)
-    var silver: Int = 0, // 실버 (스테이지 종료 시 0으로 초기화)
-    var inGameUpgrades: MutableMap<String, Int> = mutableMapOf(), // 인게임 업그레이드 레벨
+    // 인게임 레벨 시스템 (스테이지마다 초기화)
+    var inGameLevel: Int = 1, // 인게임 레벨 (스테이지마다 1부터 시작)
+    var inGameExp: Int = 0, // 현재 경험치
+    var selectedLevelUpOptions: MutableList<String> = mutableListOf(), // 선택된 레벨업 옵션 ID 리스트 (예: ["DAMAGE_NORMAL", "COOLDOWN_RARE", ...])
 
-    // 인게임 업그레이드 보너스 값들 (계산 편의를 위해 캐시)
-    var criticalChance: Float = 5f, // 기본 치명타 확률 5%
-    var criticalDamage: Float = 150f // 기본 치명타 데미지 150%
+    // 레벨업 선택지 티어 확률 (영구 업그레이드로 수정 가능)
+    var tierChanceNormal: Float = 80f, // 노멀 티어 확률
+    var tierChanceRare: Float = 15f, // 레어 티어 확률
+    var tierChanceUnique: Float = 5f, // 유니크 티어 확률
+
+    // 레벨업 선택지 리롤 시스템
+    var maxRerollCount: Int = 0, // 최대 리롤 횟수 (영구 업그레이드로 증가, 최대 5)
+    var currentRerollCount: Int = 0, // 현재 남은 리롤 횟수 (게임 시작마다 maxRerollCount로 충전)
+
+    // 인게임 HP 시스템 (스테이지마다 초기화 및 재계산)
+    var maxHp: Int = 100, // 최대 체력 (baseHp + 업그레이드 + 인게임 선택지)
+    var currentHp: Int = 100, // 현재 체력
+
+    // 에너지 실드 시스템
+    var maxEnergyShield: Int = 50, // 최대 에너지 실드
+    var currentEnergyShield: Int = 0, // 현재 에너지 실드
+    var energyShieldRegenRate: Float = 1f, // 초당 회복량
+
 ) {
     init {
         // 처음 게임 시작 시 기본 스킬 제공

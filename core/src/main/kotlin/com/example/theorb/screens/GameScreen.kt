@@ -5,13 +5,10 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
-import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton
 import com.badlogic.gdx.scenes.scene2d.ui.Label
-import com.badlogic.gdx.scenes.scene2d.ui.Stack
 import com.badlogic.gdx.scenes.scene2d.ui.Table
-import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.example.theorb.balance.EnemyType
 import com.example.theorb.data.SaveManager
 import com.example.theorb.effects.Effect
@@ -24,20 +21,22 @@ import com.example.theorb.skills.SkillRegistry
 import com.example.theorb.ui.DamageText
 import com.example.theorb.ui.RewardText
 import com.example.theorb.ui.RewardType
-import com.example.theorb.ui.InGameUpgradePanel
+import com.example.theorb.ui.InGameStatusPanel
 import com.example.theorb.modal.ModalDialog
 import com.example.theorb.modal.PauseModal
 import com.example.theorb.ui.ToastMessage
-import com.example.theorb.modal.VictoryModal
-import com.example.theorb.upgrades.InGameUpgradeManager
+import com.example.theorb.modal.GameResultModal
 import com.example.theorb.upgrades.UpgradeManager
+import com.example.theorb.upgrades.LevelUpManager
 import com.example.theorb.util.ResourceManager
 import com.example.theorb.util.formatNumber
 import com.example.theorb.data.OrbRegistry
+import com.example.theorb.modal.LevelUpSelectionModal
 import com.example.theorb.skills.SkillInventory
 import com.example.theorb.util.OrbManager
 import com.example.theorb.skills.SubSkillInventoryItem
 import com.example.theorb.skills.SubSkillType
+import com.example.theorb.ui.RetroButtonV01
 
 class GameScreen : BaseScreen() {
     private val shape = ShapeRenderer()
@@ -58,34 +57,40 @@ class GameScreen : BaseScreen() {
     // UI 관련
     private val uiStage = Stage(viewport)
     private lateinit var goldLabel: Label
-    private lateinit var gemLabel: Label
-    private lateinit var silverLabel: Label
+    private lateinit var orbsLabel: Label
     private lateinit var timerLabel: Label
     private lateinit var bossHealthBar: Table
     private lateinit var bossHealthBarBackground: Table
     private lateinit var bossHealthBarFill: Table
     private lateinit var bossNameLabel: Label
     private var currentBoss: Enemy? = null
-    private lateinit var speedButton: Stack
+    private lateinit var speedButton: ImageButton
 
     private var spawnTimer = 0f
     private var bossSpawnTimer = 60f // 1분마다 보스 스폰
     private var gameTimer = 0f
-    private val maxGameTime = 600f // 10분 (초)
+    private val maxGameTime = 300f // 5분 (초)
     private var isPaused = false
     private var isGameOver = false
     private var isVictory = false
     private var animationTime = 0f
 
+    // 웨이브 시스템 (20초 사이클: 15초 스폰 + 5초 휴식)
+    private var waveCycleTimer = 0f
+    private val waveCycleDuration = 20f // 웨이브 사이클 총 시간
+    private val waveSpawnDuration = 15f // 스폰 활성 시간
+    private val waveRestDuration = 5f // 휴식 시간
+
     private lateinit var skillInventory: SkillInventory
     private lateinit var pauseModal: PauseModal
     private lateinit var modalDialog: ModalDialog
-    private lateinit var upgradePanel: InGameUpgradePanel
-    private lateinit var victoryModal: VictoryModal
+    private lateinit var statusPanel: InGameStatusPanel
+    private lateinit var levelUpSelectionModal: LevelUpSelectionModal
+    private lateinit var gameResultModal: GameResultModal
 
     // 게임 통계 추적
     private var initialGold = 0
-    private var initialGems = 0
+    private var initialOrbs = 0
     private val skillDamageStats = mutableMapOf<String, Long>()
 
     override fun show() {
@@ -96,7 +101,7 @@ class GameScreen : BaseScreen() {
 
         // 게임 시작 시 초기 통계 저장
         initialGold = gameObject.saveData.gold
-        initialGems = gameObject.saveData.orbs
+        initialOrbs = gameObject.saveData.orbs
         skillDamageStats.clear()
 
 
@@ -110,84 +115,77 @@ class GameScreen : BaseScreen() {
         Gdx.input.inputProcessor = uiStage
         pauseModal = PauseModal(uiStage, skin)
         modalDialog = ModalDialog(uiStage, skin)
-        victoryModal = VictoryModal(uiStage, skin)
-        upgradePanel = InGameUpgradePanel(gameObject.saveData)
+        gameResultModal = GameResultModal(uiStage, skin)
+        statusPanel = InGameStatusPanel(uiStage, skin, gameObject.saveData)
+        levelUpSelectionModal = LevelUpSelectionModal(uiStage, skin, gameObject.saveData)
         setupUi()
         loadSaveData()
     }
 
     private fun setupUi() {
         val mainLayout = Table().apply {
-            setFillParent(true)
+            setSize(virtualWidth, virtualHeight)
+            setPosition(0f, 0f)
         }
         uiStage.addActor(mainLayout)
 
         // 상단 UI 영역
-        val topUIContainer = Table()
+        val topUIContainer = Table().apply {
+            top()
+            pad(SCREEN_PADDING)
+        }
 
         // 게임 화면 영역 (빈 공간)
         val gameArea = Table()
 
-        // 하단 업그레이드 패널 영역
-        val upgradeAreaHeight = viewport.worldHeight * upgradeUIHeightRatio
-        val upgradeContainer = upgradePanel.createUI(upgradeAreaHeight)
+        // 하단 업그레이드 패널 영역 480 x 280
+        val upgradeAreaHeight = 280f
+        val upgradeContainer = statusPanel.createUI(upgradeAreaHeight)
 
-        // 좌측: 골드, 오브, 실버 정보
+        // 좌측: 골드, 오브, 경험치 정보
         goldLabel = Label("골드: ${formatNumber(gameObject.saveData.gold)}", skin.get("label-small", Label.LabelStyle::class.java)).apply {
             color = Color(1f, 0.84f, 0f, 1f) // 골드 색상
         }
-        gemLabel = Label("오브: ${gameObject.saveData.orbs}", skin.get("label-small", Label.LabelStyle::class.java)).apply {
+        orbsLabel = Label("오브: ${gameObject.saveData.orbs}", skin.get("label-small", Label.LabelStyle::class.java)).apply {
             color = Color(0.5f, 1f, 1f, 1f) // 시안 색상 (오브)
-        }
-        // 실버 표시 추가
-        silverLabel = Label("실버: ${formatNumber(gameObject.saveData.silver)}", skin.get("label-small", Label.LabelStyle::class.java)).apply {
-            color = Color(0.8f, 0.8f, 0.9f, 1f) // 은색 계열
         }
 
         val topLeft = Table().apply {
             add(goldLabel).left().row()
-            add(silverLabel).left().row()
-            add(gemLabel).left().row()
+            add(orbsLabel).left().row()
         }
 
-        // 설정 버튼 - Retro 스타일 (이미지 교체 방식)
-        val pauseButton = ImageButton(ImageButton.ImageButtonStyle().apply {
-            up = ResourceManager.getRetroPauseDefault()
-            down = ResourceManager.getRetroPauseEvent()
-            over = ResourceManager.getRetroPauseEvent()
-        }).apply {
-            addListener(object : ChangeListener() {
-                override fun changed(event: ChangeEvent?, actor: Actor?) {
-                    pauseGame()
-                    showSettingsModal()
-                }
-            })
+        // 설정 버튼
+        val pauseButton = RetroButtonV01.createIconButton(
+            defaultImage = ResourceManager.getPauseBasePos(),
+            eventImage = ResourceManager.getPauseEventPos()
+        ) {
+            pauseGame()
+            showSettingsModal()
         }
 
         // 배속 버튼 - Retro 스타일 (RetroButton 유틸리티 사용)
-        speedButton = com.example.theorb.ui.RetroButton.createTextButton(
-            text = getSpeedText(),
-            skin = skin,
-            textColor = BaseScreen.TEXT_PRIMARY
+        speedButton = RetroButtonV01.createIconButton(
+            defaultImage = ResourceManager.getSpeedBasePos(gameObject.saveData.currentSpeedMultiplier),
+            eventImage = ResourceManager.getSpeedEventPos(gameObject.saveData.currentSpeedMultiplier)
         ) {
             toggleGameSpeed()
         }
 
         val topRight = Table().apply {
-            val buttonSize = getSquareButtonSize()
-            add(pauseButton).size(buttonSize).padBottom(8f).row()
-            add(speedButton).size(buttonSize, buttonSize).top()
+            top()
+            add(pauseButton).size(48f).right().padBottom(8f).row()
+            add(speedButton).size(48f).right()
         }
 
-        topUIContainer.add(topLeft).left().top().padLeft(12f)
+        topUIContainer.add(topLeft).left().top()
         topUIContainer.add(Table()).expandX() // 중간 공간 채우기
-        topUIContainer.add(topRight).right().top().padRight(12f)
+        topUIContainer.add(topRight).right().top()
 
-        // 메인 레이아웃 구성 (퍼센트 기반)
-        val screenHeight = viewport.worldHeight
-        mainLayout.add(topUIContainer).expandX().fillX().padTop(12f).height(screenHeight * topUIHeightRatio).row()
-        mainLayout.add(gameArea).expandX().fillX().height(screenHeight * gameAreaHeightRatio).row()
-        mainLayout.add(upgradeContainer).expandX().fillX().padBottom(12f).height(screenHeight * upgradeUIHeightRatio)
+        // 메인 레이아웃 구성
+        mainLayout.add(topUIContainer).expandX().fillX().height(120f).top().row()
+        mainLayout.add(gameArea).expandY().fillY().row()
+        mainLayout.add(upgradeContainer).height(280f).bottom()
 
         // 중앙 상단에 타이머 추가
         timerLabel = Label("10:00", skin.get("label-default", Label.LabelStyle::class.java)).apply {
@@ -341,6 +339,10 @@ class GameScreen : BaseScreen() {
             // 배속 적용
             val speedMultiplier = gameObject.saveData.currentSpeedMultiplier
             val adjustedDelta = delta * speedMultiplier
+
+            // 에너지 실드 자동 회복
+            updateEnergyShieldRegen(adjustedDelta)
+
             // 게임 타이머 업데이트 (배속 적용)
             gameTimer += adjustedDelta
             if (gameTimer >= maxGameTime) {
@@ -349,46 +351,76 @@ class GameScreen : BaseScreen() {
                 // 타이머 종료 후에도 게임은 계속 진행되어야 함 (적 처치를 위해)
             }
 
-            // 적 스폰 (10분 이후에는 스폰하지 않음)
+            // 적 스폰 (5분 이후에는 스폰하지 않음)
             if (gameTimer < maxGameTime) {
-                val spawnSpeedMultiplier = InGameUpgradeManager.getEnemySpawnSpeedMultiplier(gameObject.saveData)
-                spawnTimer -= adjustedDelta * spawnSpeedMultiplier
-
-                if (spawnTimer <= 0f) {
-                // 기본 적 1마리 + 업그레이드 효과로 추가 적들
-                val baseSpawnCount = 1
-                val bonusSpawnCount = InGameUpgradeManager.getEnemySpawnCountBonus(gameObject.saveData)
-                val totalSpawnCount = baseSpawnCount + bonusSpawnCount
-
-                repeat(totalSpawnCount) {
-                    val gameAreaStartY = viewport.worldHeight * upgradeUIHeightRatio
-                    val gameAreaHeight = viewport.worldHeight * gameAreaHeightRatio
-                    enemies.add(EnemyFactory.spawnRandom(viewport.worldWidth, gameAreaHeight, gameAreaStartY, gameTimer))
+                // 웨이브 사이클 타이머 업데이트
+                waveCycleTimer += adjustedDelta
+                if (waveCycleTimer >= waveCycleDuration) {
+                    waveCycleTimer = 0f // 사이클 리셋
                 }
 
-                    spawnTimer = 1.5f // 1.5초마다 적 추가 (초반 난이도 조정)
+                // 스폰 활성 구간인지 확인 (15초 스폰, 5초 휴식)
+                val isSpawnActive = waveCycleTimer < waveSpawnDuration
+
+                if (isSpawnActive) {
+                    spawnTimer -= adjustedDelta
+
+                    if (spawnTimer <= 0f) {
+                        val gameAreaStartY = viewport.worldHeight * upgradeUIHeightRatio
+                        val gameAreaHeight = viewport.worldHeight * gameAreaHeightRatio
+
+                        // 시간대별 스폰 밀도 및 개수 조정 (극초반 감소, 웨이브 스타일)
+                        val (spawnInterval, spawnCount) = when {
+                            gameTimer < 30f -> Pair(0.8f, 1)      // 0~30초: 0.8초마다 1마리 (초당 1.25마리) - 극초반
+                            gameTimer < 90f -> Pair(0.6f, 2)      // 30초~1.5분: 0.6초마다 2마리 (초당 3.3마리)
+                            gameTimer < 180f -> Pair(0.4f, 3)     // 1.5~3분: 0.4초마다 3마리 (초당 7.5마리)
+                            gameTimer < 240f -> Pair(0.3f, 4)     // 3~4분: 0.3초마다 4마리 (초당 13마리)
+                            else -> Pair(0.25f, 5)                // 4~5분: 0.25초마다 5마리 (초당 20마리)
+                        }
+
+                        repeat(spawnCount) {
+                            enemies.add(EnemyFactory.spawnRandom(viewport.worldWidth, gameAreaHeight, gameAreaStartY, gameTimer))
+                        }
+
+                        spawnTimer = spawnInterval
+                    }
                 }
 
                 // 보스 스폰 (1분마다)
                 bossSpawnTimer -= adjustedDelta
                 if (bossSpawnTimer <= 0f) {
-                val gameAreaStartY = viewport.worldHeight * upgradeUIHeightRatio
-                val gameAreaHeight = viewport.worldHeight * gameAreaHeightRatio
-                val boss = EnemyFactory.spawnBoss(viewport.worldWidth, gameAreaHeight, gameAreaStartY, gameTimer)
-                enemies.add(boss)
-                currentBoss = boss
+                    val gameAreaStartY = viewport.worldHeight * upgradeUIHeightRatio
+                    val gameAreaHeight = viewport.worldHeight * gameAreaHeightRatio
+                    val boss = EnemyFactory.spawnBoss(viewport.worldWidth, gameAreaHeight, gameAreaStartY, gameTimer)
+                    enemies.add(boss)
+                    currentBoss = boss
                     bossSpawnTimer = 60f // 1분 후 다시 스폰
                     showBossHealthBar()
                 }
             }
 
-            player.update(adjustedDelta, enemies, projectiles, effects) { damage, x, y, element, skillName ->
-                addDamageText(damage, x, y, element)
-                // 스킬별 데미지 통계 추적 (실제 스킬 이름 사용)
-                trackSkillDamage(skillName, damage.toLong())
-            }
+            player.update(
+                delta = adjustedDelta,
+                enemies = enemies,
+                projectiles = projectiles,
+                effects = effects,
+                onDamage = { damage, x, y, skillName ->
+                    addDamageText(damage, x, y)
+                    // 스킬별 데미지 통계 추적 (실제 스킬 이름 사용)
+                    trackSkillDamage(skillName, damage.toLong())
+                    // 흡혈 적용
+                    applyLifesteal(damage)
+                },
+                onSkillCast = {
+                    // 스킬 시전 시 에너지 실드 회복
+                    onSkillCast()
+                }
+            )
 
             enemies.forEach { it.update(adjustedDelta, player) }
+
+            // 적과 플레이어 충돌 체크 (피격 로직)
+            checkEnemyPlayerCollision()
 
             // 투사체 업데이트 시 ConcurrentModificationException 방지
             // 새로 생성될 투사체를 임시 리스트에 모아두고 순회 후 추가
@@ -424,13 +456,10 @@ class GameScreen : BaseScreen() {
                 )
             )
 
-            // 업그레이드 효과가 적용된 골드/실버 획득
+            // 골드/경험치 획득
             val baseReward = enemy.rewardGold
-            val goldMultiplier = InGameUpgradeManager.getGoldMultiplier(gameObject.saveData)
-            val silverMultiplier = InGameUpgradeManager.getSilverMultiplier(gameObject.saveData)
-
-            val goldReward = (baseReward * goldMultiplier).toInt()
-            val silverReward = (baseReward * silverMultiplier).toInt()
+            val goldReward = baseReward
+            val expReward = baseReward * 5 // 기본 경험치는 골드의 5배
 
             // 골드 드롭 확률 (적 타입별)
             val goldDropChance = when (enemy.type) {
@@ -445,18 +474,24 @@ class GameScreen : BaseScreen() {
                 addRewardText(goldReward, 0f, 0f, RewardType.GOLD)
             }
 
-            // 실버는 항상 획득
-            gameObject.saveData.silver += silverReward
-            addRewardText(silverReward, 0f, 0f, RewardType.SILVER)
+            // 경험치는 항상 획득
+            val leveledUp = LevelUpManager.addExp(gameObject.saveData, expReward)
+            addRewardText(expReward, 0f, 0f, RewardType.EXP)
 
-            // 보스 처치 시 젬 획득 및 보조스킬 드롭
+            // 경험치 바 업데이트
+            statusPanel.refreshUI()
+
+            // 레벨업 발생 시 선택지 모달 표시
+            if (leveledUp) {
+                showLevelUpModal()
+            }
+
+            // 보스 처치 시 오브 획득 및 보조스킬 드롭
             if (enemy.type == EnemyType.BOSS) {
-                val baseGemReward = 1
-                val gemBonus = InGameUpgradeManager.getGemBonus(gameObject.saveData)
-                val totalGemReward = baseGemReward + gemBonus
+                val orbReward = 1
 
-                gameObject.saveData.orbs += totalGemReward
-                addRewardText(totalGemReward, 0f, 0f, RewardType.ORB)
+                gameObject.saveData.orbs += orbReward
+                addRewardText(orbReward, 0f, 0f, RewardType.ORB)
 
                 // 보조스킬 30% 확률 드롭
                 if (Math.random() < 0.3) {
@@ -538,9 +573,8 @@ class GameScreen : BaseScreen() {
 
         // --- UI ---
         goldLabel.setText("골드: ${formatNumber(gameObject.saveData.gold)}")
-        gemLabel.setText("오브: ${gameObject.saveData.orbs}")
-        silverLabel.setText("실버: ${formatNumber(gameObject.saveData.silver)}")
-        upgradePanel.refreshUI()
+        orbsLabel.setText("오브: ${gameObject.saveData.orbs}")
+        statusPanel.refreshUI()
 
         // 보스 체력바 실시간 업데이트
         updateBossHealthBar()
@@ -597,7 +631,7 @@ class GameScreen : BaseScreen() {
 
         // 통계 초기화
         initialGold = gameObject.saveData.gold
-        initialGems = gameObject.saveData.orbs
+        initialOrbs = gameObject.saveData.orbs
         skillDamageStats.clear()
 
         // 재시작 시 인게임 진행도 초기화
@@ -611,11 +645,11 @@ class GameScreen : BaseScreen() {
         pauseModal.hide()
 
         // 배속 버튼 텍스트 업데이트
-        com.example.theorb.ui.RetroButton.updateText(speedButton, getSpeedText())
+        updateSpeedButton()
     }
 
-    fun addDamageText(damage: Int, x: Float, y: Float, element: com.example.theorb.balance.Element) {
-        damageTexts.add(DamageText(damage, x, y, element))
+    fun addDamageText(damage: Int, x: Float, y: Float) {
+        damageTexts.add(DamageText(damage, x, y))
     }
 
     private fun addRewardText(amount: Int, x: Float, y: Float, type: RewardType) {
@@ -637,18 +671,19 @@ class GameScreen : BaseScreen() {
     private fun showVictoryScreen() {
         isPaused = true
         val goldEarned = gameObject.saveData.gold - initialGold
-        val gemsEarned = gameObject.saveData.orbs - initialGems
+        val orbsEarned = gameObject.saveData.orbs - initialOrbs
 
-        victoryModal.show(
+        gameResultModal.show(
+            title = "Victory!",
             goldEarned = goldEarned,
-            gemsEarned = gemsEarned,
+            orbsEarned = orbsEarned,
             skillStats = skillDamageStats,
             onHome = {
-                victoryModal.hide()
+                gameResultModal.hide()
                 gameObject.setScreen(HomeScreen(gameObject))
             },
             onRestart = {
-                victoryModal.hide()
+                gameResultModal.hide()
                 restartGame()
             }
         )
@@ -656,7 +691,7 @@ class GameScreen : BaseScreen() {
 
     private fun showBossHealthBar() {
         currentBoss?.let { boss ->
-            bossNameLabel.setText("${boss.element.name} BOSS")
+            bossNameLabel.setText("BOSS")
             bossHealthBar.isVisible = true
             bossHealthBarFill.isVisible = true
             updateBossHealthBarPosition()
@@ -699,8 +734,13 @@ class GameScreen : BaseScreen() {
         }
     }
 
-    private fun getSpeedText(): String {
-        return "${gameObject.saveData.currentSpeedMultiplier.toInt()}x"
+    private fun updateSpeedButton() {
+        RetroButtonV01.updateIconButton(
+            speedButton,
+            true,
+            defaultImage = ResourceManager.getSpeedBasePos(gameObject.saveData.currentSpeedMultiplier),
+            eventImage = ResourceManager.getSpeedEventPos(gameObject.saveData.currentSpeedMultiplier),
+        )
     }
 
     private fun toggleGameSpeed() {
@@ -717,8 +757,7 @@ class GameScreen : BaseScreen() {
             3.0f -> saveData.currentSpeedMultiplier = 1.0f
             else -> saveData.currentSpeedMultiplier = 1.0f
         }
-
-        com.example.theorb.ui.RetroButton.updateText(speedButton, getSpeedText())
+        updateSpeedButton()
         SaveManager.save(saveData)
     }
 
@@ -728,18 +767,218 @@ class GameScreen : BaseScreen() {
         SaveManager.save(gameObject.saveData)
     }
 
-    // 게임 시작/재시작 시 인게임 화폐 및 업그레이드 초기화
+    // 게임 시작/재시작 시 인게임 진행도 초기화
     fun resetInGameProgress() {
         println("인게임 진행도 초기화 시작")
-        println("  초기화 전 - 실버: ${gameObject.saveData.silver}, 업그레이드 개수: ${gameObject.saveData.inGameUpgrades.size}")
+        println("  초기화 전 - 레벨: ${gameObject.saveData.inGameLevel}, 경험치: ${gameObject.saveData.inGameExp}")
 
-        gameObject.saveData.silver = 0
-        gameObject.saveData.inGameUpgrades.clear()
-        gameObject.saveData.criticalChance = 5f
-        gameObject.saveData.criticalDamage = 150f
+        gameObject.saveData.inGameLevel = 1
+        gameObject.saveData.inGameExp = 0
+        gameObject.saveData.selectedLevelUpOptions.clear()
+
+        // 리롤 횟수 충전
+        LevelUpManager.rechargeRerolls(gameObject.saveData)
+        println("  리롤 횟수 충전: ${gameObject.saveData.currentRerollCount}/${gameObject.saveData.maxRerollCount}")
+
+        // HP 초기화
+        initializePlayerStats()
+
         SaveManager.save(gameObject.saveData)
 
-        println("  초기화 완료 - 실버: ${gameObject.saveData.silver}, 업그레이드 개수: ${gameObject.saveData.inGameUpgrades.size}")
+        println("  초기화 완료 - 레벨: ${gameObject.saveData.inGameLevel}, 경험치: ${gameObject.saveData.inGameExp}")
+        println("  HP 초기화: ${gameObject.saveData.currentHp}/${gameObject.saveData.maxHp}")
+    }
+
+    /**
+     * 플레이어 스탯 초기화 (HP, 에너지 실드)
+     */
+    private fun initializePlayerStats() {
+        // 최대 HP 계산 및 설정
+        gameObject.saveData.maxHp = com.example.theorb.calculation.PlayerStatsCalculator.calculateMaxHp(gameObject.saveData)
+        gameObject.saveData.currentHp = gameObject.saveData.maxHp
+
+        // 에너지 실드 초기화 (최대값으로 시작)
+        gameObject.saveData.currentEnergyShield = gameObject.saveData.maxEnergyShield
+    }
+
+    /**
+     * 에너지 실드 자동 회복
+     */
+    private fun updateEnergyShieldRegen(delta: Float) {
+        val regenAmount = gameObject.saveData.energyShieldRegenRate * delta
+        gameObject.saveData.currentEnergyShield = (gameObject.saveData.currentEnergyShield + regenAmount.toInt())
+            .coerceAtMost(gameObject.saveData.maxEnergyShield)
+    }
+
+    /**
+     * 스킬 시전 시 에너지 실드 획득 (인게임 레벨업 선택지)
+     */
+    fun onSkillCast() {
+        val esdPerCast = com.example.theorb.calculation.PlayerStatsCalculator.getEnergyShieldPerCast(gameObject.saveData)
+        if (esdPerCast > 0) {
+            gameObject.saveData.currentEnergyShield = (gameObject.saveData.currentEnergyShield + esdPerCast)
+                .coerceAtMost(gameObject.saveData.maxEnergyShield)
+        }
+    }
+
+    /**
+     * 플레이어가 데미지를 받을 때 처리 (에너지 실드 → HP 순서)
+     */
+    fun takeDamage(damage: Int) {
+        var remainingDamage = damage
+
+        // 1. 에너지 실드부터 소모
+        if (gameObject.saveData.currentEnergyShield > 0) {
+            val esdDamage = remainingDamage.coerceAtMost(gameObject.saveData.currentEnergyShield)
+            gameObject.saveData.currentEnergyShield -= esdDamage
+            remainingDamage -= esdDamage
+        }
+
+        // 2. 남은 데미지는 HP에 적용
+        if (remainingDamage > 0) {
+            gameObject.saveData.currentHp = (gameObject.saveData.currentHp - remainingDamage).coerceAtLeast(0)
+
+            // 사망 체크
+            if (gameObject.saveData.currentHp <= 0) {
+                onPlayerDeath()
+            }
+        }
+
+        // UI 업데이트
+        statusPanel.refreshUI()
+    }
+
+    /**
+     * 플레이어 사망 처리
+     */
+    private fun onPlayerDeath() {
+        println("플레이어 사망!")
+        isGameOver = true
+        showGameOverScreen()
+    }
+
+    /**
+     * 게임오버 화면 표시
+     */
+    private fun showGameOverScreen() {
+        isPaused = true
+        val goldEarned = gameObject.saveData.gold - initialGold
+        val orbsEarned = gameObject.saveData.orbs - initialOrbs
+
+        gameResultModal.show(
+            title = "Game Over!",
+            goldEarned = goldEarned,
+            orbsEarned = orbsEarned,
+            skillStats = skillDamageStats,
+            onHome = {
+                gameResultModal.hide()
+                gameObject.setScreen(HomeScreen(gameObject))
+            },
+            onRestart = {
+                gameResultModal.hide()
+                restartGame()
+            }
+        )
+    }
+
+    /**
+     * 흡혈 적용 (데미지 입힐 때마다 호출)
+     */
+    private fun applyLifesteal(damage: Int) {
+        val lifestealRate = com.example.theorb.calculation.PlayerStatsCalculator.getLifestealRate(gameObject.saveData)
+
+        if (lifestealRate > 0f) {
+            val healAmount = (damage * lifestealRate).toInt().coerceAtLeast(1) // 최소 1 회복
+            val oldHp = gameObject.saveData.currentHp
+
+            gameObject.saveData.currentHp = (gameObject.saveData.currentHp + healAmount)
+                .coerceAtMost(gameObject.saveData.maxHp)
+
+            val actualHeal = gameObject.saveData.currentHp - oldHp
+
+            if (actualHeal > 0) {
+                println("흡혈 발동! 데미지: $damage, 회복: $actualHeal (${(lifestealRate * 100).toInt()}%)")
+            }
+        }
+    }
+
+    /**
+     * 적과 플레이어의 충돌 체크 및 피격 처리
+     */
+    private fun checkEnemyPlayerCollision() {
+        val playerCollisionRadius = 25f // 플레이어 충돌 반경
+
+        enemies.forEach { enemy ->
+            // 플레이어와 적의 거리 계산
+            val dx = player.x - enemy.x
+            val dy = player.y - enemy.y
+            val distance = kotlin.math.sqrt(dx * dx + dy * dy)
+
+            // 충돌 범위 내에 있고, 적이 공격 가능한 상태라면
+            if (distance < playerCollisionRadius && enemy.canAttack()) {
+                // 플레이어가 데미지를 받음
+                takeDamage(enemy.contactDamage)
+
+                // 적의 공격 쿨다운 리셋
+                enemy.resetAttackCooldown()
+
+                println("플레이어 피격! 데미지: ${enemy.contactDamage}, 남은 HP: ${gameObject.saveData.currentHp}, 남은 ESD: ${gameObject.saveData.currentEnergyShield}")
+            }
+        }
+    }
+
+    /**
+     * 레벨업 모달 표시
+     *
+     * UI 커스터마이징을 위한 콜백 기반 인터페이스:
+     * 1. 이 함수는 3개의 선택지를 생성하고 게임을 일시정지합니다
+     * 2. 사용자가 선택지를 선택하면 onOptionSelected를 호출합니다
+     * 3. 선택이 완료되면 게임을 재개합니다
+     */
+    private fun showLevelUpModal() {
+        pauseGame() // 게임 일시정지
+        val options = LevelUpManager.generateLevelUpOptions(gameObject.saveData)
+        levelUpSelectionModal.show(
+            options = options,
+            onSelection = { selected ->
+                onOptionSelected(selected)
+            },
+            onReroll = {
+                // 리롤 시 새로운 선택지 생성하고 다시 모달 표시
+                val newOptions = LevelUpManager.generateLevelUpOptions(gameObject.saveData)
+                levelUpSelectionModal.show(
+                    options = newOptions,
+                    onSelection = { selected ->
+                        onOptionSelected(selected)
+                    },
+                    onReroll = ::showLevelUpModal // 재귀적으로 다시 호출
+                )
+            }
+        )
+    }
+
+    /**
+     * 선택지 선택 시 호출되는 함수
+     * UI에서 이 함수를 호출하도록 구현하면 됩니다
+     */
+    private fun onOptionSelected(option: com.example.theorb.balance.LevelUpOptionData) {
+        LevelUpManager.applyOption(gameObject.saveData, option)
+
+        // HP 관련 선택지를 선택한 경우 maxHp 재계산
+        if (option.type.name.startsWith("HP_")) {
+            val oldMaxHp = gameObject.saveData.maxHp
+            val newMaxHp = com.example.theorb.calculation.PlayerStatsCalculator.calculateMaxHp(gameObject.saveData)
+            val hpIncrease = newMaxHp - oldMaxHp
+
+            gameObject.saveData.maxHp = newMaxHp
+            gameObject.saveData.currentHp += hpIncrease // 증가량만큼 현재 체력도 증가
+
+            println("HP 업그레이드: $oldMaxHp → $newMaxHp (현재 HP: ${gameObject.saveData.currentHp})")
+        }
+
+        SaveManager.save(gameObject.saveData)
+        levelUpSelectionModal.hide()
+        resumeGame()
     }
 
     /**

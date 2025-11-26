@@ -126,7 +126,7 @@ class UpgradeScreen(private val game: TheOrb) : BaseScreen() {
             val isSelected = category == selectedTab
 
             // RetroButton의 스타일 업데이트
-            RetroButtonV01.updateIconButtonEnabled(
+            RetroButtonV01.updateIconButton(
                 button,
                 true,
                 if(isSelected) ResourceManager.getUpgradeTabBasePos(category) else ResourceManager.getUpgradeTabBaseNag(category),
@@ -204,6 +204,10 @@ class UpgradeScreen(private val game: TheOrb) : BaseScreen() {
             isEnabled = canUpgrade,
         ) {
             if (UpgradeManager.purchaseUpgrade(game.saveData, upgradeType)) {
+                // 리롤 업그레이드인 경우 SaveData 동기화
+                if (upgradeType == UpgradeType.REROLL_COUNT) {
+                    UpgradeManager.applyRerollUpgrade(game.saveData)
+                }
                 SaveManager.save(game.saveData)
                 // 즉시 업데이트 플래그 설정
                 needsUpdate = true
@@ -256,7 +260,7 @@ class UpgradeScreen(private val game: TheOrb) : BaseScreen() {
             upgradeButtons[upgradeType]?.let { button ->
                 val canUpgrade = UpgradeManager.canUpgrade(game.saveData, upgradeType)
                 // RetroButton 활성화/비활성화 상태 업데이트
-                RetroButtonV01.updateIconButtonEnabled(
+                RetroButtonV01.updateIconButton(
                     button,
                     canUpgrade,
                     ResourceManager.getLvUpBasePos(),
@@ -277,8 +281,8 @@ class UpgradeScreen(private val game: TheOrb) : BaseScreen() {
             UpgradeType.REGENERATION -> "+${value.toInt()}/s"
             UpgradeType.RANGE -> "+${(value * 100).toInt()}%"
             UpgradeType.COOLDOWN_REDUCTION -> "-${(value * 100).toInt()}%"
-            UpgradeType.MOVEMENT_SPEED -> "+${(value * 100).toInt()}%"
             UpgradeType.GOLD_BONUS -> "+${(value * 100).toInt()}%"
+            UpgradeType.REROLL_COUNT -> "+${value.toInt()}회"
         }
     }
 

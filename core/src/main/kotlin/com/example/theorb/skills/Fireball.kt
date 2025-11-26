@@ -1,6 +1,5 @@
 package com.example.theorb.skills
 
-import com.example.theorb.balance.Element
 import com.example.theorb.effects.Anchor
 import com.example.theorb.effects.Effect
 import com.example.theorb.effects.EffectManager
@@ -12,17 +11,18 @@ import com.example.theorb.util.ResourceManager
 
 class Fireball : Skill(
     name = "화염구",
-    baseCooldown = 0.9f,
-    baseElement = Element.FIRE,
+    baseCooldown = 0.45f, // 0.9f → 0.45f (50% 감소)
     baseDamageMul = 1.8f,
     hitEffectType = EffectType.FIREBALL_HIT,
     flyEffectType = EffectType.FIREBALL_FLY,
     baseIcon = ResourceManager.getFireballBase(),
     eventIcon = ResourceManager.getFireballEvent(),
-    baseDescription = "화염구를 적에게 발사합니다."
+    baseDescription = "화염구를 적에게 발사하여 폭발시킵니다. 명중한 적에게 100%, 주변 적들에게 70% 데미지를 줍니다.",
+    splashRadius = 40f,
+    splashDamageRatio = 0.7f
 ) {
 
-    override val tags: List<SkillTag> = listOf(SkillTag.FIRE, SkillTag.PROJECTILE, SkillTag.INSTANT)
+    override val tags: List<SkillTag> = listOf(SkillTag.FIRE, SkillTag.PROJECTILE, SkillTag.INSTANT, SkillTag.AOE)
 
     // Fireball 전용 등급 배율 (더 공격적인 성장)
     override fun getRankMultipliers(): Map<SkillRank, Float> = mapOf(
@@ -42,7 +42,7 @@ class Fireball : Skill(
         effects: MutableList<Effect>,
         chainCnt: Int,
         beforeEnemies: MutableList<Enemy>,
-        onDamage: ((Int, Float, Float, Element, String) -> Unit)?
+        onDamage: ((Int, Float, Float, String) -> Unit)?
     ): Projectile {
         return Projectile(
             x = x,
@@ -53,12 +53,13 @@ class Fireball : Skill(
             preCalculatedDamage = preCalculatedDamage,
             chainCnt = chainCnt,
             beforeEnemies = beforeEnemies,
-            onHit = { enemy ->
+            onHit = { hitEnemy ->
+                // 명중 이펙트 (폭발 효과)
                 effects.add(
                     Effect(
                         EffectManager.load(hitEffectType),
-                        enemy.x,
-                        enemy.y,
+                        hitEnemy.x,
+                        hitEnemy.y,
                         hitEffectType.scale,
                         0f,
                         Anchor.CENTER

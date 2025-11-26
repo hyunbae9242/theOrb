@@ -3,8 +3,10 @@ package com.example.theorb.util
 import com.example.theorb.entities.Enemy
 import com.example.theorb.entities.Player
 import com.example.theorb.skills.Skill
-import com.example.theorb.upgrades.InGameUpgradeManager
+import com.example.theorb.calculation.CriticalCalculator
+import com.example.theorb.calculation.DamageCalculator as LevelUpDamageCalc
 import com.example.theorb.upgrades.UpgradeManager
+import java.util.Locale
 import kotlin.random.Random
 
 fun dist2(x1: Float, y1: Float, x2: Float, y2: Float): Float {
@@ -34,12 +36,12 @@ fun calcDamage(enemy: Enemy, player: Player, skill: Skill): Int {
         ))
     }
 
-    // 2-3. 인게임 업그레이드에서 데미지 모디파이어 추출 (기존 시스템을 증가로 변환)
-    val inGameDamageMultiplier = InGameUpgradeManager.getDamageMultiplier(saveData)
-    if (inGameDamageMultiplier != 1.0f) {
+    // 2-3. 레벨업 시스템에서 데미지 모디파이어 추출 (증가로 변환)
+    val levelUpDamageMultiplier = LevelUpDamageCalc.getDamageMultiplierFromLevelUp(saveData)
+    if (levelUpDamageMultiplier != 1.0f) {
         modifiers.add(DamageModifier(
             type = com.example.theorb.data.OrbAbilityType.DAMAGE_INCREASE,
-            value = inGameDamageMultiplier
+            value = levelUpDamageMultiplier
         ))
     }
 
@@ -47,32 +49,30 @@ fun calcDamage(enemy: Enemy, player: Player, skill: Skill): Int {
     modifiers.addAll(getSubSkillDamageModifiers(skill))
 
     // 3. 크리티컬 정보 계산
-    val baseCritChance = InGameUpgradeManager.getCriticalChance(saveData)
+    val baseCritChance = CriticalCalculator.getCriticalChance(saveData)
     val subSkillCritChance = skill.getEffectValue(com.example.theorb.skills.SubSkillEffectType.CRITICAL_CHANCE)
     val critChance = (baseCritChance + subSkillCritChance) / 100f // 퍼센트를 소수로 변환
 
-    val baseCritDamage = InGameUpgradeManager.getCriticalDamage(saveData)
+    // 치명타 데미지: 기본 150% + 보너스
+    val baseCritDamage = CriticalCalculator.getCriticalDamageBonus(saveData)
     val subSkillCritDamage = skill.getEffectValue(com.example.theorb.skills.SubSkillEffectType.CRITICAL_DAMAGE_AMPLIFY)
-    val critDamageMultiplier = (baseCritDamage + subSkillCritDamage) / 100f
+    val critDamageMultiplier = 1.5f + ((baseCritDamage + subSkillCritDamage) / 100f)
 
-    // 4. 속성 저항 계산
-    val resist = enemy.resistAgainst(skill.baseElement).coerceIn(0f, 0.75f)
-
-    // 5. 새로운 DamageCalculator로 최종 데미지 계산
+    // 4. 새로운 DamageCalculator로 최종 데미지 계산
     val finalDamage = DamageCalculator.calculateFinalDamage(
         baseDamage = baseDamage,
         modifiers = modifiers,
-        skillElement = skill.baseElement,
+        skillElement = null,
         criticalChance = critChance,
         criticalDamageMultiplier = critDamageMultiplier,
-        elementalResistance = resist
+        elementalResistance = 0f
     )
 
     return maxOf(1, finalDamage.toInt())
 }
 
 fun isCriticalHit(player: Player): Boolean {
-    val critChance = InGameUpgradeManager.getCriticalChance(player.saveData)
+    val critChance = CriticalCalculator.getCriticalChance(player.saveData)
     return Random.nextFloat() * 100f < critChance
 }
 
@@ -95,6 +95,13 @@ fun formatNumber(number: Float): String {
     return formatNumber(number.toInt())
 }
 
+
+fun getPercent(current: Int, max: Int): String {
+    if (max <= 0) return "0.0%"
+    val percent = current.toFloat() / max * 100f
+    return String.format(Locale.US, "%.1f%%", percent)
+}
+
 /**
  * 보조스킬에서 데미지 모디파이어 추출
  */
@@ -110,66 +117,12 @@ private fun getSubSkillDamageModifiers(skill: com.example.theorb.skills.Skill): 
         ))
     }
 
-    val fireAddition = skill.getEffectValue(com.example.theorb.skills.SubSkillEffectType.FIRE_DAMAGE_ADDITION)
-    if (fireAddition != 0) {
-        modifiers.add(DamageModifier(
-            type = com.example.theorb.data.OrbAbilityType.FIRE_DAMAGE_ADDITION,
-            value = fireAddition.toFloat(),
-            element = com.example.theorb.balance.Element.FIRE
-        ))
-    }
-
-    val iceAddition = skill.getEffectValue(com.example.theorb.skills.SubSkillEffectType.ICE_DAMAGE_ADDITION)
-    if (iceAddition != 0) {
-        modifiers.add(DamageModifier(
-            type = com.example.theorb.data.OrbAbilityType.COLD_DAMAGE_ADDITION,
-            value = iceAddition.toFloat(),
-            element = com.example.theorb.balance.Element.COLD
-        ))
-    }
-
-    val lightningAddition = skill.getEffectValue(com.example.theorb.skills.SubSkillEffectType.LIGHTNING_DAMAGE_ADDITION)
-    if (lightningAddition != 0) {
-        modifiers.add(DamageModifier(
-            type = com.example.theorb.data.OrbAbilityType.LIGHTNING_DAMAGE_ADDITION,
-            value = lightningAddition.toFloat(),
-            element = com.example.theorb.balance.Element.LIGHTNING
-        ))
-    }
-
     // 증가 데미지 (백분율을 배율로 변환: +20% -> 1.20, -15% -> 0.85)
     val damageIncrease = skill.getEffectValue(com.example.theorb.skills.SubSkillEffectType.DAMAGE_INCREASE)
     if (damageIncrease != 0) {
         modifiers.add(DamageModifier(
             type = com.example.theorb.data.OrbAbilityType.DAMAGE_INCREASE,
             value = 1f + damageIncrease / 100f
-        ))
-    }
-
-    val fireIncrease = skill.getEffectValue(com.example.theorb.skills.SubSkillEffectType.FIRE_DAMAGE_INCREASE)
-    if (fireIncrease != 0) {
-        modifiers.add(DamageModifier(
-            type = com.example.theorb.data.OrbAbilityType.FIRE_DAMAGE_INCREASE,
-            value = 1f + fireIncrease / 100f,
-            element = com.example.theorb.balance.Element.FIRE
-        ))
-    }
-
-    val iceIncrease = skill.getEffectValue(com.example.theorb.skills.SubSkillEffectType.ICE_DAMAGE_INCREASE)
-    if (iceIncrease != 0) {
-        modifiers.add(DamageModifier(
-            type = com.example.theorb.data.OrbAbilityType.COLD_DAMAGE_INCREASE,
-            value = 1f + iceIncrease / 100f,
-            element = com.example.theorb.balance.Element.COLD
-        ))
-    }
-
-    val lightningIncrease = skill.getEffectValue(com.example.theorb.skills.SubSkillEffectType.LIGHTNING_DAMAGE_INCREASE)
-    if (lightningIncrease != 0) {
-        modifiers.add(DamageModifier(
-            type = com.example.theorb.data.OrbAbilityType.LIGHTNING_DAMAGE_INCREASE,
-            value = 1f + lightningIncrease / 100f,
-            element = com.example.theorb.balance.Element.LIGHTNING
         ))
     }
 

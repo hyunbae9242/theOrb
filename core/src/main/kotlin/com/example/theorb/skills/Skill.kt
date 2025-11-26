@@ -1,7 +1,6 @@
 package com.example.theorb.skills
 
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
-import com.example.theorb.balance.Element
 import com.example.theorb.effects.Effect
 import com.example.theorb.effects.EffectType
 import com.example.theorb.entities.Enemy
@@ -13,7 +12,6 @@ import com.example.theorb.util.dist2
 abstract class Skill(
     val name: String,
     val baseCooldown: Float,
-    val baseElement: Element,
     val baseDamageMul: Float,
     val castEffectType: EffectType? = null,
     val flyEffectType: EffectType? = null,
@@ -23,7 +21,9 @@ abstract class Skill(
     var rank: SkillRank = SkillRank.C, // 기본 등급은 C
     val baseDescription: String? = null,
     val baseIcon: TextureRegionDrawable? = null,
-    val eventIcon: TextureRegionDrawable? = null
+    val eventIcon: TextureRegionDrawable? = null,
+    val splashRadius: Float = 0f, // 스플래시 범위 (0이면 스플래시 없음)
+    val splashDamageRatio: Float = 0f // 스플래시 데미지 비율 (0~1)
 ) {
 
     // 각 스킬이 가진 태그들 (하위 클래스에서 구현)
@@ -60,7 +60,7 @@ abstract class Skill(
 
     // 스킬설명
     fun getDescription(): String {
-        return "쿨타임: $baseCooldown 초 속성: $baseElement\n$baseDescription"
+        return "쿨타임: $baseCooldown 초\n$baseDescription"
     }
 
     /**
@@ -90,6 +90,15 @@ abstract class Skill(
     fun getModifiedCooldown(): Float {
         val cooldownPercent = getEffectValue(SubSkillEffectType.COOLDOWN) // -35% ~ +15%
         return baseCooldown * (1f + cooldownPercent / 100f)
+    }
+
+    /**
+     * 보조스킬 효과가 적용된 AOE/스플래시 범위 계산
+     */
+    fun getModifiedSplashRadius(): Float {
+        if (splashRadius <= 0f) return 0f
+        val aoeIncrease = getEffectValue(SubSkillEffectType.AOE_INCREASE) // +20% ~ +80%
+        return splashRadius * (1f + aoeIncrease / 100f)
     }
 
     // 스킬별 등급 배율 정의 (서브클래스에서 오버라이드)
@@ -123,7 +132,7 @@ abstract class Skill(
         effects: MutableList<Effect>,
         chainCnt: Int = 0,
         beforeEnemies: MutableList<Enemy> = mutableListOf(),
-        onDamage: ((Int, Float, Float, Element, String) -> Unit)? = null
+        onDamage: ((Int, Float, Float, String) -> Unit)? = null
     ): Projectile
 
     // AOE 스킬용 메소드
@@ -133,7 +142,7 @@ abstract class Skill(
         targets: List<Enemy>,
         caster: Player,
         effects: MutableList<Effect>,
-        onDamage: ((Int, Float, Float, Element, String) -> Unit)? = null
+        onDamage: ((Int, Float, Float, String) -> Unit)? = null
     ): List<Projectile> {
         // 시전 효과가 있으면 시전자 위치에서 한 번만 발동
         if (castEffectType != null) {

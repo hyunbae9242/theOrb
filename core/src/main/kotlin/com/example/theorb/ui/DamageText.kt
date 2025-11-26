@@ -4,14 +4,12 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.utils.Align
-import com.example.theorb.balance.Element
 import com.example.theorb.util.formatNumber
 
 class DamageText(
     private val damage: Int,
     private var x: Float,
-    private var y: Float,
-    private val element: Element
+    private var y: Float
 ) {
     private var alpha: Float = 1.0f
     private var lifeTime: Float = 0f
@@ -27,22 +25,11 @@ class DamageText(
         return lifeTime < maxLifeTime
     }
 
-    private fun getElementColor(): Color {
-        return when (element) {
-            Element.FIRE -> Color(1f, 0.6f, 0.4f, 1f)         // 주황빛 빨강
-            Element.COLD -> Color(0.6f, 0.8f, 1f, 1f)         // 연한 파랑
-            Element.LIGHTNING -> Color(1f, 1f, 0.6f, 1f)      // 연한 노랑
-            Element.ANGEL -> Color(1f, 0.9f, 0.7f, 1f)        // 크림색/금색
-            Element.DEMON -> Color(0.8f, 0.6f, 1f, 1f)        // 연한 보라
-        }
-    }
-
     fun draw(batch: SpriteBatch, font: BitmapFont) {
         val originalColor = font.color.cpy()
-        val elementColor = getElementColor()
-        elementColor.a = alpha
+        val damageColor = Color(1f, 1f, 1f, alpha) // 기본 흰색
 
-        font.color = elementColor
+        font.color = damageColor
         font.draw(batch, formatNumber(damage), x, y, 0f, Align.center, false)
 
         // 폰트 색상 복원

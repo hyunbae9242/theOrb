@@ -12,17 +12,10 @@ enum class EnemyType(
     TANK(Color.GREEN, 18f),
     BOSS(Color.PURPLE, 20f)
 }
-enum class Element { FIRE, COLD, LIGHTNING, ANGEL, DEMON }
-enum class DamageType { PROJECTILE } // 추후 근접/지속도 추가 가능
 
 object Balance {
-    // === 저항 관련 ===
-    const val MAX_RESIST = 0.75f
-    const val BASE_RESIST = 0.10f      // 기본 저항력
-    const val MATCH_RESIST = 0.25f     // 해당 속성 매칭 저항력
-
-    // === 베이스 스탯 === (원래 쓰던 숫자와 매칭되도록 설정)
-    const val BASE_HP = 15
+    // === 베이스 스탯 === (핵앤슬래시 스타일로 조정)
+    const val BASE_HP = 8 // 15 → 8 (약 50% 감소)
     const val BASE_SPEED = 35f
     const val BASE_CONTACT_DAMAGE = 5
     const val BASE_REWARD_GOLD = 1
@@ -55,14 +48,5 @@ object Balance {
         EnemyType.NORMAL to 80,
         EnemyType.SPEED  to 15,
         EnemyType.TANK   to 45
-    )
-
-    // 속성 스폰 가중치 (엔젤/데몬 낮게)
-    val ELEMENT_WEIGHTS: Map<Element, Int> = mapOf(
-        Element.FIRE to 30,
-        Element.COLD to 30,
-        Element.LIGHTNING to 30,
-        Element.ANGEL to 5,
-        Element.DEMON to 5
     )
 }

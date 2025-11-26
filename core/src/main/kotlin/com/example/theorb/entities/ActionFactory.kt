@@ -15,7 +15,7 @@ object ActionFactory {
                         projectiles: MutableList<Projectile>,
                         caster: Player,
                         effects: MutableList<Effect>,
-                        onDamage: ((Int, Float, Float, com.example.theorb.balance.Element, String) -> Unit)? = null
+                        onDamage: ((Int, Float, Float, String) -> Unit)? = null
                         ): Boolean
     {
         if (skill.canUse()) {
@@ -47,7 +47,7 @@ object ActionFactory {
                                effects: MutableList<Effect>,
                                chainCnt: Int = 0,
                                beforeEnemies: MutableList<Enemy> = mutableListOf(),
-                               onDamage: ((Int, Float, Float, com.example.theorb.balance.Element, String) -> Unit)? = null
+                               onDamage: ((Int, Float, Float, String) -> Unit)? = null
     ): Boolean {
         val projectileCount = skill.getProjectileCount()
         val nearbyTargets = enemies
