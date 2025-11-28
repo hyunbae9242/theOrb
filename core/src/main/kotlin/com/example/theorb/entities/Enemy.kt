@@ -36,16 +36,53 @@ class Enemy(
     private val attackCooldown: Float = 2f // 공격 쿨다운 (2초)
     private val stopDistance: Float = 20f // 플레이어로부터 멈추는 거리
 
+    // 빙결 상태
+    var isFrozen: Boolean = false
+    var freezeTimeRemaining: Float = 0f
+
+    // 넉백 상태
+    var isKnockback: Boolean = false
+    var knockbackVelocityX: Float = 0f
+    var knockbackVelocityY: Float = 0f
+    var knockbackDistance: Float = 0f // 남은 넉백 거리
+    var knockbackMaxDistance: Float = 0f // 최대 넉백 거리
+
     fun update(delta: Float, player: Player) {
         animationTime += delta
         lastAttackTime += delta
+
+        // 빙결 상태 업데이트
+        if (isFrozen) {
+            freezeTimeRemaining -= delta
+            if (freezeTimeRemaining <= 0f) {
+                isFrozen = false
+                freezeTimeRemaining = 0f
+            }
+        }
+
+        // 넉백 상태 업데이트
+        if (isKnockback) {
+            val knockbackSpeed = 300f // 넉백 속도 (픽셀/초)
+            val moveDistance = knockbackSpeed * delta
+
+            if (knockbackDistance > 0f) {
+                val actualMove = minOf(moveDistance, knockbackDistance)
+                x += knockbackVelocityX * actualMove
+                y += knockbackVelocityY * actualMove
+                knockbackDistance -= actualMove
+            } else {
+                isKnockback = false
+                knockbackVelocityX = 0f
+                knockbackVelocityY = 0f
+            }
+        }
 
         val dx = player.x - x
         val dy = player.y - y
         val dist = sqrt(dx * dx + dy * dy)
 
-        // 일정 거리 이상일 때만 이동
-        if (dist > stopDistance) {
+        // 빙결이나 넉백 상태가 아닐 때만 이동
+        if (!isFrozen && !isKnockback && dist > stopDistance) {
             x += dx / dist * speed * delta
             y += dy / dist * speed * delta
         }
@@ -66,6 +103,45 @@ class Enemy(
     }
 
     fun isDead() = hp <= 0
+
+    /**
+     * 빙결 효과 적용
+     */
+    fun applyFreeze(duration: Float) {
+        isFrozen = true
+        freezeTimeRemaining = duration
+    }
+
+    /**
+     * 넉백 효과 적용
+     * @param sourceX 넉백 원점 X (플레이어 위치)
+     * @param sourceY 넉백 원점 Y (플레이어 위치)
+     * @param knockbackDistance 넉백 거리
+     * @param maxDistance 최대 밀려날 수 있는 거리 (사정거리 등)
+     */
+    fun applyKnockback(sourceX: Float, sourceY: Float, knockbackDistance: Float, maxDistance: Float) {
+        // 넉백 방향 계산 (플레이어 -> 적)
+        val dx = x - sourceX
+        val dy = y - sourceY
+        val distance = sqrt(dx * dx + dy * dy)
+
+        if (distance > 0f) {
+            // 정규화된 방향 벡터
+            val dirX = dx / distance
+            val dirY = dy / distance
+
+            // 실제 넉백 거리 (최대 거리 제한)
+            val actualKnockbackDistance = minOf(knockbackDistance, maxDistance - distance).coerceAtLeast(0f)
+
+            if (actualKnockbackDistance > 0f) {
+                isKnockback = true
+                knockbackVelocityX = dirX
+                knockbackVelocityY = dirY
+                this.knockbackDistance = actualKnockbackDistance
+                this.knockbackMaxDistance = maxDistance
+            }
+        }
+    }
 
     fun getDeathEffectType(): EffectType {
         // 속성에 맞는 죽음 이펙트 (DIE_02와 DIE_03 중 랜덤)

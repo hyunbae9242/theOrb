@@ -10,7 +10,7 @@ import com.example.theorb.entities.Projectile
 
 class DivineNova : Skill(
     name = "성스러운파동",
-    baseCooldown = 1.0f, // 2.0f → 1.0f (50% 감소)
+    baseCooldown = 5.0f, // 2.0f → 1.0f (50% 감소)
     baseDamageMul = 2.5f, // AOE이므로 단일 타겟 대비 데미지 조정
     castEffectType = EffectType.DIVINE_NOVA_CAST, // 시전자 중심에서 한 번만 발동
     hitEffectType = EffectType.FIREBALL_HIT,
@@ -33,6 +33,78 @@ class DivineNova : Skill(
         SkillRank.SS to 4.5f,
         SkillRank.SSS to 6.0f
     )
+
+    /**
+     * DivineNova는 플레이어 중심의 즉발 AOE
+     * 투사체 없이 즉시 범위 내 모든 적에게 데미지
+     */
+    override fun createAOEProjectiles(
+        x: Float,
+        y: Float,
+        targets: List<Enemy>,
+        caster: Player,
+        effects: MutableList<Effect>,
+        onDamage: ((Int, Float, Float, String) -> Unit)?
+    ): List<Projectile> {
+        if (targets.isEmpty()) return emptyList()
+
+        // 시전 효과 (플레이어 위치)
+        if (castEffectType != null) {
+            effects.add(
+                Effect(
+                    EffectManager.load(castEffectType),
+                    x,
+                    y,
+                    castEffectType.scale,
+                    0f,
+                    Anchor.CENTER,
+                    0.5f
+                )
+            )
+        }
+
+        // 보조스킬 효과가 적용된 범위
+        val effectiveRadius = getModifiedSplashRadius()
+
+        // 넉백 거리 계산 (사정거리의 1/3)
+        val effectiveRange = com.example.theorb.upgrades.UpgradeManager.getEffectiveRange(caster.saveData, caster.baseRange)
+        val knockbackDistance = effectiveRange / 3f
+        val maxKnockbackDistance = effectiveRange
+
+        // 범위 내 모든 적에게 즉시 데미지
+        targets.forEach { enemy ->
+            // 플레이어로부터의 거리 계산
+            val dx = enemy.x - x
+            val dy = enemy.y - y
+            val distance = kotlin.math.sqrt(dx * dx + dy * dy)
+
+            // 범위 내에 있으면 데미지 적용
+            if (distance <= effectiveRadius) {
+                val damage = com.example.theorb.util.calcDamage(enemy, caster, this)
+                enemy.hp -= damage
+                onDamage?.invoke(damage, enemy.x, enemy.y, name)
+
+                // 넉백 적용
+                enemy.applyKnockback(x, y, knockbackDistance, maxKnockbackDistance)
+
+                // 히트 이펙트
+                effects.add(
+                    Effect(
+                        EffectManager.load(hitEffectType),
+                        enemy.x,
+                        enemy.y,
+                        hitEffectType.scale,
+                        0f,
+                        Anchor.CENTER
+                    )
+                )
+            }
+        }
+
+        // 투사체 없이 즉시 처리되므로 빈 리스트 반환
+        return emptyList()
+    }
+
     override fun createProjectile(
         x: Float,
         y: Float,

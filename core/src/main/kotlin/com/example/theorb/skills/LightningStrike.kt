@@ -14,7 +14,9 @@ class LightningStrike : Skill(
     baseDamageMul = 1.3f,
     hitEffectType = EffectType.LIGHTNING_STRIKE,
     isInstant = true, // 즉발 스킬
-    baseDescription = "즉시 적에게 번개를 내리칩니다."
+    baseDescription = "즉시 적에게 번개를 내리칩니다. 명중한 적에게 100%, 주변 적들에게 50% 데미지를 줍니다.",
+    splashRadius = 25f, // Fireball보다 작은 범위
+    splashDamageRatio = 0.5f // 주변 적 50% 데미지
 ) {
 
     override val tags: List<SkillTag> = listOf(SkillTag.LIGHTNING, SkillTag.INSTANT, SkillTag.AOE)

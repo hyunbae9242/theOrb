@@ -14,7 +14,7 @@ class IceLance : Skill(
     baseDamageMul = 1.6f,
     hitEffectType = EffectType.ICE_LANCE_HIT,
     flyEffectType = EffectType.ICE_LANCE_FLY,
-    baseDescription = "얼음창을 적에게 발사합니다."
+    baseDescription = "얼음창을 적에게 발사합니다. 명중한 적은 2초간 빙결되어 움직이지 못합니다."
 ) {
 
     override val tags: List<SkillTag> = listOf(SkillTag.ICE, SkillTag.PROJECTILE, SkillTag.INSTANT)
@@ -50,6 +50,7 @@ class IceLance : Skill(
             chainCnt = chainCnt,
             beforeEnemies = beforeEnemies,
             onHit = { enemy ->
+                // 히트 이펙트
                 effects.add(
                     Effect(
                         EffectManager.load(hitEffectType),
@@ -60,6 +61,8 @@ class IceLance : Skill(
                         Anchor.CENTER
                     )
                 )
+                // 빙결 효과 적용 (2초)
+                enemy.applyFreeze(2.0f)
             },
             onDamage = onDamage
         )

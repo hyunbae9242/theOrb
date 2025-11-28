@@ -92,6 +92,10 @@ object ResourceManager {
         const val AGAIN_BASE_NAG = "images/v01/button/again/Again_base_n.png"
         const val AGAIN_EVENT_NAG = "images/v01/button/again/Again_event_n.png"
 
+        const val LIST_BASE_POS = "images/v01/button/list/List_base_p.png"
+        const val LIST_EVENT_POS = "images/v01/button/list/List_event_p.png"
+        const val LIST_BASE_NAG = "images/v01/button/list/List_base_n.png"
+
         // nav
         const val SHOP_BASE_POS = "images/v01/button/shop/Shop_base_p.png"
         const val SHOP_EVENT_POS = "images/v01/button/shop/Shop_event_p.png"
@@ -185,41 +189,6 @@ object ResourceManager {
         // v01 작업분 skill icon
         const val FIREBALL_BASE = "images/v01/skill/fireball/fireball_base.png"
         const val FIREBALL_EVENT = "images/v01/skill/fireball/fireball_event.png"
-
-
-        // Retro Ui 배경없는 버튼
-        const val RETRO_GEAR = "images/buttons/retro/Gear.png"
-        const val RETRO_CHECK = "images/buttons/retro/Check.png"
-
-        // Retro UI 버튼들
-        const val RETRO_PAUSE_DEFAULT = "images/buttons/retro/Pause_d.png"
-        const val RETRO_PAUSE_EVENT = "images/buttons/retro/Pause_e.png"
-        const val RETRO_HOME_DEFAULT = "images/buttons/retro/Home_d.png"
-        const val RETRO_HOME_EVENT = "images/buttons/retro/Home_e.png"
-        const val RETRO_PLAY_DEFAULT = "images/buttons/retro/Play_d.png"
-        const val RETRO_PLAY_EVENT = "images/buttons/retro/Play_e.png"
-
-        // Retro Square 버튼들
-        const val RETRO_SQUARE_POS_DEFAULT = "images/buttons/retro/Square_pos_d.png"
-        const val RETRO_SQUARE_POS_EVENT = "images/buttons/retro/Square_pos_e.png"
-        const val RETRO_SQUARE_NAG_DEFAULT = "images/buttons/retro/Square_nag_d.png"
-        const val RETRO_SQUARE_NAG_EVENT = "images/buttons/retro/Square_nag_e.png"
-
-        // Retro Rectangle 버튼들
-        const val RETRO_RECTANGLE_POS_DEFAULT = "images/buttons/retro/Rectangle_pos_d.png"
-        const val RETRO_RECTANGLE_POS_EVENT = "images/buttons/retro/Rectangle_pos_e.png"
-        const val RETRO_RECTANGLE_NAG_DEFAULT = "images/buttons/retro/Rectangle_nag_d.png"
-        const val RETRO_RECTANGLE_NAG_EVENT = "images/buttons/retro/Rectangle_nag_e.png"
-
-        // 모달 패널들
-        const val RECTANGLE_PANEL_180_340 = "images/panels/Rectangle_panel_180_340.png"
-        const val RECTANGLE_PANEL_340_180 = "images/panels/Rectangle_panel_340_180.png"
-        const val RECTANGLE_PANEL_340_120 = "images/panels/Rectangle_panel_340_120.png"
-        const val RECTANGLE_PANEL_252_84 = "images/panels/Rectangle_panel_252_84.png"
-        const val SQUARE_PANEL_360 = "images/panels/Square_panel_360.png"
-        // 스킬 아이콘 이미지들
-        const val SKILL_ICON_PANEL_48_48 = "images/panels/Skill_icon_panel_48.png"
-        const val SKILL_SELECTED_PANEL_48_50 = "images/panels/Skill_selected_panel_48_50.png"
 
         // 배경 이미지들 - clouds01
         const val BACKGROUND_CLOUDS01_1 = "images/background/clouds01/1.png"
@@ -448,44 +417,14 @@ object ResourceManager {
     fun getAgainBaseNag(): TextureRegionDrawable = getDrawable(Images.AGAIN_BASE_NAG)
     fun getAgainEventNag(): TextureRegionDrawable = getDrawable(Images.AGAIN_EVENT_NAG)
 
+    fun getListBasePos(): TextureRegionDrawable = getDrawable(Images.LIST_BASE_POS)
+    fun getListEventPos(): TextureRegionDrawable = getDrawable(Images.LIST_EVENT_POS)
+    fun getListBaseNag(): TextureRegionDrawable = getDrawable(Images.LIST_BASE_NAG)
+
     // v01 작업분 skill icon
     fun getFireballBase(): TextureRegionDrawable = getDrawable(Images.FIREBALL_BASE)
     fun getFireballEvent(): TextureRegionDrawable = getDrawable(Images.FIREBALL_EVENT)
 
-
-
-    // Retro 버튼들을 위한 편의 메소드
-    fun getRetroGear(): TextureRegionDrawable = getDrawable(Images.RETRO_GEAR)
-    fun getRetroCheck(): TextureRegionDrawable = getDrawable(Images.RETRO_CHECK)
-    fun getRetroPauseDefault(): TextureRegionDrawable = getDrawable(Images.RETRO_PAUSE_DEFAULT)
-    fun getRetroPauseEvent(): TextureRegionDrawable = getDrawable(Images.RETRO_PAUSE_EVENT)
-    fun getRetroHomeDefault(): TextureRegionDrawable = getDrawable(Images.RETRO_HOME_DEFAULT)
-    fun getRetroHomeEvent(): TextureRegionDrawable = getDrawable(Images.RETRO_HOME_EVENT)
-    fun getRetroPlayDefault(): TextureRegionDrawable = getDrawable(Images.RETRO_PLAY_DEFAULT)
-    fun getRetroPlayEvent(): TextureRegionDrawable = getDrawable(Images.RETRO_PLAY_EVENT)
-
-    // Retro Square 버튼들을 위한 편의 메소드
-    fun getRetroSquarePosDefault(): TextureRegionDrawable = getDrawable(Images.RETRO_SQUARE_POS_DEFAULT)
-    fun getRetroSquarePosEvent(): TextureRegionDrawable = getDrawable(Images.RETRO_SQUARE_POS_EVENT)
-    fun getRetroSquareNagDefault(): TextureRegionDrawable = getDrawable(Images.RETRO_SQUARE_NAG_DEFAULT)
-    fun getRetroSquareNagEvent(): TextureRegionDrawable = getDrawable(Images.RETRO_SQUARE_NAG_EVENT)
-
-    // Retro Rectangle 버튼들을 위한 편의 메소드
-    fun getRetroRectanglePosDefault(): TextureRegionDrawable = getDrawable(Images.RETRO_RECTANGLE_POS_DEFAULT)
-    fun getRetroRectanglePosEvent(): TextureRegionDrawable = getDrawable(Images.RETRO_RECTANGLE_POS_EVENT)
-    fun getRetroRectangleNagDefault(): TextureRegionDrawable = getDrawable(Images.RETRO_RECTANGLE_NAG_DEFAULT)
-    fun getRetroRectangleNagEvent(): TextureRegionDrawable = getDrawable(Images.RETRO_RECTANGLE_NAG_EVENT)
-
-
-    // 모달 패널들을 위한 편의 메소드
-    fun getSquarePanel360(): TextureRegionDrawable = getDrawable(Images.SQUARE_PANEL_360)
-    fun getRectanglePanel180340(): TextureRegionDrawable = getDrawable(Images.RECTANGLE_PANEL_180_340)
-    fun getRectanglePanel340180(): TextureRegionDrawable = getDrawable(Images.RECTANGLE_PANEL_340_180)
-    fun getRectanglePanel340120(): TextureRegionDrawable = getDrawable(Images.RECTANGLE_PANEL_340_120)
-    fun getRectanglePanel25284(): TextureRegionDrawable = getDrawable(Images.RECTANGLE_PANEL_252_84)
-    // 스킬 아이콘 편의 메소드
-    fun getSkillIconPanel4848(): TextureRegionDrawable = getDrawable(Images.SKILL_ICON_PANEL_48_48)
-    fun getSkillSelectedPanel4850(): TextureRegionDrawable = getDrawable(Images.SKILL_SELECTED_PANEL_48_50)
     // 배경 이미지들을 위한 편의 메소드 - clouds01
     fun getBackgroundClouds01Layer1(): TextureRegionDrawable = getDrawable(Images.BACKGROUND_CLOUDS01_1)
     fun getBackgroundClouds01Layer2(): TextureRegionDrawable = getDrawable(Images.BACKGROUND_CLOUDS01_2)

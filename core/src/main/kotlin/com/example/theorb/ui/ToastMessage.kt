@@ -25,7 +25,6 @@ object ToastMessage {
         }
 
         val toastPanel = Table().apply {
-            background = ResourceManager.getRectanglePanel340120()
             pad(16f)
             add(toastLabel).center()
         }

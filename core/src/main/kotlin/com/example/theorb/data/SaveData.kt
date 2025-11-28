@@ -7,7 +7,9 @@ data class SaveData(
     var pBaseHp: Int = 100,
     var pBaseCastSpeedMul: Int = 1,
     var pBaseCriChance: Int = 0,
-    var unlockedStages: Int = 1,
+    var unlockedStages: Int = 1, // 해금된 스테이지 수 (1~5)
+    var currentStage: Int = 1, // 현재 선택된 스테이지
+    var highestClearedStage: Int = 0, // 가장 높은 클리어 스테이지 (0이면 클리어 없음)
     var upgrades: MutableMap<String, Int> = mutableMapOf(), // ex) "atkPower" -> 2
     var permanentUpgrades: MutableMap<String, Int> = mutableMapOf(), // 영구 업그레이드 레벨
     var equippedSkills: MutableList<String> = mutableListOf(),
@@ -48,6 +50,19 @@ data class SaveData(
         // 처음 게임 시작 시 기본 스킬 제공
         if (skillInventory.isEmpty() && equippedSkills.isEmpty()) {
             initializeDefaultSkills()
+        }
+
+        // 기존 세이브 데이터 마이그레이션: "type" -> "skillType"
+        migrateSkillInventoryKeys()
+    }
+
+    private fun migrateSkillInventoryKeys() {
+        skillInventory.forEach { skill ->
+            if (skill is MutableMap && skill.containsKey("type") && !skill.containsKey("skillType")) {
+                val typeValue = skill["type"]
+                skill["skillType"] = typeValue!!
+                skill.remove("type")
+            }
         }
     }
 

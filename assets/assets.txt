@@ -142,6 +142,9 @@ images/v01/button/levelup/Levelup_s_base_n.png
 images/v01/button/levelup/Levelup_s_base_p.png
 images/v01/button/levelup/Levelup_s_event_n.png
 images/v01/button/levelup/Levelup_s_event_p.png
+images/v01/button/list/List_base_n.png
+images/v01/button/list/List_base_p.png
+images/v01/button/list/List_event_p.png
 images/v01/button/main/Main_base_n.png
 images/v01/button/main/Main_base_p.png
 images/v01/button/main/Main_event_n.png

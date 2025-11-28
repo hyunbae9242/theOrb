@@ -60,7 +60,9 @@ abstract class Skill(
 
     // 스킬설명
     fun getDescription(): String {
-        return "쿨타임: $baseCooldown 초\n$baseDescription"
+        val rankMultiplier = getRankMultipliers()[rank] ?: 1.0f
+        val damageInfo = "스킬 데미지: 공격력 × %.1f × %.1f".format(baseDamageMul, rankMultiplier)
+        return "$damageInfo\n쿨타임: $baseCooldown 초\n$baseDescription"
     }
 
     /**

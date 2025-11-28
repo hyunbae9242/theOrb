@@ -20,13 +20,8 @@ object OrbManager {
 
         damageModifiers.forEach { modifier ->
             if (modifier.type.calculationType == DamageCalculationType.INCREASE) {
-                when {
-                    modifier.type == OrbAbilityType.DAMAGE_INCREASE -> {
-                        multiplier *= modifier.value
-                    }
-                    element != null && modifier.element == element -> {
-                        multiplier *= modifier.value
-                    }
+                if (modifier.type == OrbAbilityType.DAMAGE_INCREASE) {
+                    multiplier *= modifier.value
                 }
             }
         }

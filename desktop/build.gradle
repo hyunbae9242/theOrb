@@ -32,3 +32,53 @@ java {
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
   kotlinOptions.jvmTarget = "1.8"
 }
+
+// ✅ Fat JAR 빌드 (모든 의존성 + assets 포함)
+task fatJar(type: Jar) {
+  archiveBaseName = 'theOrb'
+  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+  manifest {
+    attributes 'Main-Class': 'com.example.theorb.DesktopLauncher'
+  }
+  from {
+    configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+  }
+  // assets 폴더를 JAR에 직접 포함
+  from(file('../assets')) {
+    into 'assets'
+  }
+  with jar
+}
+
+// ✅ jpackage로 네이티브 실행 파일 생성
+task createExecutable(dependsOn: fatJar) {
+  doLast {
+    def jarFile = fatJar.archiveFile.get().asFile
+    def outputDir = file("${buildDir}/jpackage")
+
+    exec {
+      commandLine 'jpackage',
+        '--input', jarFile.parent,
+        '--name', 'TheOrb',
+        '--main-jar', jarFile.name,
+        '--type', 'app-image',
+        '--dest', outputDir,
+        '--java-options', '-XstartOnFirstThread',
+        '--java-options', '-Dorg.lwjgl.util.Debug=true',
+        '--java-options', '-Dorg.lwjgl.util.DebugLoader=true'
+    }
+
+    // assets 폴더를 .app 번들 내부로 복사
+    def appDir = file("${outputDir}/TheOrb.app")
+    def assetsSource = file('../assets')
+    def assetsDest = file("${appDir}/Contents/Resources/assets")
+
+    copy {
+      from assetsSource
+      into assetsDest
+    }
+
+    println "실행 파일 생성 완료: ${outputDir}"
+    println "Assets 복사 완료: ${assetsDest}"
+  }
+}

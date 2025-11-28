@@ -11,7 +11,7 @@ import com.example.theorb.util.ResourceManager
 
 class Fireball : Skill(
     name = "화염구",
-    baseCooldown = 0.45f, // 0.9f → 0.45f (50% 감소)
+    baseCooldown = 0.5f,
     baseDamageMul = 1.8f,
     hitEffectType = EffectType.FIREBALL_HIT,
     flyEffectType = EffectType.FIREBALL_FLY,

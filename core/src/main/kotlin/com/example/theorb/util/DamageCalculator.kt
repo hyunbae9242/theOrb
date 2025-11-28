@@ -9,8 +9,7 @@ import com.example.theorb.data.SaveData
  */
 data class DamageModifier(
     val type: OrbAbilityType,
-    val value: Float,
-    val element: Any? = null // 속성별 데미지인 경우 (더 이상 사용되지 않음)
+    val value: Float
 )
 
 /**
@@ -112,33 +111,11 @@ object DamageCalculator {
             when (ability.type) {
                 OrbAbilityType.DAMAGE_ADDITION,
                 OrbAbilityType.DAMAGE_INCREASE,
-                OrbAbilityType.DAMAGE_AMPLIFY,
-                OrbAbilityType.FIRE_DAMAGE_ADDITION,
-                OrbAbilityType.FIRE_DAMAGE_INCREASE,
-                OrbAbilityType.FIRE_DAMAGE_AMPLIFY,
-                OrbAbilityType.LIGHTNING_DAMAGE_ADDITION,
-                OrbAbilityType.LIGHTNING_DAMAGE_INCREASE,
-                OrbAbilityType.LIGHTNING_DAMAGE_AMPLIFY,
-                OrbAbilityType.COLD_DAMAGE_ADDITION,
-                OrbAbilityType.COLD_DAMAGE_INCREASE,
-                OrbAbilityType.COLD_DAMAGE_AMPLIFY,
-                OrbAbilityType.ANGEL_DAMAGE_ADDITION,
-                OrbAbilityType.ANGEL_DAMAGE_INCREASE,
-                OrbAbilityType.ANGEL_DAMAGE_AMPLIFY,
-                OrbAbilityType.DEMON_DAMAGE_ADDITION,
-                OrbAbilityType.DEMON_DAMAGE_INCREASE,
-                OrbAbilityType.DEMON_DAMAGE_AMPLIFY -> {
-                    DamageModifier(ability.type, ability.value, getElementFromAbility(ability.type))
+                OrbAbilityType.DAMAGE_AMPLIFY -> {
+                    DamageModifier(ability.type, ability.value)
                 }
                 else -> null
             }
         }
-    }
-
-    /**
-     * 능력 타입에서 속성 추출 (더 이상 사용되지 않음)
-     */
-    private fun getElementFromAbility(abilityType: OrbAbilityType): Any? {
-        return null
     }
 }

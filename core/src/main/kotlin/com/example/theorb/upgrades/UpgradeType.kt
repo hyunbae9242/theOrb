@@ -24,8 +24,8 @@ enum class UpgradeType(
 
     // 방어 업그레이드
     HEALTH("체력", "최대 체력 증가", 15, 1.4f, 20f, 40, UpgradeCategory.DEFENSE),
-    ARMOR("방어력", "받는 데미지 감소", 20, 1.7f, 1f, 20, UpgradeCategory.DEFENSE),
-    REGENERATION("체력 재생", "시간당 체력 회복량 증가", 25, 1.5f, 2f, 35, UpgradeCategory.DEFENSE),
+    ARMOR("방어력", "받는 데미지를 고정 수치만큼 감소", 20, 1.4f, 1f, 50, UpgradeCategory.DEFENSE),
+    ARMOR_PERCENTAGE("방어율", "받는 데미지를 %만큼 감소", 5000, 1.4f, 1f, 50, UpgradeCategory.DEFENSE),
 
     // 유틸 업그레이드
     RANGE("사정거리", "공격 사정거리 증가", 15, 1.5f, 0.05f, 14, UpgradeCategory.UTILITY), // 5%씩 증가, 최대 70% (14레벨)
@@ -39,6 +39,50 @@ enum class UpgradeType(
     }
 
     fun getValueAtLevel(level: Int): Float {
+        // 방어력은 특별한 성장 곡선 사용
+        if (this == ARMOR) {
+            return getArmorValueAtLevel(level)
+        }
+        // 방어율은 특별한 성장 곡선 사용
+        if (this == ARMOR_PERCENTAGE) {
+            return getArmorPercentageValueAtLevel(level)
+        }
         return baseIncrease * level
+    }
+
+    /**
+     * 방어력 성장 곡선
+     * 1~10: +1씩 (총 10)
+     * 11~20: +2씩 (총 20)
+     * 21~35: +3씩 (총 45)
+     * 36~50: +5씩 (총 75)
+     * 최종 50레벨: 150 방어력
+     */
+    private fun getArmorValueAtLevel(level: Int): Float {
+        return when (level) {
+            in 1..10 -> level.toFloat()                           // 1~10
+            in 11..20 -> 10f + (level - 10) * 2f                  // 10 + 20
+            in 21..35 -> 30f + (level - 20) * 3f                  // 30 + 45
+            in 36..50 -> 75f + (level - 35) * 5f                  // 75 + 75
+            else -> 0f
+        }
+    }
+
+    /**
+     * 방어율 성장 곡선 (초반 적게, 후반 많이)
+     * 1~15: +0.5%씩 (총 7.5%)
+     * 16~30: +1%씩 (총 15%)
+     * 31~40: +2%씩 (총 20%)
+     * 41~50: +3.25%씩 (총 32.5%)
+     * 최종 50레벨: 75%
+     */
+    private fun getArmorPercentageValueAtLevel(level: Int): Float {
+        return when (level) {
+            in 1..15 -> level * 0.5f                              // 0.5~7.5
+            in 16..30 -> 7.5f + (level - 15) * 1f                 // 7.5 + 15
+            in 31..40 -> 22.5f + (level - 30) * 2f                // 22.5 + 20
+            in 41..50 -> 42.5f + (level - 40) * 3.25f             // 42.5 + 32.5
+            else -> 0f
+        }
     }
 }

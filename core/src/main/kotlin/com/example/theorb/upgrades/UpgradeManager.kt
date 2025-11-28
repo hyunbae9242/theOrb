@@ -61,6 +61,20 @@ object UpgradeManager {
     }
 
     /**
+     * 방어력 (고정 수치 감소)
+     */
+    fun getArmor(saveData: SaveData): Int {
+        return getUpgradeValue(saveData, UpgradeType.ARMOR).toInt()
+    }
+
+    /**
+     * 방어율 (% 감소)
+     */
+    fun getArmorPercentage(saveData: SaveData): Float {
+        return getUpgradeValue(saveData, UpgradeType.ARMOR_PERCENTAGE)
+    }
+
+    /**
      * 리롤 횟수를 SaveData에 적용
      */
     fun getMaxRerollCount(saveData: SaveData): Int {

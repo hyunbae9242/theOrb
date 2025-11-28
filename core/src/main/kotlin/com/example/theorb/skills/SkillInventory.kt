@@ -56,11 +56,15 @@ class SkillInventory {
     fun fromSaveData(data: List<Map<String, Any>>) {
         skills.clear()
         data.forEach { skillData ->
-            val skillType = skillData["skillType"] as String
-            val rankName = skillData["rank"] as String
-            val exp = skillData["exp"] as Int
-            val rank = SkillRank.valueOf(rankName)
-            skills.add(SkillItem(skillType, rank, exp))
+            // "skillType" 또는 "type" 키 모두 지원 (하위 호환성)
+            val skillType = (skillData["skillType"] ?: skillData["type"]) as? String
+            val rankName = skillData["rank"] as? String
+            val exp = (skillData["exp"] as? Number)?.toInt()
+
+            if (skillType != null && rankName != null && exp != null) {
+                val rank = SkillRank.valueOf(rankName)
+                skills.add(SkillItem(skillType, rank, exp))
+            }
         }
     }
 }

@@ -189,7 +189,7 @@ class UpgradeScreen(private val game: TheOrb) : BaseScreen() {
         // 업그레이드 버튼 - Retro 스타일
         val currentLevel = UpgradeManager.getUpgradeLevel(game.saveData, upgradeType)
         val initialCost = if (currentLevel < upgradeType.maxLevel) upgradeType.getCostForLevel(currentLevel) else -1
-        val initialText = if (currentLevel >= upgradeType.maxLevel) "MAX" else "Lv UP\n(${initialCost}G)"
+        val initialText = if (currentLevel >= upgradeType.maxLevel) "MAX" else "${initialCost}G"
         val costLabel = Label(initialText, skin.get("label-default", Label.LabelStyle::class.java)).apply {
             color = TEXT_PRIMARY
         }
@@ -222,7 +222,7 @@ class UpgradeScreen(private val game: TheOrb) : BaseScreen() {
         leftTable.add(valueLabel).expand().left()
 
         upgradeTable.add(leftTable).expand().fill().left().padLeft(8f)
-        upgradeTable.add(costLabel).expand().fill().left()
+        upgradeTable.add(costLabel).left().padRight(8f)
         upgradeTable.add(lvUpButton).width(80f).height(48f).right().padRight(8f)
 
         return upgradeTable
@@ -252,7 +252,7 @@ class UpgradeScreen(private val game: TheOrb) : BaseScreen() {
             val costText = if (level >= maxLevel) {
                 "MAX"
             } else {
-                "Lv UP\n(${cost}G)"
+                "${cost}G"
             }
             upgradeCostLabels[upgradeType]?.setText(costText)
 
@@ -278,7 +278,7 @@ class UpgradeScreen(private val game: TheOrb) : BaseScreen() {
             UpgradeType.CRITICAL_DAMAGE -> "+${(value).toInt()}%"
             UpgradeType.HEALTH -> "+${value.toInt()}"
             UpgradeType.ARMOR -> "+${value.toInt()}"
-            UpgradeType.REGENERATION -> "+${value.toInt()}/s"
+            UpgradeType.ARMOR_PERCENTAGE -> "+${value.toInt()}%"
             UpgradeType.RANGE -> "+${(value * 100).toInt()}%"
             UpgradeType.COOLDOWN_REDUCTION -> "-${(value * 100).toInt()}%"
             UpgradeType.GOLD_BONUS -> "+${(value * 100).toInt()}%"

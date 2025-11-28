@@ -36,7 +36,10 @@ import com.example.theorb.skills.SkillInventory
 import com.example.theorb.util.OrbManager
 import com.example.theorb.skills.SubSkillInventoryItem
 import com.example.theorb.skills.SubSkillType
+import com.example.theorb.skills.SkillRank
 import com.example.theorb.ui.RetroButtonV01
+import com.example.theorb.stages.StageManager
+import com.example.theorb.stages.StageData
 
 class GameScreen : BaseScreen() {
     private val shape = ShapeRenderer()
@@ -66,6 +69,11 @@ class GameScreen : BaseScreen() {
     private var currentBoss: Enemy? = null
     private lateinit var speedButton: ImageButton
 
+    // 웨이브 진행도 바
+    private lateinit var waveProgressBarBackground: Table
+    private lateinit var waveProgressBarFill: Table
+    private lateinit var waveProgressContainer: Table
+
     private var spawnTimer = 0f
     private var bossSpawnTimer = 60f // 1분마다 보스 스폰
     private var gameTimer = 0f
@@ -80,6 +88,13 @@ class GameScreen : BaseScreen() {
     private val waveCycleDuration = 20f // 웨이브 사이클 총 시간
     private val waveSpawnDuration = 15f // 스폰 활성 시간
     private val waveRestDuration = 5f // 휴식 시간
+    private var currentWave = 1 // 현재 웨이브 (1부터 시작)
+    private var waveEnemyKillCount = 0 // 현재 웨이브에서 처치한 적 수
+    private var waveEnemySpawnCount = 0 // 현재 웨이브에서 실제로 스폰된 적 수
+    private var waveExpectedSpawnCount = 0 // 현재 웨이브에서 스폰될 예정인 총 적 수
+
+    // 스테이지 시스템
+    private lateinit var currentStageData: StageData
 
     private lateinit var skillInventory: SkillInventory
     private lateinit var pauseModal: PauseModal
@@ -92,12 +107,21 @@ class GameScreen : BaseScreen() {
     private var initialGold = 0
     private var initialOrbs = 0
     private val skillDamageStats = mutableMapOf<String, Long>()
+    private val acquiredActiveSkills = mutableListOf<String>() // 획득한 액티브 스킬
+    private val acquiredSubSkills = mutableListOf<String>() // 획득한 보조스킬
 
     override fun show() {
         initSharedResources()
 
+        // 현재 스테이지 데이터 로드
+        currentStageData = StageManager.getStage(gameObject.saveData.currentStage)
+            ?: StageManager.getStage(1)!! // 기본값: 스테이지 1
+
         // 게임 시작 시 인게임 진행도 초기화
         resetInGameProgress()
+
+        // 첫 웨이브 예상 스폰 수 계산
+        calculateExpectedSpawnCount()
 
         // 게임 시작 시 초기 통계 저장
         initialGold = gameObject.saveData.gold
@@ -187,28 +211,59 @@ class GameScreen : BaseScreen() {
         mainLayout.add(gameArea).expandY().fillY().row()
         mainLayout.add(upgradeContainer).height(280f).bottom()
 
-        // 중앙 상단에 타이머 추가
-        timerLabel = Label("10:00", skin.get("label-default", Label.LabelStyle::class.java)).apply {
+        // 중앙 상단에 웨이브 진행도 바 추가
+        setupWaveProgressBar()
+
+        // 보스 체력바 설정 (초기에는 숨겨짐)
+        setupBossHealthBar()
+    }
+
+    private fun setupWaveProgressBar() {
+        // 웨이브 라벨
+        timerLabel = Label("WAVE 1/20", skin.get("label-default", Label.LabelStyle::class.java)).apply {
             color = TEXT_PRIMARY
         }
 
-        val timerContainer = Table().apply {
-            background = BaseScreen.skin.getDrawable("white")
-            color = PANEL_BG
-            pad(8f, 12f, 8f, 12f)
-            add(timerLabel)
+        // 진행도 바 배경 (검은색)
+        waveProgressBarBackground = Table().apply {
+            background = BaseScreen.skin.newDrawable("white", Color(0.1f, 0.1f, 0.1f, 1f))
         }
 
-        uiStage.addActor(timerContainer.apply {
-            pack() // 컨테이너 크기 계산
+        // 진행도 바 채우기 (밝은 색)
+        waveProgressBarFill = Table().apply {
+            background = BaseScreen.skin.newDrawable("white", Color(0.3f, 0.8f, 1f, 1f))
+        }
+
+        // 진행도 바 너비
+        val progressBarWidth = 240f
+        val progressBarHeight = 8f
+
+        // 진행도 바 컨테이너 (배경 위에 fill을 겹쳐서 표시)
+        val progressBarContainer = Table().apply {
+            add(waveProgressBarBackground).size(progressBarWidth, progressBarHeight)
+        }
+
+        // 전체 컨테이너
+        waveProgressContainer = Table().apply {
+            background = BaseScreen.skin.newDrawable("white", PANEL_BG)
+            pad(12f, 16f, 12f, 16f)
+            add(timerLabel).center().padBottom(6f).row()
+            add(progressBarContainer).center()
+        }
+
+        uiStage.addActor(waveProgressContainer.apply {
+            pack()
             setPosition(
                 (uiStage.viewport.worldWidth - width) / 2f,
                 uiStage.viewport.worldHeight - height - 12f
             )
         })
 
-        // 보스 체력바 설정 (초기에는 숨겨짐)
-        setupBossHealthBar()
+        // Fill 액터를 별도로 추가 (배경 위에 겹치기)
+        uiStage.addActor(waveProgressBarFill.apply {
+            setSize(0f, progressBarHeight)
+            // 위치는 updateWaveProgressBar에서 업데이트
+        })
     }
 
     private fun setupBossHealthBar() {
@@ -308,7 +363,7 @@ class GameScreen : BaseScreen() {
         Gdx.app.log("GameScreen", "=== 로드된 스킬 확인 ===")
         skills.forEach { skill ->
             Gdx.app.log("GameScreen", "스킬: ${skill.name}, 등급: ${skill.rank.displayName}, 데미지 배율: ${skill.damageMul}")
-            Gdx.app.log("GameScreen", "  - 보조스킬 효과: ${skill.equippedSubSkills}")
+            Gdx.app.log("GameScreen", "  - 보조스킬: ${skill.equippedSubSkills.size}개")
             Gdx.app.log("GameScreen", "  - 투사체 개수: ${skill.getProjectileCount()}")
         }
 
@@ -345,18 +400,22 @@ class GameScreen : BaseScreen() {
 
             // 게임 타이머 업데이트 (배속 적용)
             gameTimer += adjustedDelta
-            if (gameTimer >= maxGameTime) {
+
+            // 웨이브 완료 체크: 마지막 웨이브에서 모든 적 처치 시 게임 종료
+            if (currentWave > currentStageData.requiredWaves && enemies.isEmpty()) {
                 isGameOver = true
-                gameTimer = maxGameTime
-                // 타이머 종료 후에도 게임은 계속 진행되어야 함 (적 처치를 위해)
             }
 
-            // 적 스폰 (5분 이후에는 스폰하지 않음)
-            if (gameTimer < maxGameTime) {
+            // 적 스폰 (마지막 웨이브까지만)
+            if (currentWave <= currentStageData.requiredWaves) {
                 // 웨이브 사이클 타이머 업데이트
                 waveCycleTimer += adjustedDelta
                 if (waveCycleTimer >= waveCycleDuration) {
                     waveCycleTimer = 0f // 사이클 리셋
+                    currentWave++ // 다음 웨이브로
+                    waveEnemyKillCount = 0 // 킬 카운트 리셋
+                    waveEnemySpawnCount = 0 // 스폰 카운트 리셋
+                    calculateExpectedSpawnCount() // 다음 웨이브 예상 스폰 수 계산
                 }
 
                 // 스폰 활성 구간인지 확인 (15초 스폰, 5초 휴식)
@@ -369,32 +428,49 @@ class GameScreen : BaseScreen() {
                         val gameAreaStartY = viewport.worldHeight * upgradeUIHeightRatio
                         val gameAreaHeight = viewport.worldHeight * gameAreaHeightRatio
 
-                        // 시간대별 스폰 밀도 및 개수 조정 (극초반 감소, 웨이브 스타일)
+                        // 웨이브별 스폰 밀도 및 개수 조정
                         val (spawnInterval, spawnCount) = when {
-                            gameTimer < 30f -> Pair(0.8f, 1)      // 0~30초: 0.8초마다 1마리 (초당 1.25마리) - 극초반
-                            gameTimer < 90f -> Pair(0.6f, 2)      // 30초~1.5분: 0.6초마다 2마리 (초당 3.3마리)
-                            gameTimer < 180f -> Pair(0.4f, 3)     // 1.5~3분: 0.4초마다 3마리 (초당 7.5마리)
-                            gameTimer < 240f -> Pair(0.3f, 4)     // 3~4분: 0.3초마다 4마리 (초당 13마리)
-                            else -> Pair(0.25f, 5)                // 4~5분: 0.25초마다 5마리 (초당 20마리)
+                            currentWave <= 2 -> Pair(0.8f, 1)      // 1~2웨이브: 0.8초마다 1마리 (초당 1.25마리)
+                            currentWave <= 5 -> Pair(0.6f, 2)      // 3~5웨이브: 0.6초마다 2마리 (초당 3.3마리)
+                            currentWave <= 10 -> Pair(0.4f, 3)     // 6~10웨이브: 0.4초마다 3마리 (초당 7.5마리)
+                            currentWave <= 15 -> Pair(0.3f, 4)     // 11~15웨이브: 0.3초마다 4마리 (초당 13마리)
+                            else -> Pair(0.25f, 5)                 // 16~20웨이브: 0.25초마다 5마리 (초당 20마리)
                         }
 
                         repeat(spawnCount) {
-                            enemies.add(EnemyFactory.spawnRandom(viewport.worldWidth, gameAreaHeight, gameAreaStartY, gameTimer))
+                            enemies.add(EnemyFactory.spawnRandom(
+                                width = viewport.worldWidth,
+                                gameAreaHeight = gameAreaHeight,
+                                gameAreaStartY = gameAreaStartY,
+                                gameTimeSeconds = gameTimer,
+                                currentWave = currentWave,
+                                stageHpMultiplier = currentStageData.enemyHpMultiplier,
+                                stageDamageMultiplier = currentStageData.enemyDamageMultiplier
+                            ))
+                            waveEnemySpawnCount++ // 스폰 카운트 증가
                         }
 
                         spawnTimer = spawnInterval
                     }
                 }
 
-                // 보스 스폰 (1분마다)
-                bossSpawnTimer -= adjustedDelta
-                if (bossSpawnTimer <= 0f) {
+                // 보스 스폰 (5의 배수 웨이브에만: 5, 10, 15, 20)
+                // 웨이브가 시작되고 1초 후에 보스 스폰
+                if (currentWave % 5 == 0 && waveCycleTimer >= 1f && waveCycleTimer < 1.1f && currentBoss == null) {
                     val gameAreaStartY = viewport.worldHeight * upgradeUIHeightRatio
                     val gameAreaHeight = viewport.worldHeight * gameAreaHeightRatio
-                    val boss = EnemyFactory.spawnBoss(viewport.worldWidth, gameAreaHeight, gameAreaStartY, gameTimer)
+                    val boss = EnemyFactory.spawnBoss(
+                        width = viewport.worldWidth,
+                        gameAreaHeight = gameAreaHeight,
+                        gameAreaStartY = gameAreaStartY,
+                        gameTimeSeconds = gameTimer,
+                        currentWave = currentWave,
+                        stageHpMultiplier = currentStageData.enemyHpMultiplier,
+                        stageDamageMultiplier = currentStageData.enemyDamageMultiplier
+                    )
                     enemies.add(boss)
                     currentBoss = boss
-                    bossSpawnTimer = 60f // 1분 후 다시 스폰
+                    waveEnemySpawnCount++ // 보스도 카운트에 포함
                     showBossHealthBar()
                 }
             }
@@ -456,10 +532,15 @@ class GameScreen : BaseScreen() {
                 )
             )
 
-            // 골드/경험치 획득
+            // 웨이브 킬 카운트 증가 (예상 스폰 수를 초과하지 않도록)
+            if (waveEnemyKillCount < waveExpectedSpawnCount) {
+                waveEnemyKillCount++
+            }
+
+            // 골드/경험치 획득 (스테이지 배율 적용)
             val baseReward = enemy.rewardGold
-            val goldReward = baseReward
-            val expReward = baseReward * 5 // 기본 경험치는 골드의 5배
+            val goldReward = (baseReward * currentStageData.goldMultiplier).toInt()
+            val expReward = (baseReward * 5 * currentStageData.expMultiplier).toInt() // 기본 경험치는 골드의 5배
 
             // 골드 드롭 확률 (적 타입별)
             val goldDropChance = when (enemy.type) {
@@ -486,22 +567,32 @@ class GameScreen : BaseScreen() {
                 showLevelUpModal()
             }
 
-            // 보스 처치 시 오브 획득 및 보조스킬 드롭
+            // 보스 처치 시 오브 획득 및 액티브 스킬 드롭 (스테이지 배율 적용)
             if (enemy.type == EnemyType.BOSS) {
-                val orbReward = 1
+                val orbReward = (1 * currentStageData.orbMultiplier).toInt().coerceAtLeast(1)
 
                 gameObject.saveData.orbs += orbReward
                 addRewardText(orbReward, 0f, 0f, RewardType.ORB)
 
-                // 보조스킬 30% 확률 드롭
-                if (Math.random() < 0.3) {
-                    dropRandomSubSkill()
+                // 액티브 스킬 20% 확률 드롭 (5마리 보스 중 평균 1개)
+                if (Math.random() < 0.2) {
+                    dropRandomActiveSkill()
                 }
 
                 // 보스가 죽으면 체력바 숨기기 및 현재 보스 참조 제거
                 if (enemy == currentBoss) {
                     hideBossHealthBar()
                     currentBoss = null
+                }
+            } else {
+                // 일반 적 처치 시 드롭
+                // 보조스킬 0.11% 확률 (2,184마리 중 평균 2.4개)
+                if (Math.random() < 0.0011) {
+                    dropRandomSubSkill()
+                }
+                // 액티브 스킬 0.05% 확률 (2,184마리 중 평균 1.09개)
+                if (Math.random() < 0.0005) {
+                    dropRandomActiveSkill()
                 }
             }
 
@@ -579,11 +670,8 @@ class GameScreen : BaseScreen() {
         // 보스 체력바 실시간 업데이트
         updateBossHealthBar()
 
-        // 타이머 업데이트 (남은 시간으로 표시)
-        val remainingTime = maxGameTime - gameTimer
-        val minutes = (remainingTime / 60).toInt()
-        val seconds = (remainingTime % 60).toInt()
-        timerLabel.setText(String.format("%02d:%02d", minutes, seconds))
+        // 웨이브 진행도 표시 및 진행도 바 업데이트
+        updateWaveProgressBar()
 
         uiStage.act(delta)
         uiStage.draw()
@@ -640,9 +728,12 @@ class GameScreen : BaseScreen() {
         // 플레이어 재생성
         loadSaveData()
 
+        // 모든 모달 닫기
+        pauseModal.hide()
+        gameResultModal.hide()
+
         // 게임 재개
         resumeGame()
-        pauseModal.hide()
 
         // 배속 버튼 텍스트 업데이트
         updateSpeedButton()
@@ -673,11 +764,31 @@ class GameScreen : BaseScreen() {
         val goldEarned = gameObject.saveData.gold - initialGold
         val orbsEarned = gameObject.saveData.orbs - initialOrbs
 
+        // 스테이지 클리어 처리 및 다음 스테이지 해금
+        val currentStage = gameObject.saveData.currentStage
+
+        // 최고 클리어 스테이지 업데이트
+        if (currentStage > gameObject.saveData.highestClearedStage) {
+            gameObject.saveData.highestClearedStage = currentStage
+        }
+
+        // 다음 스테이지 해금
+        val nextStageId = currentStage + 1
+        if (nextStageId <= StageManager.getMaxStageCount()) {
+            if (nextStageId > gameObject.saveData.unlockedStages) {
+                gameObject.saveData.unlockedStages = nextStageId
+            }
+        }
+
+        SaveManager.save(gameObject.saveData)
+
         gameResultModal.show(
             title = "Victory!",
             goldEarned = goldEarned,
             orbsEarned = orbsEarned,
             skillStats = skillDamageStats,
+            acquiredActiveSkills = acquiredActiveSkills,
+            acquiredSubSkills = acquiredSubSkills,
             onHome = {
                 gameResultModal.hide()
                 gameObject.setScreen(HomeScreen(gameObject))
@@ -732,6 +843,58 @@ class GameScreen : BaseScreen() {
                 updateBossHealthBarPosition()
             }
         }
+    }
+
+    private fun calculateExpectedSpawnCount() {
+        // 웨이브별 스폰 간격 결정
+        val (spawnInterval, spawnCount) = when {
+            currentWave <= 2 -> Pair(0.8f, 1)
+            currentWave <= 5 -> Pair(0.6f, 2)
+            currentWave <= 10 -> Pair(0.4f, 3)
+            currentWave <= 15 -> Pair(0.3f, 4)
+            else -> Pair(0.25f, 5)
+        }
+
+        // 15초 동안 스폰되는 총 적 수 계산
+        val spawnTimes = (waveSpawnDuration / spawnInterval).toInt()
+        waveExpectedSpawnCount = spawnTimes * spawnCount
+
+        // 5의 배수 웨이브면 보스 1마리 추가
+        if (currentWave % 5 == 0) {
+            waveExpectedSpawnCount += 1
+        }
+
+        println("[Wave $currentWave] Expected spawn: $waveExpectedSpawnCount (interval: $spawnInterval, count: $spawnCount, times: $spawnTimes)")
+    }
+
+    private fun updateWaveProgressBar() {
+        // 웨이브 라벨 업데이트
+        timerLabel.setText("WAVE $currentWave/${currentStageData.requiredWaves}")
+
+        // 진행도 계산 (예상 스폰 수 기준)
+        val progress = if (waveExpectedSpawnCount > 0) {
+            waveEnemyKillCount.toFloat() / waveExpectedSpawnCount.toFloat()
+        } else {
+            0f
+        }
+
+        // 진행도 바 너비
+        val progressBarWidth = 240f
+        val progressBarHeight = 8f
+        val fillWidth = (progressBarWidth * progress).coerceIn(0f, progressBarWidth)
+
+        // 진행도 바 위치 계산 (배경 바와 같은 위치)
+        waveProgressContainer.pack()
+        val containerX = (uiStage.viewport.worldWidth - waveProgressContainer.width) / 2f
+        val containerY = uiStage.viewport.worldHeight - waveProgressContainer.height - 12f
+
+        // 진행도 바 배경의 위치 (컨테이너 내부 패딩 고려)
+        val progressBarX = containerX + 16f // 좌 패딩
+        val progressBarY = containerY + 12f // 하 패딩
+
+        // Fill 위치 및 크기 업데이트
+        waveProgressBarFill.setPosition(progressBarX, progressBarY)
+        waveProgressBarFill.setSize(fillWidth, progressBarHeight)
     }
 
     private fun updateSpeedButton() {
@@ -822,19 +985,28 @@ class GameScreen : BaseScreen() {
     }
 
     /**
-     * 플레이어가 데미지를 받을 때 처리 (에너지 실드 → HP 순서)
+     * 플레이어가 데미지를 받을 때 처리 (방어력 → 방어율 → 에너지 실드 → HP 순서)
      */
     fun takeDamage(damage: Int) {
-        var remainingDamage = damage
+        // 1. 방어력으로 데미지 감소 (고정 수치)
+        val armor = UpgradeManager.getArmor(gameObject.saveData)
+        val damageAfterArmor = (damage - armor).coerceAtLeast(1) // 최소 1 데미지
 
-        // 1. 에너지 실드부터 소모
+        // 2. 방어율로 데미지 감소 (%)
+        val armorPercentage = UpgradeManager.getArmorPercentage(gameObject.saveData)
+        val damageReduction = 1f - (armorPercentage / 100f)
+        var finalDamage = (damageAfterArmor * damageReduction).toInt().coerceAtLeast(1) // 최소 1 데미지
+
+        var remainingDamage = finalDamage
+
+        // 3. 에너지 실드부터 소모
         if (gameObject.saveData.currentEnergyShield > 0) {
             val esdDamage = remainingDamage.coerceAtMost(gameObject.saveData.currentEnergyShield)
             gameObject.saveData.currentEnergyShield -= esdDamage
             remainingDamage -= esdDamage
         }
 
-        // 2. 남은 데미지는 HP에 적용
+        // 4. 남은 데미지는 HP에 적용
         if (remainingDamage > 0) {
             gameObject.saveData.currentHp = (gameObject.saveData.currentHp - remainingDamage).coerceAtLeast(0)
 
@@ -870,6 +1042,8 @@ class GameScreen : BaseScreen() {
             goldEarned = goldEarned,
             orbsEarned = orbsEarned,
             skillStats = skillDamageStats,
+            acquiredActiveSkills = acquiredActiveSkills,
+            acquiredSubSkills = acquiredSubSkills,
             onHome = {
                 gameResultModal.hide()
                 gameObject.setScreen(HomeScreen(gameObject))
@@ -991,6 +1165,13 @@ class GameScreen : BaseScreen() {
 
         val saveData = gameObject.saveData
 
+        // 경험치 획득량 결정 (90% 1개, 8% 2개, 2% 3개)
+        val expAmount = when {
+            Math.random() < 0.90 -> 1
+            Math.random() < 0.80 -> 2 // 나머지 10% 중 80% = 전체의 8%
+            else -> 3 // 나머지 2%
+        }
+
         // 이미 보유한 보조스킬인지 확인
         val existingData = saveData.subSkillInventory[subSkillTypeName]
 
@@ -1000,7 +1181,7 @@ class GameScreen : BaseScreen() {
             val currentExp = (existingData["exp"] as? Number)?.toInt() ?: 0
 
             val item = SubSkillInventoryItem(randomSubSkillType, currentLevel, currentExp)
-            val leveledUp = item.addExp(1) // 스테이지 1은 경험치 1 획득
+            val leveledUp = item.addExp(expAmount)
 
             // 업데이트된 정보 저장
             saveData.subSkillInventory[subSkillTypeName] = mapOf(
@@ -1012,7 +1193,7 @@ class GameScreen : BaseScreen() {
                 // 레벨업 시
                 ToastMessage.show(
                     uiStage,
-                    "${randomSubSkillType.displayName} 보조스킬이 Lv.${item.level}로 레벨업했습니다!",
+                    "${randomSubSkillType.displayName} 보조스킬이 Lv.${item.level}로 레벨업했습니다! (경험치 +$expAmount)",
                     skin,
                     duration = 2f
                 )
@@ -1020,7 +1201,7 @@ class GameScreen : BaseScreen() {
                 // 경험치만 획득
                 ToastMessage.show(
                     uiStage,
-                    "${randomSubSkillType.displayName} 보조스킬 경험치를 획득했습니다.\n\r(${item.exp}/${item.getRequiredExpForNextLevel()})",
+                    "${randomSubSkillType.displayName} 보조스킬 경험치 +$expAmount\n\r(${item.exp}/${item.getRequiredExpForNextLevel()})",
                     skin,
                     duration = 2f
                 )
@@ -1032,6 +1213,9 @@ class GameScreen : BaseScreen() {
                 "exp" to 0
             )
 
+            // 획득 목록에 추가
+            acquiredSubSkills.add(randomSubSkillType.displayName)
+
             ToastMessage.show(
                 uiStage,
                 "${randomSubSkillType.displayName} 보조스킬을 획득했습니다!",
@@ -1041,7 +1225,81 @@ class GameScreen : BaseScreen() {
         }
 
         SaveManager.save(saveData)
-        Gdx.app.log("GameScreen", "보조스킬 드롭: ${randomSubSkillType.displayName}")
+        Gdx.app.log("GameScreen", "보조스킬 드롭: ${randomSubSkillType.displayName} (경험치 +$expAmount)")
+    }
+
+    private fun dropRandomActiveSkill() {
+        // 사용 가능한 액티브 스킬 목록
+        val availableSkills = listOf("LightningStrike", "Fireball", "IceLance", "DivineNova")
+
+        val saveData = gameObject.saveData
+
+        // 랜덤 스킬 선택
+        val skillToDrop = availableSkills.random()
+
+        // 경험치 획득량 결정 (90% 1개, 8% 2개, 2% 3개)
+        val expAmount = when {
+            Math.random() < 0.90 -> 1
+            Math.random() < 0.80 -> 2 // 나머지 10% 중 80% = 전체의 8%
+            else -> 3 // 나머지 2%
+        }
+
+        // SkillInventory를 통해 스킬 로드
+        val skillInventory = SkillInventory()
+        skillInventory.fromSaveData(saveData.skillInventory)
+
+        // 기존 스킬 찾기
+        val existingSkills = skillInventory.getSkillsByType(skillToDrop)
+        val existingSkill = existingSkills.firstOrNull()
+
+        val skillName = SkillRegistry.createSkill(skillToDrop).name
+
+        if (existingSkill != null) {
+            // 중복: 경험치 추가
+            val oldRank = existingSkill.rank
+            val oldExp = existingSkill.exp
+
+            existingSkill.exp += expAmount
+            existingSkill.updateRank()
+
+            val rankChanged = existingSkill.rank != oldRank
+
+            if (rankChanged) {
+                ToastMessage.show(
+                    uiStage,
+                    "$skillName 스킬이 ${existingSkill.rank.displayName}등급으로 승급했습니다! (경험치 +$expAmount)",
+                    skin,
+                    duration = 2f
+                )
+            } else {
+                ToastMessage.show(
+                    uiStage,
+                    "$skillName 스킬 경험치 +$expAmount\n\r(${existingSkill.exp}/${existingSkill.rank.upgradeRequirement})",
+                    skin,
+                    duration = 2f
+                )
+            }
+        } else {
+            // 신규 획득
+            skillInventory.addSkill(skillToDrop, SkillRank.C, 0)
+
+            // 획득 목록에 추가
+            acquiredActiveSkills.add(skillName)
+
+            ToastMessage.show(
+                uiStage,
+                "$skillName 스킬을 획득했습니다!",
+                skin,
+                duration = 2f
+            )
+        }
+
+        // SaveData에 다시 저장
+        saveData.skillInventory.clear()
+        saveData.skillInventory.addAll(skillInventory.toSaveData())
+
+        SaveManager.save(saveData)
+        Gdx.app.log("GameScreen", "액티브 스킬 드롭: $skillToDrop (경험치 +$expAmount)")
     }
 
     override fun dispose() {

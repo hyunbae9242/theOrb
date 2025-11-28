@@ -5,11 +5,9 @@ import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.Touchable
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.example.theorb.screens.BaseScreen
-import com.example.theorb.ui.RetroButton
 import com.example.theorb.ui.RetroButtonV01
 import com.example.theorb.util.ResourceManager
 import com.example.theorb.util.formatNumber
-import javax.naming.spi.ResolveResult
 
 class GameResultModal(private val stage: Stage, private val skin: Skin) {
 
@@ -21,6 +19,8 @@ class GameResultModal(private val stage: Stage, private val skin: Skin) {
         goldEarned: Int,
         orbsEarned: Int,
         skillStats: Map<String, Long>,
+        acquiredActiveSkills: List<String> = emptyList(),
+        acquiredSubSkills: List<String> = emptyList(),
         onHome: () -> Unit,
         onRestart: () -> Unit
     ) {
@@ -35,7 +35,7 @@ class GameResultModal(private val stage: Stage, private val skin: Skin) {
             touchable = Touchable.enabled
         }
 
-        createDialogContainer(title, goldEarned, orbsEarned, skillStats, onHome, onRestart)
+        createDialogContainer(title, goldEarned, orbsEarned, skillStats, acquiredActiveSkills, acquiredSubSkills, onHome, onRestart)
 
         stage.addActor(backgroundOverlay)
         stage.addActor(dialogContainer)
@@ -49,6 +49,8 @@ class GameResultModal(private val stage: Stage, private val skin: Skin) {
         goldEarned: Int,
         orbsEarned: Int,
         skillStats: Map<String, Long>,
+        acquiredActiveSkills: List<String>,
+        acquiredSubSkills: List<String>,
         onHome: () -> Unit,
         onRestart: () -> Unit
     ) {
@@ -73,6 +75,31 @@ class GameResultModal(private val stage: Stage, private val skin: Skin) {
 
             add(goldLabel).padRight(16f)
             add(gemsLabel)
+        }
+
+        // 획득한 스킬 목록
+        val acquiredSkillsTable = Table()
+        if (acquiredActiveSkills.isNotEmpty() || acquiredSubSkills.isNotEmpty()) {
+            val acquiredTitle = Label("획득한 스킬:", BaseScreen.skin.get("label-small", Label.LabelStyle::class.java)).apply {
+                color = BaseScreen.TEXT_PRIMARY
+            }
+            acquiredSkillsTable.add(acquiredTitle).colspan(2).padBottom(8f).row()
+
+            // 액티브 스킬
+            acquiredActiveSkills.forEach { skillName ->
+                val skillLabel = Label("⚔ $skillName", skin.get("label-small", Label.LabelStyle::class.java)).apply {
+                    color = Color(1.0f, 0.8f, 0.2f, 1f) // 황금색
+                }
+                acquiredSkillsTable.add(skillLabel).left().colspan(2).row()
+            }
+
+            // 보조 스킬
+            acquiredSubSkills.forEach { subSkillName ->
+                val subSkillLabel = Label("◆ $subSkillName", skin.get("label-small", Label.LabelStyle::class.java)).apply {
+                    color = Color(0.4f, 0.8f, 1.0f, 1f) // 파란색
+                }
+                acquiredSkillsTable.add(subSkillLabel).left().colspan(2).row()
+            }
         }
 
         // 스킬별 데미지 통계
@@ -118,6 +145,12 @@ class GameResultModal(private val stage: Stage, private val skin: Skin) {
         dialogContainer!!.apply {
             add(titleLabel).center().padBottom(16f).row()
             add(rewardsTable).center().padBottom(16f).row()
+
+            // 획득한 스킬이 있으면 표시
+            if (acquiredActiveSkills.isNotEmpty() || acquiredSubSkills.isNotEmpty()) {
+                add(acquiredSkillsTable).center().padBottom(16f).row()
+            }
+
             add(statsTable).center().expandY().fillY().padBottom(16f).row()
             add(buttonTable).center()
         }

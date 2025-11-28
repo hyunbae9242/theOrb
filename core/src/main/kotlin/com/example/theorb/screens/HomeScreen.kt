@@ -14,6 +14,7 @@ import com.example.theorb.data.OrbRegistry
 import com.example.theorb.data.SaveManager
 import com.example.theorb.ui.BottomNavigation
 import com.example.theorb.modal.OrbSelectionModal
+import com.example.theorb.modal.StageSelectModal
 import com.example.theorb.ui.RetroButtonV01
 import com.example.theorb.ui.TopBar
 import com.example.theorb.util.ResourceManager
@@ -22,18 +23,16 @@ import com.example.theorb.util.formatNumber
 class HomeScreen(private val game: Game) : BaseScreen() {
     private val stage = Stage(viewport)
     private lateinit var orbSelectionModal: OrbSelectionModal
+    private lateinit var stageSelectModal: StageSelectModal
     private lateinit var topBar: TopBar
 
 
-    // stage 관련 임시데이터
-    private var stageIdx = 1
-    private val minStageIdx = 1
-    private val maxStageIdx = 5
 
     override fun show() {
         initSharedResources()
         Gdx.input.inputProcessor = stage
         orbSelectionModal = OrbSelectionModal(stage, skin, gameObject.saveData)
+        stageSelectModal = StageSelectModal(stage, skin)
         topBar = TopBar(stage, skin)
 
         setupUi()
@@ -103,31 +102,27 @@ class HomeScreen(private val game: Game) : BaseScreen() {
     private fun createMainTable(): Table {
         val mainTable = Table().apply {
             top()
-            left()
             background = ResourceManager.getHomeMainPanel()
         }
 
 
-        val stageTable = Table()
-        val leftBtn = RetroButtonV01.createIconButton(
-            defaultImage = ResourceManager.getLeftBasePos(),
-            eventImage = ResourceManager.getLeftEventPos(),
-            disabledImage = ResourceManager.getLeftBaseNag(),
-            stageIdx != minStageIdx
-        ) {
-            stageIdx -= 1;
+        val stageTable = Table().apply {
+            center()
         }
 
-        val rightBtn = RetroButtonV01.createIconButton(
-            defaultImage = ResourceManager.getRightBasePos(),
-            eventImage = ResourceManager.getRightEventPos(),
-            disabledImage = ResourceManager.getRightBaseNag(),
-            stageIdx != maxStageIdx
-        ) {
-            stageIdx += 1;
-        }
+        val currentStage = gameObject.saveData.currentStage
+        val stageLabel = Label("STAGE ${formatNumber(currentStage)}", skin.get("label-large-bold", Label.LabelStyle::class.java))
 
-        val stageLabel = Label("STAGE ${formatNumber(stageIdx)}", skin.get("label-large-bold", Label.LabelStyle::class.java))
+        // 스테이지 선택 버튼
+        val stageSelectBtn = RetroButtonV01.createIconButton(
+            defaultImage = ResourceManager.getListBasePos(),
+            eventImage = ResourceManager.getListEventPos()
+        ) {
+            stageSelectModal.show(gameObject.saveData) { selectedStageId ->
+                // 스테이지가 변경되면 UI 갱신
+                setupUi()
+            }
+        }
 
         val startBtn = RetroButtonV01.createIconButton(
             defaultImage = ResourceManager.getStartBasePos(),
@@ -138,10 +133,8 @@ class HomeScreen(private val game: Game) : BaseScreen() {
             game.setScreen(GameScreen())
         }
 
-        stageTable.add(leftBtn).padLeft(16f).left()
-        stageTable.add(stageLabel).center().expandX()
-        stageTable.add(rightBtn).padRight(16f).right()
-
+        stageTable.add(stageLabel).padLeft(12f).expandX()
+        stageTable.add(stageSelectBtn).padRight(12f)
         mainTable.add(stageTable).padTop(12f).padBottom(8f).expandX().fillX().row()
         mainTable.add(startBtn).center()
 

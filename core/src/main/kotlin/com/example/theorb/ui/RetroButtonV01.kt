@@ -28,8 +28,8 @@ object RetroButtonV01 {
     fun createImageButton(
         image: TextureRegionDrawable,
         imageSize: Float = 48f,
-        defaultImage: TextureRegionDrawable = ResourceManager.getRetroSquarePosDefault(),
-        eventImage: TextureRegionDrawable = ResourceManager.getRetroSquarePosEvent(),
+        defaultImage: TextureRegionDrawable = ResourceManager.getSquareBasePanel(),
+        eventImage: TextureRegionDrawable = ResourceManager.getSquareEventPanel(),
         buttonSize: Float = 48f,
         onClick: () -> Unit
     ): Stack {

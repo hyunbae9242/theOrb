@@ -1,6 +1,77 @@
 {
-gold: 2480
-orbs: 30
+gold: 3678
+orbs: 4
+equippedSkills: [
+	DivineNova
+	Fireball
+]
+skillInventory: [
+	{
+		class: java.util.LinkedHashMap
+		skillType: {
+			class: java.lang.String
+			value: Fireball
+		}
+		rank: {
+			class: java.lang.String
+			value: C
+		}
+		exp: {
+			class: java.lang.Integer
+			value: 3
+		}
+	}
+	{
+		class: java.util.LinkedHashMap
+		skillType: {
+			class: java.lang.String
+			value: IceLance
+		}
+		rank: {
+			class: java.lang.String
+			value: C
+		}
+		exp: {
+			class: java.lang.Integer
+			value: 2
+		}
+	}
+	{
+		class: java.util.LinkedHashMap
+		skillType: {
+			class: java.lang.String
+			value: LightningStrike
+		}
+		rank: {
+			class: java.lang.String
+			value: C
+		}
+		exp: {
+			class: java.lang.Integer
+			value: 0
+		}
+	}
+	{
+		class: java.util.LinkedHashMap
+		skillType: {
+			class: java.lang.String
+			value: DivineNova
+		}
+		rank: {
+			class: java.lang.String
+			value: C
+		}
+		exp: {
+			class: java.lang.Integer
+			value: 0
+		}
+	}
+]
+maxSkillSlots: 2
+equippedSubSkills: {
+	class: java.util.LinkedHashMap
+	Fireball: []
+}
 subSkillInventory: {
 	class: java.util.LinkedHashMap
 	PROJECTILE_COUNT: {
@@ -11,7 +82,7 @@ subSkillInventory: {
 		}
 		exp: {
 			class: java.lang.Integer
-			value: 2
+			value: 3
 		}
 	}
 	FIRE_DAMAGE: {
@@ -44,7 +115,7 @@ subSkillInventory: {
 		}
 		exp: {
 			class: java.lang.Integer
-			value: 0
+			value: 2
 		}
 	}
 	DAMAGE_FOCUS: {
@@ -55,7 +126,7 @@ subSkillInventory: {
 		}
 		exp: {
 			class: java.lang.Integer
-			value: 0
+			value: 2
 		}
 	}
 	ICE_DAMAGE: {
@@ -91,8 +162,22 @@ subSkillInventory: {
 			value: 0
 		}
 	}
+	RAPID_CASTING: {
+		class: java.util.LinkedHashMap
+		level: {
+			class: java.lang.Integer
+			value: 1
+		}
+		exp: {
+			class: java.lang.Integer
+			value: 1
+		}
+	}
 }
-selectedOrb: angel
+selectedOrb: balance
+selectedBackground: city01
 currentSpeedMultiplier: 2
+inGameLevel: 2
+inGameExp: 3
 currentEnergyShield: 50
 }

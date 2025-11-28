@@ -26,6 +26,15 @@ class InGameStatusPanel(
     private lateinit var esdLabel: Label
     private lateinit var esdBarFill: Table
 
+    // 스탯 라벨들
+    lateinit var attackLabel: Label          // 공격력
+    lateinit var defenseLabel: Label         // 방어력
+    lateinit var cooldownLabel: Label        // 쿨다운 감소
+    lateinit var criticalChanceLabel: Label  // 치명타 확률
+    lateinit var criticalDamageLabel: Label  // 치명타 데미지
+    lateinit var lifestealLabel: Label       // 명중 시 체력 회복
+    lateinit var energyShieldGainLabel: Label // 시전 시 에너지 실드 획득
+
     fun createUI(availableHeight: Float? = null): Table {
         mainContainer = Table().apply {
             background = ResourceManager.getGameStatusBackPanel()
@@ -36,11 +45,77 @@ class InGameStatusPanel(
         val levelTable = createLevelTable()
         val hpTable = createHpTable()
         val esdTable = createEsdTable()
+        createStatsLabels()
+
+        val statusLeftTable = Table().apply {
+            top()
+        }
+        val statusRightTable = Table().apply {
+            top()
+        }
+        statusLeftTable.add(attackLabel).left().padBottom(4f).row()
+        statusLeftTable.add(defenseLabel).left().padBottom(4f).row()
+        statusLeftTable.add(criticalChanceLabel).left().padBottom(4f).row()
+        statusLeftTable.add(criticalDamageLabel).left().padBottom(4f).row()
+        statusRightTable.add(cooldownLabel).left().padBottom(4f).row()
+        statusRightTable.add(lifestealLabel).left().padBottom(4f).row()
+        statusRightTable.add(energyShieldGainLabel).left().padBottom(4f).row()
 
         mainContainer.add(levelTable).colspan(2).expandX().fillX().padBottom(8f).row()
-        mainContainer.add(hpTable).left().padBottom(8f).row()
+        mainContainer.add(hpTable).left().padBottom(8f)
         mainContainer.add(esdTable).left().padBottom(8f).row()
+        mainContainer.add(statusLeftTable).left().expandX()
+        mainContainer.add(statusRightTable).left().top().expandX()
         return mainContainer
+    }
+
+    private fun createStatsLabels() {
+        // 공격력 (baseDamage: 10 + 영구 업그레이드 + 인게임 레벨업)
+        val baseDamage = 10
+        val damageMultiplier = com.example.theorb.calculation.DamageCalculator.getTotalDamageMultiplier(saveData)
+        val finalBaseDamage = (baseDamage * damageMultiplier).toInt()
+        attackLabel = Label("기본 공격력: $finalBaseDamage", skin.get("label-small", Label.LabelStyle::class.java)).apply {
+            color = BaseScreen.TEXT_PRIMARY
+        }
+
+        // 방어력
+        val armor = com.example.theorb.upgrades.UpgradeManager.getArmor(saveData)
+        val armorPercentage = com.example.theorb.upgrades.UpgradeManager.getArmorPercentage(saveData).toInt()
+        defenseLabel = Label("방어력: $armor / 방어율: $armorPercentage%", skin.get("label-small", Label.LabelStyle::class.java)).apply {
+            color = BaseScreen.TEXT_PRIMARY
+        }
+
+        // 쿨다운 감소
+        val cooldownReduction = com.example.theorb.calculation.CooldownCalculator.getCooldownReduction(saveData)
+        cooldownLabel = Label("쿨다운 감소: ${"%.1f".format(cooldownReduction)}%", skin.get("label-small", Label.LabelStyle::class.java)).apply {
+            color = BaseScreen.TEXT_PRIMARY
+        }
+
+        // 치명타 확률
+        val criticalChance = com.example.theorb.calculation.CriticalCalculator.getCriticalChance(saveData).toInt()
+        criticalChanceLabel = Label("치명타 확률: $criticalChance%", skin.get("label-small", Label.LabelStyle::class.java)).apply {
+            color = BaseScreen.TEXT_PRIMARY
+        }
+
+        // 치명타 데미지 (기본 150% + 보너스)
+        val criticalDamageBonus = com.example.theorb.calculation.CriticalCalculator.getCriticalDamageBonus(saveData).toInt()
+        val totalCriticalDamage = 150 + criticalDamageBonus
+        criticalDamageLabel = Label("치명타 데미지: $totalCriticalDamage%", skin.get("label-small", Label.LabelStyle::class.java)).apply {
+            color = BaseScreen.TEXT_PRIMARY
+        }
+
+        // 흡혈 (명중 시 체력 회복)
+        val lifestealRate = com.example.theorb.calculation.PlayerStatsCalculator.getLifestealRate(saveData)
+        val lifestealPercent = (lifestealRate * 100).toInt()
+        lifestealLabel = Label("명중 시 체력 회복: $lifestealPercent%", skin.get("label-small", Label.LabelStyle::class.java)).apply {
+            color = BaseScreen.TEXT_PRIMARY
+        }
+
+        // 에너지 실드 획득
+        val esdGain = com.example.theorb.calculation.PlayerStatsCalculator.getEnergyShieldPerCast(saveData)
+        energyShieldGainLabel = Label("시전 시 실드 획득: $esdGain", skin.get("label-small", Label.LabelStyle::class.java)).apply {
+            color = BaseScreen.TEXT_PRIMARY
+        }
     }
 
     private fun createLevelTable(): Table {
@@ -196,5 +271,43 @@ class InGameStatusPanel(
                 cell?.width(esdBarWidth * esdRatio)
             }
         }
+
+        // 스탯 정보 업데이트
+        refreshStats()
+    }
+
+    fun refreshStats() {
+        // 공격력 (baseDamage: 10 + 영구 업그레이드 + 인게임 레벨업)
+        val baseDamage = 10
+        val damageMultiplier = com.example.theorb.calculation.DamageCalculator.getTotalDamageMultiplier(saveData)
+        val finalBaseDamage = (baseDamage * damageMultiplier).toInt()
+        attackLabel.setText("기본 공격력: $finalBaseDamage")
+
+        // 방어력
+        val armor = com.example.theorb.upgrades.UpgradeManager.getArmor(saveData)
+        val armorPercentage = com.example.theorb.upgrades.UpgradeManager.getArmorPercentage(saveData).toInt()
+        defenseLabel.setText("방어력: $armor / 방어율: $armorPercentage%")
+
+        // 쿨다운 감소
+        val cooldownReduction = com.example.theorb.calculation.CooldownCalculator.getCooldownReduction(saveData)
+        cooldownLabel.setText("쿨다운 감소: ${"%.1f".format(cooldownReduction)}%")
+
+        // 치명타 확률
+        val criticalChance = com.example.theorb.calculation.CriticalCalculator.getCriticalChance(saveData).toInt()
+        criticalChanceLabel.setText("치명타 확률: $criticalChance%")
+
+        // 치명타 데미지 (기본 150% + 보너스)
+        val criticalDamageBonus = com.example.theorb.calculation.CriticalCalculator.getCriticalDamageBonus(saveData).toInt()
+        val totalCriticalDamage = 150 + criticalDamageBonus
+        criticalDamageLabel.setText("치명타 데미지: $totalCriticalDamage%")
+
+        // 흡혈
+        val lifestealRate = com.example.theorb.calculation.PlayerStatsCalculator.getLifestealRate(saveData)
+        val lifestealPercent = (lifestealRate * 100).toInt()
+        lifestealLabel.setText("명중 시 체력 회복: $lifestealPercent%")
+
+        // 에너지 실드 획득
+        val esdGain = com.example.theorb.calculation.PlayerStatsCalculator.getEnergyShieldPerCast(saveData)
+        energyShieldGainLabel.setText("시전 시 실드 획득: $esdGain")
     }
 }
