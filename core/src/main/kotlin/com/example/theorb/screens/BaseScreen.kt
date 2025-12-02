@@ -63,19 +63,9 @@ abstract class BaseScreen : ScreenAdapter() {
 
         // 폰트 스케일링 계산 (DPI 기반)
         fun calculateFontScale(): Float {
-            // Android DPI 기준으로 스케일 계산
             val density = Gdx.graphics.density
-            // 기준 밀도 (mdpi = 1.0) 기준으로 스케일링
-            val baseScale = when {
-                density >= 4.0f -> 2.5f  // xxxhdpi
-                density >= 3.0f -> 2.0f  // xxhdpi
-                density >= 2.0f -> 1.5f  // xhdpi
-                density >= 1.5f -> 1.25f // hdpi
-                density >= 1.0f -> 1.0f  // mdpi
-                else -> 0.8f             // ldpi
-            }
-
-            return baseScale.coerceIn(0.8f, 2.5f)
+            // mdpi 기준 1.0, 고해상도는 살짝만 키우기
+            return (density / 2f).coerceIn(0.9f, 1.2f)
         }
         lateinit var gameObject: TheOrb
         lateinit var fontSm: BitmapFont
@@ -100,7 +90,7 @@ abstract class BaseScreen : ScreenAdapter() {
                 gameObject = Gdx.app.applicationListener as TheOrb
 
                 // --- 동적 폰트 크기 계산 ---
-                val fontScale = calculateFontScale()
+                val fontScale = Gdx.graphics.density * 0.9f
 
                 val smallSize = (BASE_FONT_SMALL * fontScale).toInt().coerceAtLeast(10)
                 val mediumSize = (BASE_FONT_MEDIUM * fontScale).toInt().coerceAtLeast(12)

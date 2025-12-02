@@ -15,8 +15,18 @@ object FontUtil {
 
     fun load(size: Int, path: String = "fonts/Galmuri11.ttf"): BitmapFont {
         val gen = FreeTypeFontGenerator(Gdx.files.internal(path))
+        // 안드로이드에서는 폰트 크기를 줄임
+        val density = Gdx.graphics.density
+        val adjustedSize = if (density > 1.5f) {
+            // 안드로이드: 40% 크기로 (원래보다 많이 작게)
+            (size * 0.4f).toInt().coerceAtLeast(6)
+        } else {
+            // 데스크톱: 그대로
+            size
+        }
+
         val p = FreeTypeFontGenerator.FreeTypeFontParameter().apply {
-            this.size = size
+            this.size = adjustedSize
             borderWidth = 1f
             borderStraight = true
             // 픽셀 느낌 유지 (블러 없이 또렷)
@@ -34,8 +44,18 @@ object FontUtil {
 
     fun loadBold(size: Int, path: String = "fonts/Galmuri11-Bold.ttf"): BitmapFont {
         val gen = FreeTypeFontGenerator(Gdx.files.internal(path))
+        // 안드로이드에서는 폰트 크기를 줄임
+        val density = Gdx.graphics.density
+        val adjustedSize = if (density > 1.5f) {
+            // 안드로이드: 40% 크기로 (원래보다 많이 작게)
+            (size * 0.4f).toInt().coerceAtLeast(6)
+        } else {
+            // 데스크톱: 그대로
+            size
+        }
+
         val p = FreeTypeFontGenerator.FreeTypeFontParameter().apply {
-            this.size = size
+            this.size = adjustedSize
             borderWidth = 1f
             borderStraight = true
             // 픽셀 느낌 유지 (블러 없이 또렷)

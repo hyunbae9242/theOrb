@@ -283,6 +283,12 @@ class UpgradeScreen(private val game: TheOrb) : BaseScreen() {
             UpgradeType.COOLDOWN_REDUCTION -> "-${(value * 100).toInt()}%"
             UpgradeType.GOLD_BONUS -> "+${(value * 100).toInt()}%"
             UpgradeType.REROLL_COUNT -> "+${value.toInt()}회"
+            UpgradeType.RARITY_BONUS -> {
+                val level = value.toInt()
+                val uniqueBonus = UpgradeType.RARITY_BONUS.getRarityBonusUnique(level)
+                val rareBonus = UpgradeType.RARITY_BONUS.getRarityBonusRare(level)
+                "U +${uniqueBonus}%, R +${rareBonus}%"
+            }
         }
     }
 

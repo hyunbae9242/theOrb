@@ -110,6 +110,9 @@ class GameScreen : BaseScreen() {
     private val acquiredActiveSkills = mutableListOf<String>() // 획득한 액티브 스킬
     private val acquiredSubSkills = mutableListOf<String>() // 획득한 보조스킬
 
+    // 흡혈 누적 시스템
+    private var pendingLifestealHealing = 0f // 아직 적용되지 않은 회복량
+
     override fun show() {
         initSharedResources()
 
@@ -613,6 +616,7 @@ class GameScreen : BaseScreen() {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
 
         camera.update()
+        batch.projectionMatrix = camera.combined
         shape.projectionMatrix = camera.combined
 
         // --- 이펙트와 플레이어 (SpriteBatch) ---
@@ -721,6 +725,9 @@ class GameScreen : BaseScreen() {
         initialGold = gameObject.saveData.gold
         initialOrbs = gameObject.saveData.orbs
         skillDamageStats.clear()
+
+        // 흡혈 누적량 초기화
+        pendingLifestealHealing = 0f
 
         // 재시작 시 인게임 진행도 초기화
         resetInGameProgress()
@@ -943,6 +950,10 @@ class GameScreen : BaseScreen() {
         LevelUpManager.rechargeRerolls(gameObject.saveData)
         println("  리롤 횟수 충전: ${gameObject.saveData.currentRerollCount}/${gameObject.saveData.maxRerollCount}")
 
+        // 희귀도 보너스 적용
+        UpgradeManager.applyRarityBonusUpgrade(gameObject.saveData)
+        println("  희귀도 확률: 유니크 ${gameObject.saveData.tierChanceUnique}%, 레어 ${gameObject.saveData.tierChanceRare}%, 노멀 ${gameObject.saveData.tierChanceNormal}%")
+
         // HP 초기화
         initializePlayerStats()
 
@@ -1057,21 +1068,34 @@ class GameScreen : BaseScreen() {
 
     /**
      * 흡혈 적용 (데미지 입힐 때마다 호출)
+     * 회복량이 0.1부터 누적되며, 1.0 이상이 되면 정수 부분만큼 체력에 추가
      */
     private fun applyLifesteal(damage: Int) {
         val lifestealRate = com.example.theorb.calculation.PlayerStatsCalculator.getLifestealRate(gameObject.saveData)
 
         if (lifestealRate > 0f) {
-            val healAmount = (damage * lifestealRate).toInt().coerceAtLeast(1) // 최소 1 회복
-            val oldHp = gameObject.saveData.currentHp
+            // 회복량 계산 (최소 0.1)
+            val rawHealAmount = (damage * lifestealRate).coerceAtLeast(0.1f)
 
-            gameObject.saveData.currentHp = (gameObject.saveData.currentHp + healAmount)
-                .coerceAtMost(gameObject.saveData.maxHp)
+            // 누적 회복량에 추가
+            pendingLifestealHealing += rawHealAmount
 
-            val actualHeal = gameObject.saveData.currentHp - oldHp
+            // 1.0 이상이 되면 정수 부분만큼 체력 회복
+            if (pendingLifestealHealing >= 1.0f) {
+                val healAmount = pendingLifestealHealing.toInt()
+                val oldHp = gameObject.saveData.currentHp
 
-            if (actualHeal > 0) {
-                println("흡혈 발동! 데미지: $damage, 회복: $actualHeal (${(lifestealRate * 100).toInt()}%)")
+                gameObject.saveData.currentHp = (gameObject.saveData.currentHp + healAmount)
+                    .coerceAtMost(gameObject.saveData.maxHp)
+
+                val actualHeal = gameObject.saveData.currentHp - oldHp
+
+                // 적용된 만큼 누적량에서 차감
+                pendingLifestealHealing -= healAmount.toFloat()
+
+                if (actualHeal > 0) {
+                    println("흡혈 발동! 데미지: $damage, 회복: $actualHeal (누적: ${String.format("%.1f", pendingLifestealHealing)}, ${(lifestealRate * 100).toInt()}%)")
+                }
             }
         }
     }
@@ -1300,6 +1324,11 @@ class GameScreen : BaseScreen() {
 
         SaveManager.save(saveData)
         Gdx.app.log("GameScreen", "액티브 스킬 드롭: $skillToDrop (경험치 +$expAmount)")
+    }
+
+    override fun resize(width: Int, height: Int) {
+        super.resize(width, height)
+        uiStage.viewport.update(width, height, true)
     }
 
     override fun dispose() {

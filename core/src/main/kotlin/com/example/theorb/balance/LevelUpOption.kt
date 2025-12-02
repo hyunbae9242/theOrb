@@ -65,13 +65,13 @@ enum class LevelUpOptionType(
         "생명력 흡수",
         UpgradeTier.RARE,
         1,
-        { _ -> "명중 데미지의 2%만큼 체력을 회복합니다" }
+        { _ -> "명중 데미지의 0.5%만큼 체력을 회복합니다" }
     ),
     LIFESTEAL_UNIQUE(
         "생명력 흡수",
         UpgradeTier.UNIQUE,
         1,
-        { _ -> "명중 데미지의 4%만큼 체력을 회복합니다" }
+        { _ -> "명중 데미지의 1%만큼 체력을 회복합니다" }
     ),
 
     // === 4. 에너지 쉴드 ===
@@ -85,7 +85,7 @@ enum class LevelUpOptionType(
         "에너지 쉴드",
         UpgradeTier.UNIQUE,
         1,
-        { _ -> "스킬 시전 시 3의 에너지 쉴드를 획득합니다" }
+        { _ -> "스킬 시전 시 2의 에너지 쉴드를 획득합니다" }
     ),
 
     // === 5. 체력 증가 ===

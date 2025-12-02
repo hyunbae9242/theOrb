@@ -28,9 +28,9 @@ data class SaveData(
     var selectedLevelUpOptions: MutableList<String> = mutableListOf(), // 선택된 레벨업 옵션 ID 리스트 (예: ["DAMAGE_NORMAL", "COOLDOWN_RARE", ...])
 
     // 레벨업 선택지 티어 확률 (영구 업그레이드로 수정 가능)
-    var tierChanceNormal: Float = 80f, // 노멀 티어 확률
-    var tierChanceRare: Float = 15f, // 레어 티어 확률
-    var tierChanceUnique: Float = 5f, // 유니크 티어 확률
+    var tierChanceNormal: Float = 90f, // 노멀 티어 확률
+    var tierChanceRare: Float = 7f, // 레어 티어 확률
+    var tierChanceUnique: Float = 3f, // 유니크 티어 확률
 
     // 레벨업 선택지 리롤 시스템
     var maxRerollCount: Int = 0, // 최대 리롤 횟수 (영구 업그레이드로 증가, 최대 5)

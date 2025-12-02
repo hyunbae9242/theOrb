@@ -1,5 +1,5 @@
 {
-gold: 3678
+gold: 3683
 orbs: 4
 equippedSkills: [
 	DivineNova
@@ -177,7 +177,12 @@ subSkillInventory: {
 selectedOrb: balance
 selectedBackground: city01
 currentSpeedMultiplier: 2
-inGameLevel: 2
-inGameExp: 3
+inGameLevel: 3
+inGameExp: 2
+selectedLevelUpOptions: [
+	HP_NORMAL
+]
+maxHp: 110
+currentHp: 110
 currentEnergyShield: 50
 }

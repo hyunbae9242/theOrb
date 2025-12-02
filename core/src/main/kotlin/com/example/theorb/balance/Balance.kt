@@ -16,7 +16,7 @@ enum class EnemyType(
 object Balance {
     // === 베이스 스탯 === (핵앤슬래시 스타일로 조정)
     const val BASE_HP = 8 // 15 → 8 (약 50% 감소)
-    const val BASE_SPEED = 35f
+    const val BASE_SPEED = 25f
     const val BASE_CONTACT_DAMAGE = 5
     const val BASE_REWARD_GOLD = 1
 

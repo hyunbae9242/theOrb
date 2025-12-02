@@ -89,6 +89,35 @@ object UpgradeManager {
         saveData.maxRerollCount = getMaxRerollCount(saveData)
     }
 
+    /**
+     * 희귀도 보너스 - 유니크 확률 증가
+     */
+    fun getRarityBonusUnique(saveData: SaveData): Float {
+        val level = getUpgradeLevel(saveData, UpgradeType.RARITY_BONUS)
+        return UpgradeType.RARITY_BONUS.getRarityBonusUnique(level)
+    }
+
+    /**
+     * 희귀도 보너스 - 레어 확률 증가
+     */
+    fun getRarityBonusRare(saveData: SaveData): Float {
+        val level = getUpgradeLevel(saveData, UpgradeType.RARITY_BONUS)
+        return UpgradeType.RARITY_BONUS.getRarityBonusRare(level)
+    }
+
+    /**
+     * SaveData의 tierChance를 업그레이드 레벨에 맞게 동기화
+     */
+    fun applyRarityBonusUpgrade(saveData: SaveData) {
+        val uniqueBonus = getRarityBonusUnique(saveData)
+        val rareBonus = getRarityBonusRare(saveData)
+
+        // 기본 확률: 유니크 3%, 레어 7%, 노멀 90%
+        saveData.tierChanceUnique = 3f + uniqueBonus
+        saveData.tierChanceRare = 7f + rareBonus
+        saveData.tierChanceNormal = 100f - saveData.tierChanceUnique - saveData.tierChanceRare
+    }
+
     // 업그레이드 초기화 - 사용한 골드를 모두 환불
     fun resetAllUpgrades(saveData: SaveData): Int {
         var totalRefund = 0

@@ -31,7 +31,8 @@ enum class UpgradeType(
     RANGE("사정거리", "공격 사정거리 증가", 15, 1.5f, 0.05f, 14, UpgradeCategory.UTILITY), // 5%씩 증가, 최대 70% (14레벨)
     COOLDOWN_REDUCTION("쿨다운 감소", "스킬 쿨다운 시간 감소", 20, 1.7f, 0.03f, 25, UpgradeCategory.UTILITY), // 3%씩 감소, 최대 75%
     GOLD_BONUS("골드 보너스", "획득 골드량 증가", 22, 1.4f, 0.05f, 20, UpgradeCategory.UTILITY),
-    REROLL_COUNT("리롤 기회", "레벨업 선택지 리롤 횟수 증가 (최대 5회)", 100, 2.0f, 1f, 5, UpgradeCategory.UTILITY); // 매우 비싸게, 최대 5레벨
+    REROLL_COUNT("리롤 기회", "레벨업 선택지 리롤 횟수 증가 (최대 5회)", 100, 2.0f, 1f, 5, UpgradeCategory.UTILITY), // 매우 비싸게, 최대 5레벨
+    RARITY_BONUS("선택지 희귀도", "레벨업 선택지의 레어/유니크 확률 증가", 3000, 2.0f, 1f, 10, UpgradeCategory.UTILITY); // 초기 3000골드, 2배씩 증가, 10레벨 max
 
     fun getCostForLevel(level: Int): Int {
         if (level >= maxLevel) return Int.MAX_VALUE
@@ -46,6 +47,10 @@ enum class UpgradeType(
         // 방어율은 특별한 성장 곡선 사용
         if (this == ARMOR_PERCENTAGE) {
             return getArmorPercentageValueAtLevel(level)
+        }
+        // 희귀도 보너스는 특별한 성장 곡선 사용
+        if (this == RARITY_BONUS) {
+            return getRarityBonusValueAtLevel(level)
         }
         return baseIncrease * level
     }
@@ -84,5 +89,28 @@ enum class UpgradeType(
             in 41..50 -> 42.5f + (level - 40) * 3.25f             // 42.5 + 32.5
             else -> 0f
         }
+    }
+
+    /**
+     * 희귀도 보너스 성장 곡선
+     * 레벨당 유니크 +0.5%, 레어 +1%씩 증가
+     * 이 함수는 내부적으로는 사용되지 않고, getRarityBonusUnique/Rare 함수에서 직접 계산
+     */
+    private fun getRarityBonusValueAtLevel(level: Int): Float {
+        return level.toFloat() // 더미 값, 실제로는 아래 함수들 사용
+    }
+
+    /**
+     * 희귀도 보너스 - 유니크 확률 증가 (레벨당 +0.5%)
+     */
+    fun getRarityBonusUnique(level: Int): Float {
+        return level * 0.5f
+    }
+
+    /**
+     * 희귀도 보너스 - 레어 확률 증가 (레벨당 +1%)
+     */
+    fun getRarityBonusRare(level: Int): Float {
+        return level * 1f
     }
 }

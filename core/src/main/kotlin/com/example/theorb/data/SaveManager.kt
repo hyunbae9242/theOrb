@@ -5,11 +5,21 @@ import com.badlogic.gdx.utils.Json
 
 object SaveManager {
     private val json = Json()
-    // macOS 앱 번들에서는 작업 디렉토리가 /가 되므로 external 사용
-    private val saveFile = Gdx.files.external(".theorb/save.json")
+    // 플랫폼에 따라 적절한 저장소 사용
+    private val saveFile = try {
+        // 안드로이드/iOS는 local 사용 (앱 내부 저장소)
+        Gdx.files.local("save.json")
+    } catch (e: Exception) {
+        // 데스크톱/macOS는 external 사용
+        Gdx.files.external(".theorb/save.json")
+    }
 
     fun save(data: SaveData) {
-        saveFile.writeString(json.prettyPrint(data), false)
+        try {
+            saveFile.writeString(json.prettyPrint(data), false)
+        } catch (e: Exception) {
+            Gdx.app.error("SaveManager", "저장 실패", e)
+        }
     }
 
     fun load(): SaveData {

@@ -59,8 +59,8 @@ object PlayerStatsCalculator {
 
         // 둘 중 하나만 적용 (유니크 우선)
         return when {
-            hasUnique -> 0.04f // 4%
-            hasRare -> 0.02f // 2%
+            hasUnique -> 0.01f // 1%
+            hasRare -> 0.005f // 0.5%
             else -> 0f
         }
     }
@@ -82,8 +82,8 @@ object PlayerStatsCalculator {
 
         // 둘 중 하나만 적용 (유니크 우선)
         return when {
-            hasUnique -> 5
-            hasRare -> 3
+            hasUnique -> 2
+            hasRare -> 1
             else -> 0
         }
     }
